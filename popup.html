@@ -14,8 +14,6 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             width: 400px;
-            min-height: 500px;
-            max-height: 600px;
             background: white;
             display: flex;
             flex-direction: column;
@@ -489,7 +487,7 @@
 
         <div class="actions-section">
             <button id="organize-btn" class="btn btn-primary">
-                🗂️ Organize All Bookmarks
+                🗂️ Organize Bookmarks
             </button>
             <button id="auto-organize-toggle" class="btn btn-toggle">
                 <span class="toggle-label">⚡ Auto-Organize New Bookmarks</span>
@@ -517,31 +515,6 @@
             <span>⚙️</span>
             <span>Settings</span>
         </button>
-    </div>
-
-    <!-- Confirmation Dialog -->
-    <div id="confirmation-overlay" class="confirmation-overlay">
-        <div class="confirmation-dialog">
-            <div class="confirmation-icon">⚠️</div>
-            <div class="confirmation-title">Organize Bookmarks?</div>
-            <div class="confirmation-message">
-                This will reorganize all your bookmarks into categorized folders.
-            </div>
-            <div class="confirmation-warning">
-                <div class="confirmation-warning-title">⚠️ IMPORTANT: Backup First!</div>
-                <div class="confirmation-warning-text">
-                    It is strongly recommended to back up your bookmarks before proceeding.
-                </div>
-                <div class="confirmation-backup-instructions">
-                    <strong>To backup:</strong><br>
-                    chrome://bookmarks → ⋮ (menu) → Export bookmarks
-                </div>
-            </div>
-            <div class="confirmation-actions">
-                <button id="cancel-btn" class="btn btn-secondary">Cancel</button>
-                <button id="confirm-btn" class="btn btn-danger">Proceed</button>
-            </div>
-        </div>
     </div>
 
     <script src="dist/popup.js"></script>

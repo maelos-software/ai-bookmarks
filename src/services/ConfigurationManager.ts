@@ -39,7 +39,7 @@ export interface OrganizationConfig {
   renamedSpeedDialFolderIds: string[];  // IDs of Speed Dial folders that were renamed (can't be deleted)
   organizeSavedTabs: boolean; // whether to organize "Saved Tabs" folders (disabled by default)
   autoOrganize: boolean;      // automatically organize bookmarks as they're added (disabled by default)
-  respectOrganizationHistory: boolean; // skip bookmarks that have been previously organized (enabled by default)
+  respectOrganizationHistory: 'always' | 'never' | 'organizeAllOnly'; // when to skip previously organized bookmarks
 }
 
 export interface DebugConfig {
@@ -146,7 +146,7 @@ const DEFAULT_CONFIG: AppConfig = {
     renamedSpeedDialFolderIds: [],  // Populated during first organization when Speed Dial folders are renamed
     organizeSavedTabs: false,  // Default: exclude "Saved Tabs" folders from organization
     autoOrganize: false,  // Default: don't automatically organize bookmarks as they're added
-    respectOrganizationHistory: true  // Default: skip previously organized bookmarks (safer)
+    respectOrganizationHistory: 'organizeAllOnly'  // Default: only skip during "Organize All"
   },
   debug: {
     logLevel: 0,              // ERROR by default

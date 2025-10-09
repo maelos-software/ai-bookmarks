@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Folders to Organize - AI Bookmark Organizer</title>
+    <link rel="icon" type="image/png" href="icons/icon32.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .header-icon {
+            font-size: 2.5em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1em;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .toolbar-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            font-size: 0.95em;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #f8f9fa;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #c82333;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
+            color: white;
+            font-weight: 700;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 175, 25, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .selection-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 1em;
+            color: #1565c0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .selection-info strong {
+            font-weight: 700;
+        }
+
+        .folder-tree-container {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .folder-tree {
+            list-style: none;
+        }
+
+        .folder-item {
+            margin: 0;
+            padding: 0;
+        }
+
+        .folder-row {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .folder-row:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .folder-indent {
+            display: inline-block;
+        }
+
+        .expand-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            color: #666;
+            user-select: none;
+        }
+
+        .expand-toggle.empty {
+            visibility: hidden;
+        }
+
+        .folder-checkbox {
+            margin-right: 10px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .folder-icon {
+            margin-right: 8px;
+            font-size: 1.1em;
+        }
+
+        .folder-name {
+            flex: 1;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .folder-counts {
+            font-size: 0.85em;
+            color: #666;
+            margin-left: 10px;
+        }
+
+        .folder-counts .direct {
+            color: #2196f3;
+        }
+
+        .folder-counts .total {
+            color: #999;
+            margin-left: 8px;
+        }
+
+        .folder-children {
+            list-style: none;
+            margin-left: 0;
+            display: none;
+        }
+
+        .folder-children.expanded {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state-message {
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            justify-content: space-between;
+        }
+
+        .form-actions-left {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-actions-right {
+            display: flex;
+            gap: 15px;
+            margin-left: auto;
+        }
+
+        .status {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+            display: block;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            display: block;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            display: block;
+        }
+
+        /* Confirmation Dialog */
+        .confirmation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .confirmation-overlay.active {
+            display: flex;
+        }
+
+        .confirmation-dialog {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .confirmation-icon {
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .confirmation-message {
+            font-size: 1em;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .confirmation-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .confirmation-actions .btn {
+            flex: 1;
+            padding: 14px 20px;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .toolbar-buttons {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .toolbar-buttons .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span class="header-icon">📁</span>Select Folders to Organize</h1>
+            <p class="subtitle">Choose which folders you want to organize with AI</p>
+        </div>
+
+        <div class="content">
+            <div class="toolbar">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="🔍 Search folders...">
+                </div>
+                <div class="toolbar-buttons">
+                    <button type="button" id="select-all-btn" class="btn btn-small btn-secondary">Select All</button>
+                    <button type="button" id="deselect-all-btn" class="btn btn-small btn-secondary">Deselect All</button>
+                    <button type="button" id="expand-all-btn" class="btn btn-small btn-secondary">Expand All</button>
+                    <button type="button" id="collapse-all-btn" class="btn btn-small btn-secondary">Collapse All</button>
+                </div>
+            </div>
+
+            <div id="selection-info" class="selection-info">
+                <span><strong id="selected-count">0</strong> folders selected (<strong id="bookmark-count">0</strong> bookmarks)</span>
+            </div>
+
+            <div class="folder-tree-container">
+                <ul id="folder-tree" class="folder-tree">
+                    <!-- Folder tree will be populated by JavaScript -->
+                </ul>
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">📂</div>
+                    <div class="empty-state-message">No folders found</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <div class="form-actions-left">
+                <button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>
+                <button type="button" id="organize-btn" class="btn btn-primary">Organize Selected Folders</button>
+            </div>
+            <div class="form-actions-right">
+                <button type="button" id="organize-all-btn" class="btn btn-warning">⚡ Organize All</button>
+            </div>
+            <div id="status" class="status"></div>
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div id="confirmation-overlay" class="confirmation-overlay">
+        <div class="confirmation-dialog">
+            <div class="confirmation-icon">⚠️</div>
+            <div id="confirmation-title" class="confirmation-title">Organize Selected Folders?</div>
+            <div id="confirmation-message" class="confirmation-message">
+                This will reorganize <strong id="confirm-folder-count">0</strong> folders containing <strong id="confirm-bookmark-count">0</strong> bookmarks into categorized folders.
+                <br><br>
+                <strong>Note:</strong> It's recommended to back up your bookmarks first (chrome://bookmarks → Export).
+            </div>
+            <div class="confirmation-actions">
+                <button id="confirm-cancel-btn" class="btn btn-secondary">Cancel</button>
+                <button id="confirm-proceed-btn" class="btn btn-danger">Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dist/folder-selector.js"></script>
+</body>
+</html>

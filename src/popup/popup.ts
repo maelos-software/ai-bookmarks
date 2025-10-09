@@ -36,9 +36,6 @@ class PopupController {
   private activityCount: HTMLElement;
   private infoBox: HTMLElement;
   private openSettingsBtn: HTMLButtonElement;
-  private confirmationOverlay: HTMLElement;
-  private confirmBtn: HTMLButtonElement;
-  private cancelBtn: HTMLButtonElement;
   private recentActivitySection: HTMLElement;
   private activityList: HTMLElement;
   private clearActivityBtn: HTMLButtonElement;
@@ -56,18 +53,13 @@ class PopupController {
     this.activityCount = document.getElementById('activity-count') as HTMLElement;
     this.infoBox = document.getElementById('info-box') as HTMLElement;
     this.openSettingsBtn = document.getElementById('open-settings') as HTMLButtonElement;
-    this.confirmationOverlay = document.getElementById('confirmation-overlay') as HTMLElement;
-    this.confirmBtn = document.getElementById('confirm-btn') as HTMLButtonElement;
-    this.cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
     this.recentActivitySection = document.getElementById('recent-activity') as HTMLElement;
     this.activityList = document.getElementById('activity-list') as HTMLElement;
     this.clearActivityBtn = document.getElementById('clear-activity-btn') as HTMLButtonElement;
     this.autoOrganizeToggle = document.getElementById('auto-organize-toggle') as HTMLButtonElement;
     this.toggleStatus = document.getElementById('toggle-status') as HTMLElement;
 
-    this.organizeBtn.addEventListener('click', () => this.showConfirmation());
-    this.confirmBtn.addEventListener('click', () => this.handleConfirm());
-    this.cancelBtn.addEventListener('click', () => this.hideConfirmation());
+    this.organizeBtn.addEventListener('click', () => this.handleOrganize());
     this.clearActivityBtn.addEventListener('click', () => this.clearActivityLog());
     this.autoOrganizeToggle.addEventListener('click', () => this.toggleAutoOrganize());
     this.openSettingsBtn.addEventListener('click', () => {
@@ -246,81 +238,10 @@ class PopupController {
     }
   }
 
-  private showConfirmation() {
-    logger.info('PopupController', 'Showing confirmation dialog');
-    this.confirmationOverlay.classList.add('active');
-  }
-
-  private hideConfirmation() {
-    logger.info('PopupController', 'Hiding confirmation dialog');
-    this.confirmationOverlay.classList.remove('active');
-  }
-
-  private async handleConfirm() {
-    logger.info('PopupController', 'User confirmed - starting organization');
-    this.hideConfirmation();
-    await this.handleOrganize();
-  }
-
-  private async handleOrganize() {
-    this.organizeBtn.disabled = true;
-    this.showStatus('🔄 Organizing...', 'active');
-    this.showActivity(true);
-    this.hideInfo();
-
-    // Clear status cache since we're starting a new operation
-    await this.clearStatusCache();
-
-    // Keep popup alive
-    const keepAlive = setInterval(() => {
-      chrome.runtime.sendMessage({ type: 'PING' }).catch(() => {});
-    }, 1000);
-
-    try {
-      logger.info('PopupController', 'Sending EXECUTE_REORGANIZATION message to background');
-      const response = await chrome.runtime.sendMessage({ type: 'EXECUTE_REORGANIZATION' });
-      logger.info('PopupController', 'Got response from background', response);
-
-      const result = response.result;
-
-      // Even if success is false, show results page with errors
-      if (!response.success || result.errors?.length > 0) {
-        logger.warn('PopupController', 'Organization completed with errors', result.errors);
-        this.showStatus('⚠ Completed with errors', 'error');
-        this.showActivity(false);
-
-        // Store results and open results page to show errors
-        await chrome.storage.local.set({ lastOrganizationResult: result });
-
-        const resultsUrl = chrome.runtime.getURL('results.html');
-        await chrome.tabs.create({ url: resultsUrl });
-
-        // Close popup
-        window.close();
-        return;
-      }
-
-      // Success case
-      this.showStatus('✓ Complete!', 'ready');
-      this.showActivity(false);
-
-      // Store results and open results page in new tab
-      await chrome.storage.local.set({ lastOrganizationResult: result });
-
-      const resultsUrl = chrome.runtime.getURL('results.html');
-      await chrome.tabs.create({ url: resultsUrl });
-
-      // Close popup
-      window.close();
-    } catch (error) {
-      this.showStatus('✗ Error', 'error');
-      this.showActivity(false);
-      this.showInfo(`Error: ${error}`, true);
-      logger.error('PopupController', 'Organization failed', error);
-    } finally {
-      clearInterval(keepAlive);
-      this.organizeBtn.disabled = false;
-    }
+  private handleOrganize() {
+    logger.info('PopupController', 'Opening folder selector');
+    const selectorUrl = chrome.runtime.getURL('folder-selector.html');
+    chrome.tabs.create({ url: selectorUrl });
   }
 
   private updateProgress(current: number, total: number, message: string) {
@@ -487,6 +408,7 @@ class PopupController {
       this.toggleStatus.textContent = 'OFF';
     }
   }
+
 }
 
 // Initialize

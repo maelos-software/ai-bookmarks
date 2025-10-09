@@ -294,6 +294,64 @@
             cursor: pointer;
         }
 
+        .radio-option-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .radio-option-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .radio-option-card.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .radio-option-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .radio-option-header input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .radio-option-title {
+            font-weight: 600;
+            font-size: 1em;
+            color: #333;
+            flex: 1;
+        }
+
+        .radio-option-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .radio-option-description {
+            margin-left: 30px;
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
         .info-box {
             background: #e3f2fd;
             border-left: 4px solid #2196f3;
@@ -453,12 +511,40 @@
                     </div>
 
                     <div class="form-group">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="respectOrganizationHistory" name="respectOrganizationHistory">
-                            <label for="respectOrganizationHistory">Remember previous organization</label>
+                        <label>Remember Previous Organization</label>
+                        <div style="margin-top: 16px;">
+                            <label class="radio-option-card" for="historyOrganizeAllOnly">
+                                <div class="radio-option-header">
+                                    <input type="radio" id="historyOrganizeAllOnly" name="respectOrganizationHistory" value="organizeAllOnly" checked>
+                                    <span class="radio-option-title">Only During "Organize All"</span>
+                                    <span class="radio-option-badge">Recommended</span>
+                                </div>
+                                <div class="radio-option-description">
+                                    Skip previously organized bookmarks when using "Organize All", but always reorganize when you explicitly select specific folders.
+                                </div>
+                            </label>
+
+                            <label class="radio-option-card" for="historyAlways">
+                                <div class="radio-option-header">
+                                    <input type="radio" id="historyAlways" name="respectOrganizationHistory" value="always">
+                                    <span class="radio-option-title">Always Remember</span>
+                                </div>
+                                <div class="radio-option-description">
+                                    Skip previously organized bookmarks in all operations (both "Organize All" and specific folder selection).
+                                </div>
+                            </label>
+
+                            <label class="radio-option-card" for="historyNever">
+                                <div class="radio-option-header">
+                                    <input type="radio" id="historyNever" name="respectOrganizationHistory" value="never">
+                                    <span class="radio-option-title">Never Remember</span>
+                                </div>
+                                <div class="radio-option-description">
+                                    Always reorganize all bookmarks regardless of previous organization.
+                                </div>
+                            </label>
                         </div>
-                        <small>When enabled, bookmarks that have been organized before will be skipped in future organization runs. This prevents re-organizing bookmarks you've manually moved. Enabled by default.</small>
-                        <button type="button" id="clearHistoryBtn" class="btn-secondary" style="margin-top: 10px;">Clear Organization History</button>
+                        <button type="button" id="clearHistoryBtn" class="btn-secondary" style="margin-top: 20px;">Clear Organization History</button>
                     </div>
 
                     <div class="divider"></div>
@@ -580,5 +666,30 @@
     </div>
 
     <script src="dist/options.js"></script>
+    <script>
+        // Add visual feedback for radio option cards
+        document.addEventListener('DOMContentLoaded', () => {
+            const radioCards = document.querySelectorAll('.radio-option-card');
+            const radioInputs = document.querySelectorAll('input[name="respectOrganizationHistory"]');
+
+            function updateCardStates() {
+                radioCards.forEach(card => {
+                    const radio = card.querySelector('input[type="radio"]');
+                    if (radio && radio.checked) {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+                });
+            }
+
+            radioInputs.forEach(radio => {
+                radio.addEventListener('change', updateCardStates);
+            });
+
+            // Initialize on load
+            updateCardStates();
+        });
+    </script>
 </body>
 </html>

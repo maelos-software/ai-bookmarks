@@ -23,7 +23,7 @@ class OptionsController {
   private ignoreFoldersInput: HTMLInputElement;
   private organizeSavedTabsCheckbox: HTMLInputElement;
   private autoOrganizeCheckbox: HTMLInputElement;
-  private respectOrganizationHistoryCheckbox: HTMLInputElement;
+  private respectOrganizationHistoryRadios: NodeListOf<HTMLInputElement>;
   private clearHistoryBtn: HTMLButtonElement;
   private logLevelSelect: HTMLSelectElement;
   private consoleLoggingCheckbox: HTMLInputElement;
@@ -60,7 +60,7 @@ class OptionsController {
     this.ignoreFoldersInput = document.getElementById('ignoreFolders') as HTMLInputElement;
     this.organizeSavedTabsCheckbox = document.getElementById('organizeSavedTabs') as HTMLInputElement;
     this.autoOrganizeCheckbox = document.getElementById('autoOrganize') as HTMLInputElement;
-    this.respectOrganizationHistoryCheckbox = document.getElementById('respectOrganizationHistory') as HTMLInputElement;
+    this.respectOrganizationHistoryRadios = document.querySelectorAll('input[name="respectOrganizationHistory"]') as NodeListOf<HTMLInputElement>;
     this.clearHistoryBtn = document.getElementById('clearHistoryBtn') as HTMLButtonElement;
     this.logLevelSelect = document.getElementById('logLevel') as HTMLSelectElement;
     this.consoleLoggingCheckbox = document.getElementById('consoleLogging') as HTMLInputElement;
@@ -137,7 +137,9 @@ class OptionsController {
     this.removeEmptyFoldersCheckbox.addEventListener('change', () => this.markUnsavedChanges());
     this.organizeSavedTabsCheckbox.addEventListener('change', () => this.markUnsavedChanges());
     this.autoOrganizeCheckbox.addEventListener('change', () => this.markUnsavedChanges());
-    this.respectOrganizationHistoryCheckbox.addEventListener('change', () => this.markUnsavedChanges());
+    this.respectOrganizationHistoryRadios.forEach(radio => {
+      radio.addEventListener('change', () => this.markUnsavedChanges());
+    });
     this.logLevelSelect.addEventListener('change', () => this.markUnsavedChanges());
     this.consoleLoggingCheckbox.addEventListener('change', () => this.markUnsavedChanges());
 
@@ -227,7 +229,19 @@ class OptionsController {
           this.ignoreFoldersInput.value = (config.organization.ignoreFolders || []).join(', ');
           this.organizeSavedTabsCheckbox.checked = config.organization.organizeSavedTabs === true;
           this.autoOrganizeCheckbox.checked = config.organization.autoOrganize === true;
-          this.respectOrganizationHistoryCheckbox.checked = config.organization.respectOrganizationHistory === true;
+
+          // Set radio button based on config value (with backward compatibility)
+          const historyValue = config.organization.respectOrganizationHistory;
+          let selectedValue: string;
+          if (typeof historyValue === 'boolean') {
+            // Backward compatibility: convert old boolean to new string format
+            selectedValue = historyValue ? 'always' : 'never';
+          } else {
+            selectedValue = historyValue || 'organizeAllOnly';
+          }
+          this.respectOrganizationHistoryRadios.forEach(radio => {
+            radio.checked = radio.value === selectedValue;
+          });
 
           // Apply excluded system folder IDs
           const excludedIds = new Set(config.organization.excludedSystemFolderIds || []);
@@ -355,7 +369,15 @@ class OptionsController {
     const ignoreFoldersText = this.ignoreFoldersInput.value.trim();
     const organizeSavedTabs = this.organizeSavedTabsCheckbox.checked;
     const autoOrganize = this.autoOrganizeCheckbox.checked;
-    const respectOrganizationHistory = this.respectOrganizationHistoryCheckbox.checked;
+
+    // Get selected radio button value
+    let respectOrganizationHistory: 'always' | 'never' | 'organizeAllOnly' = 'organizeAllOnly';
+    this.respectOrganizationHistoryRadios.forEach(radio => {
+      if (radio.checked) {
+        respectOrganizationHistory = radio.value as 'always' | 'never' | 'organizeAllOnly';
+      }
+    });
+
     const logLevel = parseInt(this.logLevelSelect.value);
     const consoleLogging = this.consoleLoggingCheckbox.checked;
 
@@ -490,7 +512,12 @@ class OptionsController {
       this.ignoreFoldersInput.value = '';
       this.organizeSavedTabsCheckbox.checked = false;
       this.autoOrganizeCheckbox.checked = false;
-      this.respectOrganizationHistoryCheckbox.checked = true;
+
+      // Set default radio button
+      this.respectOrganizationHistoryRadios.forEach(radio => {
+        radio.checked = radio.value === 'organizeAllOnly';
+      });
+
       this.logLevelSelect.value = '0';
       this.consoleLoggingCheckbox.checked = true;
 

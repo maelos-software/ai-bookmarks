@@ -9,6 +9,7 @@ A Chrome extension that uses AI to intelligently organize your bookmarks into ca
 
 ### Core Functionality
 - **AI-Powered Categorization**: Automatically assigns bookmarks to predefined categories using LLMs
+- **Selective Organization**: Choose specific folders to organize or organize all bookmarks through unified interface
 - **Multi-Provider Support**: Compatible with OpenRouter, OpenAI, Claude (Anthropic), Grok (xAI), and custom OpenAI-compatible endpoints
 - **Batch Processing**: Efficiently processes bookmarks in configurable batches (default: 50)
 - **Smart Cleanup**: Removes duplicate bookmarks and empty folders automatically
@@ -17,6 +18,7 @@ A Chrome extension that uses AI to intelligently organize your bookmarks into ca
 
 ### User Experience
 - **Intuitive Popup**: Clean interface with status indicator and recent activity log
+- **Folder Selector**: Visual hierarchical tree to select specific folders for organization
 - **Comprehensive Settings**: Organized configuration with validation and unsaved changes warnings
 - **Detailed Results**: Complete breakdown with statistics, timeline, and item-by-item details
 - **Visual Feedback**: Toast notifications, badge indicators, and progress updates
@@ -70,7 +72,10 @@ Coming soon
 
 3. **Organize Your Bookmarks**
    - Click the extension icon
-   - Click "Organize All Bookmarks"
+   - Click "Organize Bookmarks"
+   - Choose either:
+     - **Organize Selected Folders**: Select specific folders from the tree
+     - **Organize All**: Organize all bookmarks at once
    - Review the results
 
 **Important**: Always backup your bookmarks first!
@@ -109,7 +114,10 @@ Coming soon
 
 ### Organization Settings
 - **Auto-Organize New Bookmarks**: Categorize bookmarks automatically as you add them (disabled by default)
-- **Remember Previous Organization**: Skip bookmarks that have been organized before (enabled by default)
+- **Remember Previous Organization**: Control how previously organized bookmarks are handled:
+  - **Only During "Organize All"** (Recommended): Skip previously organized bookmarks when using "Organize All", but always reorganize when you explicitly select specific folders
+  - **Always Remember**: Skip previously organized bookmarks in all operations (both "Organize All" and specific folder selection)
+  - **Never Remember**: Always reorganize all bookmarks regardless of previous organization
 - **System Folders**: Choose which root folders to organize (Bookmarks Bar, Other Bookmarks, Mobile Bookmarks)
 - **Saved Tabs**: Optionally include browser-generated "Saved Tabs" folders (disabled by default)
 - **Custom Ignore List**: Specify additional folders to skip
@@ -167,12 +175,14 @@ ai-bookmarks/
 ├── manifest.json           # Chrome extension manifest (Manifest V3)
 ├── popup.html             # Extension popup UI
 ├── options.html           # Settings page
+├── folder-selector.html   # Folder selection page
 ├── results.html           # Organization results page
 ├── icons/                 # Extension icons (16, 32, 48, 128px)
 ├── src/
 │   ├── background/        # Service worker
 │   ├── popup/             # Popup logic
 │   ├── options/           # Settings logic
+│   ├── folder-selector/   # Folder selection logic
 │   ├── results/           # Results display logic
 │   └── services/          # Core services
 │       ├── BookmarkManager.ts          # Chrome Bookmarks API

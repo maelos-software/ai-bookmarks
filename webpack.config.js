@@ -5,7 +5,8 @@ module.exports = {
     background: './src/background/background.ts',
     popup: './src/popup/popup.ts',
     options: './src/options/options.ts',
-    results: './src/results/results.ts'
+    results: './src/results/results.ts',
+    'folder-selector': './src/folder-selector/folder-selector.ts'
   },
   module: {
     rules: [

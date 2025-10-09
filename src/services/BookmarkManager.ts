@@ -17,6 +17,15 @@ export interface Bookmark {
   children?: Bookmark[];
 }
 
+export interface BookmarkTreeNode {
+  id: string;
+  title: string;
+  parentId?: string;
+  directBookmarks: number;
+  totalBookmarks: number;
+  children: BookmarkTreeNode[];
+}
+
 export class BookmarkManager {
   /**
    * Normalize folder title for comparison (lowercase and trim)
@@ -392,6 +401,108 @@ export class BookmarkManager {
 
     logger.info('BookmarkManager', `Found ${emptyFolders.length} empty folders`);
     return emptyFolders;
+  }
+
+  /**
+   * Get all descendant folder IDs for a given folder (including the folder itself)
+   */
+  async getFolderDescendants(folderId: string): Promise<string[]> {
+    logger.trace('BookmarkManager', `getFolderDescendants("${folderId}") called`);
+    const descendants: string[] = [folderId];
+
+    try {
+      const folder = await chrome.bookmarks.getSubTree(folderId);
+      const traverse = (nodes: chrome.bookmarks.BookmarkTreeNode[]) => {
+        for (const node of nodes) {
+          if (!node.url && node.id !== folderId) {
+            descendants.push(node.id);
+          }
+          if (node.children) {
+            traverse(node.children);
+          }
+        }
+      };
+
+      if (folder[0]?.children) {
+        traverse(folder[0].children);
+      }
+    } catch (error) {
+      logger.warn('BookmarkManager', `Failed to get descendants for folder ${folderId}`, error);
+    }
+
+    logger.debug('BookmarkManager', `Found ${descendants.length} descendant folders for ${folderId}`);
+    return descendants;
+  }
+
+  /**
+   * Get bookmarks that are in any of the specified folders (including subfolders)
+   */
+  async getBookmarksInFolders(folderIds: string[]): Promise<Bookmark[]> {
+    logger.trace('BookmarkManager', `getBookmarksInFolders called with ${folderIds.length} folders`);
+
+    // Get all descendant folders for each specified folder
+    const allFolderIds = new Set<string>();
+    for (const folderId of folderIds) {
+      const descendants = await this.getFolderDescendants(folderId);
+      descendants.forEach(id => allFolderIds.add(id));
+    }
+
+    logger.debug('BookmarkManager', `Total folders to check (including descendants): ${allFolderIds.size}`);
+
+    // Get all bookmarks and filter to those in our folder set
+    const allBookmarks = await this.getAllBookmarks();
+    const filtered = allBookmarks.filter(b => b.parentId && allFolderIds.has(b.parentId));
+
+    logger.info('BookmarkManager', `Found ${filtered.length} bookmarks in specified folders`);
+    return filtered;
+  }
+
+  /**
+   * Get bookmark tree structure with metadata for folder selector UI
+   */
+  async getBookmarkTreeWithCounts(): Promise<BookmarkTreeNode[]> {
+    logger.trace('BookmarkManager', 'getBookmarkTreeWithCounts() called');
+    const tree = await chrome.bookmarks.getTree();
+    const allBookmarks = await this.getAllBookmarks();
+
+    // Count bookmarks per folder
+    const bookmarkCounts = new Map<string, number>();
+    for (const bookmark of allBookmarks) {
+      if (bookmark.parentId) {
+        bookmarkCounts.set(bookmark.parentId, (bookmarkCounts.get(bookmark.parentId) || 0) + 1);
+      }
+    }
+
+    // Convert Chrome tree to our format with counts
+    const convert = (nodes: chrome.bookmarks.BookmarkTreeNode[]): BookmarkTreeNode[] => {
+      return nodes
+        .filter(node => !node.url) // Only folders
+        .map(node => {
+          const directCount = bookmarkCounts.get(node.id) || 0;
+          let totalCount = directCount;
+
+          // Recursively convert children
+          const children = node.children ? convert(node.children) : [];
+
+          // Add up total count from children
+          for (const child of children) {
+            totalCount += child.totalBookmarks;
+          }
+
+          return {
+            id: node.id,
+            title: node.title,
+            parentId: node.parentId,
+            directBookmarks: directCount,
+            totalBookmarks: totalCount,
+            children
+          };
+        });
+    };
+
+    const result = convert(tree);
+    logger.info('BookmarkManager', 'Generated bookmark tree with counts');
+    return result;
   }
 
   /**

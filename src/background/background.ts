@@ -113,6 +113,14 @@ class BackgroundService {
           logger.info('BackgroundService', '!!! Handling EXECUTE_REORGANIZATION !!!');
           return await this.executeReorganization();
 
+        case 'EXECUTE_SELECTIVE_REORGANIZATION':
+          logger.info('BackgroundService', 'Handling EXECUTE_SELECTIVE_REORGANIZATION');
+          return await this.executeSelectiveReorganization(message.folderIds);
+
+        case 'GET_FOLDER_TREE':
+          logger.info('BackgroundService', 'Handling GET_FOLDER_TREE');
+          return await this.getFolderTree();
+
         case 'GET_REORGANIZATION_STATUS':
           return {
             isReorganizing: this.isReorganizing,
@@ -570,6 +578,142 @@ class BackgroundService {
       return { success: true };
     } catch (error) {
       logger.error('BackgroundService', 'Failed to update logger config', error);
+      return {
+        success: false,
+        error: String(error)
+      };
+    }
+  }
+
+  private async executeSelectiveReorganization(folderIds: string[]): Promise<any> {
+    logger.info('BackgroundService', 'executeSelectiveReorganization STARTED', { folderCount: folderIds.length });
+
+    // Check if already reorganizing
+    if (this.isReorganizing) {
+      logger.warn('BackgroundService', 'Reorganization already in progress');
+      return { success: false, error: 'Reorganization already in progress' };
+    }
+
+    // Set reorganizing state
+    this.isReorganizing = true;
+    this.reorganizationProgress = { current: 0, total: 100, message: 'Starting selective organization...' };
+    await chrome.storage.local.set({
+      isReorganizing: true,
+      reorganizationProgress: this.reorganizationProgress
+    });
+
+    // Show badge
+    await chrome.action.setBadgeText({ text: '...' });
+    await chrome.action.setBadgeBackgroundColor({ color: '#4facfe' });
+    await chrome.action.setTitle({ title: 'AI Bookmark Organizer - Organizing selected folders...' });
+
+    try {
+      logger.info('BackgroundService', 'Initializing services');
+      await this.initializeServices();
+      logger.info('BackgroundService', 'Services initialized successfully');
+    } catch (err) {
+      logger.error('BackgroundService', 'Failed to initialize services', err);
+      this.isReorganizing = false;
+      this.reorganizationProgress = null;
+      await chrome.storage.local.remove(['isReorganizing', 'reorganizationProgress']);
+      return { success: false, error: `Failed to initialize: ${String(err)}` };
+    }
+
+    if (!this.reorganizationService) {
+      logger.error('BackgroundService', 'Reorganization service is null after initialization!');
+      this.isReorganizing = false;
+      this.reorganizationProgress = null;
+      await chrome.storage.local.remove(['isReorganizing', 'reorganizationProgress']);
+      return { success: false, error: 'Failed to initialize reorganization service' };
+    }
+
+    try {
+      logger.info('BackgroundService', 'Starting selective reorganization');
+
+      const progressCallback = (current: number, total: number, message: string) => {
+        logger.debug('BackgroundService', 'Progress update', { current, total, message });
+        this.reorganizationProgress = { current, total, message };
+
+        // Update badge with percentage
+        const percentage = Math.round((current / total) * 100);
+        chrome.action.setBadgeText({ text: `${percentage}%` }).catch(() => {});
+
+        // Store progress state
+        chrome.storage.local.set({
+          reorganizationProgress: this.reorganizationProgress
+        }).catch(() => {});
+      };
+
+      logger.info('BackgroundService', `Calling reorganizationService.reorganizeSpecificFolders with ${folderIds.length} folders`);
+      const result = await this.reorganizationService.reorganizeSpecificFolders(
+        folderIds,
+        progressCallback
+      );
+      logger.info('BackgroundService', 'Selective reorganization completed', result);
+
+      // Clear reorganizing state
+      this.isReorganizing = false;
+      this.reorganizationProgress = null;
+      await chrome.storage.local.remove(['isReorganizing', 'reorganizationProgress']);
+
+      // Update badge with checkmark for 3 seconds
+      await chrome.action.setBadgeText({ text: '✓' });
+      await chrome.action.setBadgeBackgroundColor({ color: '#4caf50' });
+      await chrome.action.setTitle({ title: 'AI Bookmark Organizer - Organization complete!' });
+      setTimeout(async () => {
+        await chrome.action.setBadgeText({ text: '' });
+        await chrome.action.setTitle({ title: 'AI Bookmark Organizer' });
+      }, 3000);
+
+      // Store result
+      await chrome.storage.local.set({ lastOrganizationResult: result });
+
+      logger.info('BackgroundService', 'Returning success result to caller');
+      return {
+        success: result.success,
+        result
+      };
+    } catch (error) {
+      logger.error('BackgroundService', 'Selective reorganization FAILED', error);
+
+      // Clear reorganizing state
+      this.isReorganizing = false;
+      this.reorganizationProgress = null;
+      await chrome.storage.local.remove(['isReorganizing', 'reorganizationProgress']);
+
+      // Clear badge
+      await chrome.action.setBadgeText({ text: '' });
+      await chrome.action.setTitle({ title: 'AI Bookmark Organizer' });
+
+      // Store error result
+      await chrome.storage.local.set({
+        lastOrganizationResult: {
+          success: false,
+          bookmarksMoved: 0,
+          foldersCreated: 0,
+          duplicatesRemoved: 0,
+          emptyFoldersRemoved: 0,
+          errors: [String(error)],
+          moves: [],
+          duplicates: [],
+          folders: [],
+          emptyFolders: []
+        }
+      });
+
+      return { success: false, error: String(error) };
+    }
+  }
+
+  private async getFolderTree(): Promise<any> {
+    try {
+      const tree = await this.bookmarkManager.getBookmarkTreeWithCounts();
+      return {
+        success: true,
+        tree
+      };
+    } catch (error) {
+      logger.error('BackgroundService', 'Failed to get folder tree', error);
       return {
         success: false,
         error: String(error)

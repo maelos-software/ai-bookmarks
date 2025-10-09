@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-10-08
+
+### Added
+- **Selective Folder Organization**: New hierarchical folder tree interface for choosing specific folders to organize
+  - Visual tree with expand/collapse controls
+  - Checkbox-based selection with parent/child relationships
+  - Shows bookmark counts: direct (n) and total [n] including subfolders
+  - Search/filter functionality to find folders by name
+  - Bulk selection controls: Select All, Deselect All, Expand All, Collapse All
+  - Live selection counter showing folders and bookmarks selected
+  - Pre-selects folders containing bookmarks on load
+  - Top-level folders automatically expanded for immediate visibility
+- **Unified Organization Interface**: Both "Organize All" and "Organize Selected Folders" available from folder selector page
+  - "Organize All" button prominently displayed with yellow/orange warning color
+  - Stronger backup warnings for "Organize All" action
+  - Dynamic confirmation dialogs based on action type
+  - Progress tracking with badge indicators for both modes
+- **Backend Support**: New methods in BookmarkManager and ReorganizationService
+  - `getBookmarkTreeWithCounts()`: Builds hierarchical tree with bookmark counts
+  - `getFolderDescendants()`: Recursively gets subfolder IDs
+  - `getBookmarksInFolders()`: Retrieves bookmarks from specific folders
+  - `reorganizeSpecificFolders()`: Selective organization for chosen folders
+  - Respects organization history and all existing settings
+
+### Changed
+- **Simplified Popup**: Consolidated organization options into single "Organize Bookmarks" button
+  - Removed "Organize All Bookmarks" button from popup
+  - Removed confirmation dialog from popup (moved to folder selector)
+  - Removed min/max height constraints for natural popup sizing
+  - Cleaner interface with progressive disclosure of advanced options
+
+### Technical
+- Added folder-selector.html and folder-selector.ts (516 lines)
+- Added GET_FOLDER_TREE and EXECUTE_SELECTIVE_REORGANIZATION message handlers
+- Updated webpack config for new folder-selector entry point
+- Popup controller simplified from ~500 lines to minimal delegation
+
 ## [1.0.1] - 2025-10-08
 
 ### Initial Release
@@ -48,5 +85,6 @@ First public release of AI Bookmark Organizer - a Chrome extension that intellig
 - All processing through user's chosen AI provider
 - Open source for transparency
 
-[Unreleased]: https://github.com/rmk40/ai-bookmarks/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/rmk40/ai-bookmarks/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/rmk40/ai-bookmarks/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/rmk40/ai-bookmarks/releases/tag/v1.0.1

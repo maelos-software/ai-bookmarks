@@ -508,19 +508,325 @@ export class ReorganizationService {
 
     let skippedCount = 0;
 
-    // Check if we should respect organization history
+    // Check if we should respect organization history for "Organize All" mode
     const config = await this.configManager.getConfig();
-    if (config.organization.respectOrganizationHistory) {
+    const historyMode = config.organization.respectOrganizationHistory;
+
+    if (historyMode === 'always' || historyMode === 'organizeAllOnly') {
       const beforeHistoryFilter = filtered.length;
       const organizationHistory = await this.configManager.getOrganizationHistory();
       filtered = filtered.filter(b => !organizationHistory[b.id]?.moved);
       skippedCount = beforeHistoryFilter - filtered.length;
       if (skippedCount > 0) {
-        logger.info('ReorganizationService', `Skipped ${skippedCount} previously organized bookmarks (respectOrganizationHistory enabled)`);
+        logger.info('ReorganizationService', `Skipped ${skippedCount} previously organized bookmarks (mode: ${historyMode})`);
       }
+    } else if (historyMode === 'never') {
+      logger.info('ReorganizationService', 'Ignoring organization history (mode: never)');
     }
 
     logger.info('ReorganizationService', `Filtered to ${filtered.length} bookmarks (ignored ${allBookmarks.length - filtered.length})`);
     return { bookmarks: filtered, skipped: skippedCount };
+  }
+
+  /**
+   * Execute selective reorganization for specific folders
+   */
+  async reorganizeSpecificFolders(
+    folderIds: string[],
+    progressCallback?: (current: number, total: number, message: string) => void
+  ): Promise<OrganizationResult> {
+    logger.info('ReorganizationService', 'reorganizeSpecificFolders called', { folderIds, count: folderIds.length });
+
+    const errors: string[] = [];
+    let bookmarksMoved = 0;
+    let duplicatesRemoved = 0;
+    let emptyFoldersRemoved = 0;
+    let bookmarksSkipped = 0;
+    const createdFolders = new Set<string>();
+
+    // Detailed tracking arrays
+    const moves: BookmarkMove[] = [];
+    const duplicates: DuplicateRemoved[] = [];
+    const folders: FolderCreated[] = [];
+    const emptyFolders: EmptyFolderRemoved[] = [];
+
+    try {
+      // Step 0: Get bookmarks from selected folders
+      logger.info('ReorganizationService', 'Step 0: Getting bookmarks from selected folders');
+      progressCallback?.(0, 100, 'Scanning selected folders...');
+
+      const bookmarks = await this.bookmarkManager.getBookmarksInFolders(folderIds);
+      logger.info('ReorganizationService', `Found ${bookmarks.length} bookmarks in selected folders`);
+
+      if (bookmarks.length === 0) {
+        logger.info('ReorganizationService', 'No bookmarks found in selected folders');
+        return {
+          success: true,
+          bookmarksMoved: 0,
+          foldersCreated: 0,
+          duplicatesRemoved: 0,
+          emptyFoldersRemoved: 0,
+          bookmarksSkipped: 0,
+          errors: [],
+          moves: [],
+          duplicates: [],
+          folders: [],
+          emptyFolders: []
+        };
+      }
+
+      // Filter bookmarks and respect organization history based on mode
+      // Keep parentId for tracking original folder
+      let filteredBookmarks = bookmarks.filter(b => b.url) as Array<{ id: string; title: string; url: string; parentId?: string }>;
+
+      const config = await this.configManager.getConfig();
+      const historyMode = config.organization.respectOrganizationHistory;
+
+      // Only skip bookmarks based on history if mode is 'always'
+      // 'organizeAllOnly' means skip only during full organization, not specific folders
+      // 'never' means never skip
+      if (historyMode === 'always') {
+        const beforeCount = filteredBookmarks.length;
+        const organizationHistory = await this.configManager.getOrganizationHistory();
+        filteredBookmarks = filteredBookmarks.filter(b => !organizationHistory[b.id]?.moved);
+        bookmarksSkipped = beforeCount - filteredBookmarks.length;
+        if (bookmarksSkipped > 0) {
+          logger.info('ReorganizationService', `Skipped ${bookmarksSkipped} previously organized bookmarks (mode: always)`);
+        }
+      } else {
+        logger.info('ReorganizationService', `Not skipping previously organized bookmarks in selective folder mode (mode: ${historyMode})`);
+      }
+
+      if (filteredBookmarks.length === 0) {
+        logger.info('ReorganizationService', 'No bookmarks to organize in selected folders');
+        return {
+          success: true,
+          bookmarksMoved: 0,
+          foldersCreated: 0,
+          duplicatesRemoved: 0,
+          emptyFoldersRemoved: 0,
+          bookmarksSkipped,
+          errors: [],
+          moves: [],
+          duplicates: [],
+          folders: [],
+          emptyFolders: []
+        };
+      }
+
+      progressCallback?.(0, filteredBookmarks.length, `Found ${filteredBookmarks.length} bookmarks to organize`);
+
+      // Step 1: Get existing folders
+      logger.info('ReorganizationService', 'Step 1: Getting existing folders');
+      const existingFolders = await this.bookmarkManager.getAllFolders();
+      const existingFolderNames = existingFolders
+        .filter(f =>
+          !['Bookmarks bar', 'Other bookmarks', 'Mobile bookmarks'].includes(f.title) &&
+          f.parentId === '1'
+        )
+        .map(f => f.title);
+
+      logger.info('ReorganizationService', `Found ${existingFolderNames.length} root-level folders`);
+
+      // Step 2: Use configured categories
+      logger.info('ReorganizationService', 'Step 2: Using configured categories');
+      const approvedFolders = this.categories;
+      logger.info('ReorganizationService', `Using ${approvedFolders.length} configured categories`);
+
+      // Step 3: Assign bookmarks to folders in batches
+      logger.info('ReorganizationService', 'Step 3: Assigning bookmarks to folders');
+      const allPlans: OrganizationPlan[] = [];
+      const totalBatches = Math.ceil(filteredBookmarks.length / this.batchSize);
+
+      for (let i = 0; i < filteredBookmarks.length; i += this.batchSize) {
+        const batch = filteredBookmarks.slice(i, i + this.batchSize);
+        const batchNum = Math.floor(i / this.batchSize) + 1;
+
+        logger.info('ReorganizationService', `Assigning batch ${batchNum}/${totalBatches}, ${batch.length} bookmarks`);
+        progressCallback?.(i, filteredBookmarks.length, `Assigning batch ${batchNum}/${totalBatches}`);
+
+        try {
+          const plan = await this.llmService.assignToFolders(batch, approvedFolders);
+          allPlans.push(plan);
+          logger.debug('ReorganizationService', `Batch ${batchNum} completed successfully`);
+        } catch (error) {
+          const errorMsg = `Batch ${batchNum} failed: ${error instanceof Error ? error.message : String(error)}`;
+          errors.push(errorMsg);
+          logger.error('ReorganizationService', errorMsg, error);
+
+          logger.warn('ReorganizationService', `Stopping after batch ${batchNum} due to API error`);
+          const userError = `⚠️ Processing stopped at batch ${batchNum} of ${totalBatches}. ${error instanceof Error ? error.message : String(error)}`;
+          errors.push(userError);
+          break;
+        }
+      }
+
+      logger.info('ReorganizationService', `Completed ${allPlans.length}/${totalBatches} batches successfully`);
+
+      if (allPlans.length < totalBatches) {
+        logger.error('ReorganizationService', 'Aborting reorganization due to incomplete batch processing');
+        return {
+          success: false,
+          bookmarksMoved: 0,
+          foldersCreated: 0,
+          duplicatesRemoved: 0,
+          emptyFoldersRemoved: 0,
+          bookmarksSkipped,
+          errors,
+          moves: [],
+          duplicates: [],
+          folders: [],
+          emptyFolders: []
+        };
+      }
+
+      // Step 4: Create folders that need to be created
+      logger.info('ReorganizationService', 'Step 4: Creating folders');
+      const foldersWithBookmarks = new Set<string>();
+      allPlans.forEach(plan => {
+        plan.suggestions.forEach(s => foldersWithBookmarks.add(s.folderName));
+      });
+
+      const foldersToCreate = Array.from(foldersWithBookmarks).filter(f => !existingFolderNames.includes(f));
+      logger.info('ReorganizationService', `Need to create ${foldersToCreate.length} folders`);
+
+      const folderIdMap = new Map<string, string>();
+
+      for (const folderName of foldersToCreate) {
+        try {
+          const folderId = await this.bookmarkManager.ensureFolder(folderName, '1');
+          folderIdMap.set(folderName, folderId);
+          createdFolders.add(folderName);
+          folders.push({ name: folderName, id: folderId });
+          logger.debug('ReorganizationService', `Folder "${folderName}" ready with ID ${folderId}`);
+        } catch (error) {
+          const errorMsg = `Failed to create folder "${folderName}": ${error}`;
+          errors.push(errorMsg);
+          logger.error('ReorganizationService', errorMsg, error);
+        }
+      }
+
+      // Step 5: Move bookmarks
+      logger.info('ReorganizationService', 'Step 5: Moving bookmarks to folders');
+      progressCallback?.(0, filteredBookmarks.length, 'Moving bookmarks...');
+
+      const bookmarkMap = new Map(filteredBookmarks.map(b => [b.id, b]));
+      let currentProgress = 0;
+
+      for (const plan of allPlans) {
+        for (const suggestion of plan.suggestions) {
+          const bookmark = bookmarkMap.get(suggestion.bookmarkId);
+          if (!bookmark) {
+            logger.warn('ReorganizationService', `Bookmark ${suggestion.bookmarkId} not found in map`);
+            continue;
+          }
+
+          let folderId = folderIdMap.get(suggestion.folderName);
+          if (!folderId) {
+            folderId = await this.bookmarkManager.findFolderByName(suggestion.folderName);
+          }
+
+          if (!folderId) {
+            const errorMsg = `Folder "${suggestion.folderName}" not found for bookmark ${bookmark.title}`;
+            errors.push(errorMsg);
+            logger.error('ReorganizationService', errorMsg);
+            continue;
+          }
+
+          try {
+            const originalParentId = bookmark.parentId || 'unknown';
+            const originalFolder = existingFolders.find(f => f.id === originalParentId);
+            const fromFolderName = originalFolder?.title || 'Unknown';
+
+            await this.bookmarkManager.moveBookmark(bookmark.id, folderId);
+            bookmarksMoved++;
+            moves.push({
+              bookmarkId: bookmark.id,
+              title: bookmark.title,
+              url: bookmark.url,
+              fromFolder: fromFolderName,
+              toFolder: suggestion.folderName
+            });
+
+            // Record in organization history
+            await this.configManager.markBookmarkAsOrganized(bookmark.id, suggestion.folderName);
+
+            currentProgress++;
+            if (currentProgress % 10 === 0) {
+              progressCallback?.(currentProgress, filteredBookmarks.length, `Moved ${currentProgress} of ${filteredBookmarks.length} bookmarks`);
+            }
+          } catch (error) {
+            const errorMsg = `Failed to move bookmark "${bookmark.title}": ${error}`;
+            errors.push(errorMsg);
+            logger.error('ReorganizationService', errorMsg, error);
+          }
+        }
+      }
+
+      logger.info('ReorganizationService', `Moved ${bookmarksMoved} bookmarks`);
+
+      // Step 6: Remove empty folders if configured
+      const renamedSpeedDialIds = config.organization.renamedSpeedDialFolderIds || [];
+      if (config.organization.removeEmptyFolders) {
+        logger.info('ReorganizationService', 'Step 6: Removing empty folders');
+        progressCallback?.(filteredBookmarks.length, filteredBookmarks.length, 'Removing empty folders...');
+
+        try {
+          const emptyFolderResults = await this.bookmarkManager.removeEmptyFolders(
+            renamedSpeedDialIds,
+            config.organization.organizeSavedTabs
+          );
+          emptyFoldersRemoved = emptyFolderResults.removed;
+          emptyFolders.push(...emptyFolderResults.details);
+          logger.info('ReorganizationService', `Removed ${emptyFoldersRemoved} empty folders`);
+        } catch (error) {
+          const errorMsg = `Failed to remove empty folders: ${error}`;
+          errors.push(errorMsg);
+          logger.error('ReorganizationService', errorMsg, error);
+        }
+      }
+
+      // Aggregate token usage
+      const totalTokens = {
+        prompt: allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.prompt || 0), 0),
+        completion: allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.completion || 0), 0),
+        total: allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.total || 0), 0)
+      };
+
+      const result: OrganizationResult = {
+        success: errors.length === 0,
+        bookmarksMoved,
+        foldersCreated: createdFolders.size,
+        duplicatesRemoved: 0,
+        emptyFoldersRemoved,
+        bookmarksSkipped,
+        errors,
+        moves,
+        duplicates: [],
+        folders,
+        emptyFolders,
+        tokenUsage: totalTokens.total > 0 ? totalTokens : undefined
+      };
+
+      logger.info('ReorganizationService', 'reorganizeSpecificFolders completed', result);
+      return result;
+
+    } catch (error) {
+      logger.error('ReorganizationService', 'reorganizeSpecificFolders failed catastrophically', error);
+      errors.push(`Fatal error: ${error}`);
+      return {
+        success: false,
+        bookmarksMoved,
+        bookmarksSkipped,
+        foldersCreated: createdFolders.size,
+        duplicatesRemoved,
+        emptyFoldersRemoved,
+        errors,
+        moves,
+        duplicates,
+        folders,
+        emptyFolders
+      };
+    }
   }
 }
