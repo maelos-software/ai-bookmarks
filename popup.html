@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Bookmark Organizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            width: 400px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .header h1 {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .content {
+            padding: 16px;
+            flex: 1;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 12px;
+        }
+
+        .status-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status-value.ready {
+            color: #2e7d32;
+        }
+
+        .status-value.warning {
+            color: #f57c00;
+        }
+
+        .status-value.error {
+            color: #c62828;
+        }
+
+        .status-value.active {
+            color: #667eea;
+        }
+
+        .activity-indicator {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .activity-indicator.active {
+            display: block;
+        }
+
+        .activity-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .activity-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e3f2fd;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-message {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #1565c0;
+            margin-bottom: 4px;
+        }
+
+        .activity-count {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .actions-section {
+            margin-top: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #f8f9fa;
+        }
+
+        .btn-toggle {
+            background: white;
+            color: #666;
+            border: 2px solid #e0e0e0;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-toggle.active {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+            color: #2e7d32;
+        }
+
+        .btn-toggle:hover:not(:disabled) {
+            background: #f8f9fa;
+        }
+
+        .btn-toggle.active:hover:not(:disabled) {
+            background: #dcedc8;
+        }
+
+        .toggle-label {
+            text-align: center;
+        }
+
+        .toggle-status {
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 0.9em;
+            color: #856404;
+        }
+
+        .info-box.error {
+            background: #ffebee;
+            border-left-color: #c62828;
+            color: #c62828;
+        }
+
+        .footer {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            position: sticky;
+            bottom: 0;
+            margin-top: auto;
+        }
+
+        .footer-btn {
+            width: 100%;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border: 2px solid #b8c5d6;
+            border-radius: 6px;
+            color: #495057;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .footer-btn:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .status-icon {
+            font-size: 1.2em;
+            margin-right: 6px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 16px 0;
+        }
+
+        /* Recent Activity */
+        .recent-activity {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .recent-activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .clear-activity-btn {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 0.9em;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .clear-activity-btn:hover {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            background: white;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            border-left: 3px solid #667eea;
+            font-size: 0.9em;
+        }
+
+        .activity-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .activity-item.auto-organize {
+            border-left-color: #4CAF50;
+        }
+
+        .activity-item.bulk-reorganize {
+            border-left-color: #667eea;
+        }
+
+        .activity-item-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .activity-item-details {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .activity-item-time {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .no-activity {
+            color: #999;
+            font-size: 0.9em;
+            text-align: center;
+            padding: 8px 0;
+        }
+
+        /* Confirmation Dialog */
+        .confirmation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .confirmation-overlay.active {
+            display: flex;
+        }
+
+        .confirmation-dialog {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 360px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .confirmation-icon {
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .confirmation-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .confirmation-message {
+            font-size: 0.95em;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 0.9em;
+        }
+
+        .confirmation-warning-title {
+            font-weight: 700;
+            color: #856404;
+            margin-bottom: 6px;
+        }
+
+        .confirmation-warning-text {
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .confirmation-backup-instructions {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            color: #495057;
+            margin-top: 8px;
+        }
+
+        .confirmation-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .confirmation-actions .btn {
+            flex: 1;
+            padding: 12px 20px;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="icons/icon32.png" alt="AI Bookmark Organizer" class="header-icon">
+        <h1>AI Bookmark Organizer</h1>
+    </div>
+
+    <div class="content">
+        <div class="status-card">
+            <div class="status-label">Status</div>
+            <div id="status-value" class="status-value ready">
+                <span class="status-icon">✓</span>
+                <span id="status-text">Ready</span>
+            </div>
+        </div>
+
+        <div id="activity-indicator" class="activity-indicator">
+            <div class="activity-content">
+                <div class="activity-spinner"></div>
+                <div class="activity-details">
+                    <div class="activity-message" id="activity-message">Processing...</div>
+                    <div class="activity-count" id="activity-count">0 of 0 items</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions-section">
+            <button id="organize-btn" class="btn btn-primary">
+                🗂️ Organize All Bookmarks
+            </button>
+            <button id="auto-organize-toggle" class="btn btn-toggle">
+                <span class="toggle-label">⚡ Auto-Organize New Bookmarks</span>
+                <span class="toggle-status" id="toggle-status">OFF</span>
+            </button>
+        </div>
+
+        <div id="recent-activity" class="recent-activity" style="display: none;">
+            <div class="recent-activity-header">
+                <span>Recent Activity</span>
+                <button id="clear-activity-btn" class="clear-activity-btn" title="Clear activity history">Clear</button>
+            </div>
+            <ul id="activity-list" class="activity-list">
+                <!-- Activity items will be inserted here -->
+            </ul>
+        </div>
+
+        <div id="info-box" class="info-box" style="display: none;">
+            <!-- Info messages will appear here -->
+        </div>
+    </div>
+
+    <div class="footer">
+        <button id="open-settings" class="footer-btn">
+            <span>⚙️</span>
+            <span>Settings</span>
+        </button>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div id="confirmation-overlay" class="confirmation-overlay">
+        <div class="confirmation-dialog">
+            <div class="confirmation-icon">⚠️</div>
+            <div class="confirmation-title">Organize Bookmarks?</div>
+            <div class="confirmation-message">
+                This will reorganize all your bookmarks into categorized folders.
+            </div>
+            <div class="confirmation-warning">
+                <div class="confirmation-warning-title">⚠️ IMPORTANT: Backup First!</div>
+                <div class="confirmation-warning-text">
+                    It is strongly recommended to back up your bookmarks before proceeding.
+                </div>
+                <div class="confirmation-backup-instructions">
+                    <strong>To backup:</strong><br>
+                    chrome://bookmarks → ⋮ (menu) → Export bookmarks
+                </div>
+            </div>
+            <div class="confirmation-actions">
+                <button id="cancel-btn" class="btn btn-secondary">Cancel</button>
+                <button id="confirm-btn" class="btn btn-danger">Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dist/popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+/* Options page styles for AI Bookmark Organizer */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  background-color: #f8f9fa;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  min-height: 100vh;
+}
+
+header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 20px;
+}
+
+header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.settings-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.settings-section h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #495057;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.form-group small {
+  display: block;
+  margin-top: 4px;
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+}
+
+.form-group input[type="number"] {
+  width: 120px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.btn-link {
+  background-color: transparent;
+  color: #007bff;
+  border: none;
+  text-decoration: underline;
+  padding: 4px 8px;
+}
+
+.btn-link:hover {
+  color: #0056b3;
+}
+
+.advanced-section {
+  border-left: 4px solid #007bff;
+}
+
+.advanced-content {
+  margin-top: 16px;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.save-status {
+  margin-left: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.save-status.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.save-status.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Enhanced Error Display Styles */
+.connection-details {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.connection-details.success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.connection-details.error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.error-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.error-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.error-type {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.error-type.authentication {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.error-type.network {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.error-type.rate_limit {
+  background-color: #ffe6cc;
+  color: #8b4513;
+}
+
+.error-type.service_unavailable {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.error-message {
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.technical-details {
+  margin-bottom: 12px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+}
+
+.error-code,
+.http-status {
+  display: inline-block;
+  margin-right: 12px;
+  padding: 2px 6px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.suggestions {
+  margin-bottom: 12px;
+}
+
+.suggestions ul {
+  margin: 8px 0 0 16px;
+  padding: 0;
+}
+
+.suggestions li {
+  margin-bottom: 4px;
+}
+
+.validation-errors {
+  margin-bottom: 12px;
+  padding: 8px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  border-left: 3px solid #f39c12;
+}
+
+.validation-errors ul {
+  margin: 8px 0 0 16px;
+  padding: 0;
+}
+
+.validation-errors li {
+  font-size: 12px;
+  color: #856404;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.retry-info {
+  margin-bottom: 12px;
+  padding: 8px;
+  background-color: rgba(255, 193, 7, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid #ffc107;
+}
+
+.documentation {
+  margin-top: 12px;
+}
+
+.documentation a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.documentation a:hover {
+  text-decoration: underline;
+}
+
+.detail-item {
+  margin-bottom: 8px;
+}
+
+.detail-item strong {
+  display: inline-block;
+  min-width: 120px;
+  font-weight: 600;
+}
+
+/* Recovery Actions */
+.recovery-actions {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+}
+
+.actions-header {
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: white;
+  color: #495057;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.action-btn.primary {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.action-btn.primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+/* Enhanced Save Status */
+.save-status.info {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.save-status.warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn {
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+  
+  .error-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-btn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,44 @@
+AI Bookmark Organizer
+Copyright 2025 Rafi Khardalian
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+================================================================================
+
+This project uses the following open source packages:
+
+Development Dependencies (MIT License):
+- @types/chrome - TypeScript definitions for Chrome extensions
+- @types/jest - TypeScript definitions for Jest
+- @typescript-eslint/eslint-plugin - ESLint plugin for TypeScript
+- @typescript-eslint/parser - ESLint parser for TypeScript
+- eslint - JavaScript/TypeScript linting utility
+- jest - JavaScript testing framework
+- jest-environment-jsdom - Jest environment for DOM testing
+- ts-jest - Jest transformer for TypeScript
+- ts-loader - TypeScript loader for webpack
+- typescript - TypeScript compiler
+- webpack - Module bundler
+- webpack-cli - Webpack command line interface
+
+All development dependencies are licensed under the MIT License, which is
+compatible with the Mozilla Public License 2.0. These dependencies are used
+only during development and building, and are not distributed with the extension.
+
+For the full text of the MIT License, see: https://opensource.org/licenses/MIT
+
+================================================================================
+
+Chrome Extension APIs:
+This extension uses Chrome Extension APIs provided by Google Chrome, which are
+subject to Google's terms of service.
+
+================================================================================
+
+AI Provider APIs:
+This extension integrates with third-party AI provider APIs (OpenRouter, OpenAI,
+Anthropic, xAI). Users must comply with the respective terms of service of their
+chosen provider. The extension developers are not responsible for API usage or
+compliance with third-party terms.

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Bookmark Organizer - Settings</title>
+    <link rel="icon" type="image/png" href="icons/icon32.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .header-icon {
+            font-size: 2.5em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .settings-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .settings-section h2 {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1em;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            color: #666;
+            margin-top: 6px;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .form-group-inline {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-with-unit {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-with-unit input {
+            flex: 1;
+        }
+
+        .unit-label {
+            color: #666;
+            font-size: 0.95em;
+            white-space: nowrap;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            font-size: 1.05em;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #f8f9fa;
+        }
+
+        .unsaved-changes-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .unsaved-changes-banner.visible {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .unsaved-changes-banner .icon {
+            margin-right: 8px;
+            font-size: 1.1em;
+        }
+
+        .btn-secondary.highlight {
+            background: linear-gradient(135deg, #ffd54f 0%, #ffb300 100%);
+            color: #333;
+            border-color: #ffb300;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .btn-secondary.highlight:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ffb300 0%, #ff8f00 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 179, 0, 0.4);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 179, 0, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(255, 179, 0, 0);
+            }
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+            display: block;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            display: block;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            display: block;
+        }
+
+        .footer {
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .footer strong {
+            color: #333;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.95em;
+            color: #1565c0;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 30px 0;
+        }
+
+        @media (max-width: 768px) {
+            .form-group-inline {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Unsaved Changes Banner -->
+    <div id="unsaved-changes-banner" class="unsaved-changes-banner">
+        <span class="icon">⚠️</span>
+        <span>You have unsaved changes. Click "Save Settings" to apply your changes.</span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1><span class="header-icon">⚙️</span>Settings</h1>
+            <p class="subtitle">Configure your AI Bookmark Organizer</p>
+        </div>
+
+        <div class="content">
+            <form id="optionsForm">
+                <section class="settings-section">
+                    <h2>🤖 API Configuration</h2>
+
+                    <div class="form-group">
+                        <label for="provider">AI Provider</label>
+                        <select id="provider" name="provider">
+                            <option value="openrouter">OpenRouter (Multi-Provider)</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="claude">Claude (Anthropic)</option>
+                            <option value="grok">Grok (xAI)</option>
+                            <option value="custom">Custom (OpenAI-compatible)</option>
+                        </select>
+                        <small>Choose which AI service to use for organizing your bookmarks. OpenRouter provides unified access to multiple AI providers.</small>
+                    </div>
+
+                    <!-- Custom Endpoint Configuration -->
+                    <div id="custom-endpoint-section" style="display: none;">
+                        <div class="form-group">
+                            <label for="customEndpoint">API Endpoint URL</label>
+                            <input type="text" id="customEndpoint" name="customEndpoint" placeholder="https://api.example.com/v1">
+                            <small>Enter the base URL for your OpenAI-compatible API endpoint (e.g., https://api.together.xyz/v1, https://api.groq.com/openai/v1)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customModelName">Model Name</label>
+                            <input type="text" id="customModelName" name="customModelName" placeholder="meta-llama/Llama-3-70b-chat-hf">
+                            <small>Enter the model identifier to use with this endpoint</small>
+                        </div>
+                    </div>
+
+                    <!-- OpenRouter OAuth Login Option -->
+                    <div id="openrouter-oauth-section" style="display: none; margin-top: 20px; margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-radius: 12px; border: 2px solid #667eea;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 24px;">🔑</span>
+                            <div>
+                                <strong style="color: #667eea; font-size: 16px;">Quick Login with OpenRouter</strong>
+                                <p style="margin: 4px 0 0 0; font-size: 13px; color: #555;">No API key needed - sign in with your OpenRouter account to get started instantly!</p>
+                            </div>
+                        </div>
+                        <button type="button" id="openrouter-login-btn" class="btn btn-primary" style="width: 100%; margin-top: 12px;">
+                            🚀 Sign In with OpenRouter
+                        </button>
+                        <button type="button" id="openrouter-logout-btn" class="btn btn-secondary" style="width: 100%; margin-top: 8px; display: none;">
+                            🚪 Sign Out
+                        </button>
+                        <div id="oauth-status" style="margin-top: 12px; font-size: 13px; display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apiKey">API Key</label>
+                        <input type="password" id="apiKey" name="apiKey" placeholder="sk-..." required>
+                        <small>Your API key is stored securely in Chrome and never sent anywhere except to your chosen provider.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="model">Model (Optional)</label>
+                        <input type="text" id="model" name="model" placeholder="Leave empty for default">
+                        <small>
+                            <strong>Defaults:</strong><br>
+                            • OpenAI: gpt-4o-mini<br>
+                            • Claude: claude-3-haiku-20240307<br>
+                            • Grok: grok-beta<br>
+                            • OpenRouter: meta-llama/llama-3.3-70b-instruct:free (FREE - no credits required!)
+                        </small>
+                    </div>
+
+                    <!-- OpenRouter Free Models Help -->
+                    <div id="openrouter-models-help" style="display: none; margin-top: 16px; padding: 12px; background: #f0f7ff; border-left: 4px solid #2196f3; border-radius: 4px;">
+                        <strong style="color: #1976d2;">💡 OpenRouter Free Models</strong>
+                        <p style="margin: 8px 0 4px 0; font-size: 13px; color: #333;">Try these free models (no credits required):</p>
+                        <ul style="margin: 4px 0; padding-left: 20px; font-size: 12px; color: #555;">
+                            <li><code>meta-llama/llama-3.3-70b-instruct:free</code> (Default - Powerful & capable)</li>
+                            <li><code>google/gemini-2.0-flash-exp:free</code> (Google's latest fast model)</li>
+                            <li><code>deepseek/deepseek-chat-v3-0324:free</code> (Good reasoning)</li>
+                            <li><code>qwen/qwq-32b:free</code> (Alibaba's reasoning model)</li>
+                        </ul>
+                        <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">
+                            ⚠️ Free models limited to 50 requests/day. Add <a href="https://openrouter.ai/credits" target="_blank" style="color: #1976d2;">$10+ credits</a> for 1000 requests/day.
+                        </p>
+                    </div>
+
+                    <!-- Test Connection Section -->
+                    <div class="divider"></div>
+                    <div class="form-group">
+                        <button type="button" id="testBtn" class="btn btn-secondary" style="width: 100%;">🔍 Test Connection</button>
+                        <div id="test-status" class="status" style="margin-top: 12px;"></div>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h2>🗂️ Organization Settings</h2>
+
+                    <div class="form-group">
+                        <label>Automatic Cleanup</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="removeDuplicates" name="removeDuplicates" checked>
+                            <label for="removeDuplicates">Remove duplicate bookmarks (same URL)</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="removeEmptyFolders" name="removeEmptyFolders" checked>
+                            <label for="removeEmptyFolders">Remove empty folders after organizing</label>
+                        </div>
+                        <small>These cleanup operations run automatically during organization.</small>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoOrganize" name="autoOrganize">
+                            <label for="autoOrganize">Automatically organize new bookmarks</label>
+                        </div>
+                        <small>When enabled, new bookmarks are automatically categorized and moved to appropriate folders as you add them. Disabled by default.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="respectOrganizationHistory" name="respectOrganizationHistory">
+                            <label for="respectOrganizationHistory">Remember previous organization</label>
+                        </div>
+                        <small>When enabled, bookmarks that have been organized before will be skipped in future organization runs. This prevents re-organizing bookmarks you've manually moved. Enabled by default.</small>
+                        <button type="button" id="clearHistoryBtn" class="btn-secondary" style="margin-top: 10px;">Clear Organization History</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="form-group">
+                        <label>System Folders to Organize</label>
+                        <small style="margin-bottom: 12px; display: block;">Select which system folders should be included in organization. Unchecked folders will be skipped entirely.</small>
+                        <div id="system-folders-list" style="display: grid; gap: 8px;">
+                            <!-- System folders will be populated dynamically -->
+                            <div style="text-align: center; padding: 20px; color: #999;">
+                                Loading system folders...
+                            </div>
+                        </div>
+                        <div class="checkbox-group" style="margin-top: 12px;">
+                            <input type="checkbox" id="organizeSavedTabs" name="organizeSavedTabs">
+                            <label for="organizeSavedTabs">Organize "Saved Tabs" folders</label>
+                        </div>
+                        <small>Enable this to include browser-generated "Saved Tabs" folders in organization. Disabled by default to preserve browser session management.</small>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="form-group">
+                        <label for="ignoreFolders">Additional Folders to Ignore</label>
+                        <input type="text" id="ignoreFolders" name="ignoreFolders" placeholder="Folder1, Folder2, Folder3">
+                        <small>Comma-separated list of custom folder names to skip during organization.</small>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h2>📑 Bookmark Categories</h2>
+
+                    <div class="form-group">
+                        <label for="categories">Categories</label>
+                        <textarea id="categories" name="categories" rows="8" style="width: 100%; padding: 12px 16px; font-size: 0.95em; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Courier New', monospace; line-height: 1.6; resize: vertical;"></textarea>
+                        <small>One category per line. These categories will be used to organize your bookmarks. Add, remove, or rename categories to match your preferences.</small>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h2>⏱️ Performance Settings</h2>
+
+                    <div class="info-box" style="margin-bottom: 20px;">
+                        <strong>⚠️ Advanced Settings:</strong>
+                        These settings are optimized for most users. Only modify if you are experiencing rate limiting errors or receiving errors from your LLM provider.
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apiTimeout">API Request Timeout</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="apiTimeout" name="apiTimeout" min="30" max="600" value="180" required>
+                            <span class="unit-label">seconds</span>
+                        </div>
+                        <small>Maximum time to wait for AI API responses. Increase if you have a slow connection. (30-600 seconds)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="batchSize">Batch Processing Size</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="batchSize" name="batchSize" min="10" max="100" value="50" required>
+                            <span class="unit-label">bookmarks</span>
+                        </div>
+                        <small>Number of bookmarks to process in each batch. Smaller batches are faster but may create inconsistent categories. (10-100 bookmarks)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxTokens">Maximum Response Tokens</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="maxTokens" name="maxTokens" min="1024" max="8192" value="4096" required>
+                            <span class="unit-label">tokens</span>
+                        </div>
+                        <small>Maximum tokens for AI response. Higher values allow processing larger batches but cost more. Rate limiting is handled automatically with smart retry logic. (1024-8192 tokens)</small>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h2>🐛 Debug Settings</h2>
+
+                    <div class="form-group">
+                        <label for="logLevel">Logging Level</label>
+                        <select id="logLevel" name="logLevel">
+                            <option value="0">ERROR - Only critical errors</option>
+                            <option value="1">WARN - Errors and warnings</option>
+                            <option value="2">INFO - General information</option>
+                            <option value="3">DEBUG - Detailed debugging</option>
+                            <option value="4" selected>TRACE - Everything (verbose)</option>
+                        </select>
+                        <small>Controls how much detail is logged. Use TRACE for troubleshooting, ERROR for production.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="consoleLogging" name="consoleLogging" checked>
+                            <label for="consoleLogging">Enable console logging</label>
+                        </div>
+                        <small>Show logs in browser console (Chrome DevTools). Disable for better performance.</small>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>💡 Tip:</strong>
+                        Logs are always saved internally (last 1000 entries) and can be viewed in the extension popup, regardless of these settings.
+                    </div>
+                </section>
+            </form>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" id="resetBtn" class="btn btn-secondary">↺ Reset to Defaults</button>
+            <button type="submit" form="optionsForm" id="saveBtn" class="btn btn-primary">💾 Save Settings</button>
+            <div id="status" class="status"></div>
+        </div>
+
+        <div class="footer">
+            <p>
+                <strong>🔒 Privacy Notice:</strong> Your API key and all settings are stored locally in Chrome's secure storage.
+                No data is ever sent to third parties except for AI processing requests to your chosen provider.
+            </p>
+        </div>
+    </div>
+
+    <script src="dist/options.js"></script>
+</body>
+</html>
