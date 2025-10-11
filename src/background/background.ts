@@ -30,6 +30,34 @@ class BackgroundService {
   private static readonly MAX_ACTIVITY_LOG_SIZE = 10;
 
   /**
+   * Match a folder name against a glob-style pattern
+   * Supports * (any characters) and ? (single character)
+   */
+  private matchGlobPattern(folderName: string, pattern: string): boolean {
+    // Normalize both strings to lowercase for case-insensitive matching
+    const name = folderName.toLowerCase().trim();
+    const pat = pattern.toLowerCase().trim();
+
+    // If pattern has no wildcards, do exact match
+    if (!pat.includes('*') && !pat.includes('?')) {
+      return name === pat;
+    }
+
+    // Convert glob pattern to regex
+    // Escape special regex characters except * and ?
+    let regexPattern = pat.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+
+    // Replace glob wildcards with regex equivalents
+    regexPattern = regexPattern.replace(/\*/g, '.*').replace(/\?/g, '.');
+
+    // Anchor the pattern to match the entire string
+    regexPattern = `^${regexPattern}$`;
+
+    const regex = new RegExp(regexPattern);
+    return regex.test(name);
+  }
+
+  /**
    * Show a notification (always uses system notifications for reliability)
    */
   private async showNotification(title: string, message: string): Promise<void> {
@@ -131,6 +159,14 @@ class BackgroundService {
           logger.trace('BackgroundService', 'Handling CHECK_CONFIG');
           return await this.checkConfig();
 
+        case 'GET_CONFIG':
+          logger.trace('BackgroundService', 'Handling GET_CONFIG');
+          return await this.getConfig();
+
+        case 'UPDATE_CONFIG':
+          logger.info('BackgroundService', 'Handling UPDATE_CONFIG');
+          return await this.saveConfig(message.config);
+
         case 'SAVE_CONFIG':
           logger.info('BackgroundService', 'Handling SAVE_CONFIG');
           return await this.saveConfig(message.config);
@@ -150,6 +186,10 @@ class BackgroundService {
         case 'CLEAR_ORGANIZATION_HISTORY':
           logger.info('BackgroundService', 'Handling CLEAR_ORGANIZATION_HISTORY');
           return await this.clearOrganizationHistory();
+
+        case 'MARK_ALL_ORGANIZED':
+          logger.info('BackgroundService', 'Handling MARK_ALL_ORGANIZED');
+          return await this.markAllBookmarksAsOrganized();
 
         case 'PING':
           return { success: true };
@@ -237,16 +277,18 @@ class BackgroundService {
         logger.info('BackgroundService', `Added Trash folder (ID: ${trashFolder.id}) to preview exclusions`);
       }
 
-      // Add folders from ignoreFolders config by name
-      const ignoreFolderNames = config.organization?.ignoreFolders || [];
-      if (ignoreFolderNames.length > 0) {
-        logger.info('BackgroundService', `Preview looking for folders to ignore by name: ${ignoreFolderNames.join(', ')}`);
-        ignoreFolderNames.forEach(name => {
-          const folder = allFolders.find(f => f.title.toLowerCase().trim() === name.toLowerCase().trim());
-          if (folder && !excludedFolderIds.includes(folder.id)) {
-            excludedFolderIds.push(folder.id);
-            logger.info('BackgroundService', `Preview added '${name}' folder (ID: ${folder.id}) to exclusions`);
-          }
+      // Add folders from ignoreFolders config by name (supports wildcards)
+      const ignoreFolderPatterns = config.organization?.ignoreFolders || [];
+      if (ignoreFolderPatterns.length > 0) {
+        logger.info('BackgroundService', `Preview looking for folders matching patterns: ${ignoreFolderPatterns.join(', ')}`);
+        ignoreFolderPatterns.forEach(pattern => {
+          const matchingFolders = allFolders.filter(f => this.matchGlobPattern(f.title, pattern));
+          matchingFolders.forEach(folder => {
+            if (!excludedFolderIds.includes(folder.id)) {
+              excludedFolderIds.push(folder.id);
+              logger.info('BackgroundService', `Preview added '${folder.title}' (matched pattern '${pattern}', ID: ${folder.id}) to exclusions`);
+            }
+          });
         });
       }
 
@@ -333,16 +375,18 @@ class BackgroundService {
       logger.info('BackgroundService', `Added Trash folder (ID: ${trashFolder.id}) to exclusions`);
     }
 
-    // Add folders from ignoreFolders config by name
-    const ignoreFolderNames = config.organization?.ignoreFolders || [];
-    if (ignoreFolderNames.length > 0) {
-      logger.info('BackgroundService', `Looking for folders to ignore by name: ${ignoreFolderNames.join(', ')}`);
-      ignoreFolderNames.forEach(name => {
-        const folder = allFolders.find(f => f.title.toLowerCase().trim() === name.toLowerCase().trim());
-        if (folder && !excludedFolderIds.includes(folder.id)) {
-          excludedFolderIds.push(folder.id);
-          logger.info('BackgroundService', `Added '${name}' folder (ID: ${folder.id}) to exclusions`);
-        }
+    // Add folders from ignoreFolders config by name (supports wildcards)
+    const ignoreFolderPatterns = config.organization?.ignoreFolders || [];
+    if (ignoreFolderPatterns.length > 0) {
+      logger.info('BackgroundService', `Looking for folders matching patterns: ${ignoreFolderPatterns.join(', ')}`);
+      ignoreFolderPatterns.forEach(pattern => {
+        const matchingFolders = allFolders.filter(f => this.matchGlobPattern(f.title, pattern));
+        matchingFolders.forEach(folder => {
+          if (!excludedFolderIds.includes(folder.id)) {
+            excludedFolderIds.push(folder.id);
+            logger.info('BackgroundService', `Added '${folder.title}' (matched pattern '${pattern}', ID: ${folder.id}) to exclusions`);
+          }
+        });
       });
     }
 
@@ -503,6 +547,22 @@ class BackgroundService {
         success: true,
         isConfigured,
         provider: config.api.provider
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: String(error)
+      };
+    }
+  }
+
+  private async getConfig(): Promise<any> {
+    try {
+      const config = await this.configManager.getConfig();
+
+      return {
+        success: true,
+        config
       };
     } catch (error) {
       return {
@@ -745,6 +805,20 @@ class BackgroundService {
       return { success: true };
     } catch (error) {
       logger.error('BackgroundService', 'Failed to clear organization history', error);
+      return {
+        success: false,
+        error: String(error)
+      };
+    }
+  }
+
+  private async markAllBookmarksAsOrganized(): Promise<any> {
+    try {
+      const count = await this.configManager.markAllBookmarksAsOrganized();
+      logger.info('BackgroundService', `Marked ${count} bookmarks as organized`);
+      return { success: true, count };
+    } catch (error) {
+      logger.error('BackgroundService', 'Failed to mark all bookmarks as organized', error);
       return {
         success: false,
         error: String(error)

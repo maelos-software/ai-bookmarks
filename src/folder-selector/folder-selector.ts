@@ -36,6 +36,7 @@ class FolderSelectorController {
   private confirmFolderCount: HTMLElement;
   private confirmBookmarkCount: HTMLElement;
   private settingsBtn: HTMLButtonElement;
+  private quickSettingsBtns: NodeListOf<HTMLButtonElement>;
 
   private isOrganizeAll: boolean = false;
 
@@ -70,8 +71,10 @@ class FolderSelectorController {
     this.confirmFolderCount = document.getElementById('confirm-folder-count') as HTMLElement;
     this.confirmBookmarkCount = document.getElementById('confirm-bookmark-count') as HTMLElement;
     this.settingsBtn = document.getElementById('settings-btn') as HTMLButtonElement;
+    this.quickSettingsBtns = document.querySelectorAll('.toggle-btn') as NodeListOf<HTMLButtonElement>;
 
     this.setupEventListeners();
+    this.loadQuickSettings();
     this.loadFolders();
   }
 
@@ -87,6 +90,92 @@ class FolderSelectorController {
     this.confirmCancelBtn.addEventListener('click', () => this.hideConfirmation());
     this.confirmProceedBtn.addEventListener('click', () => this.handleConfirm());
     this.settingsBtn.addEventListener('click', () => chrome.runtime.openOptionsPage());
+
+    // Quick settings toggle buttons
+    this.quickSettingsBtns.forEach(btn => {
+      btn.addEventListener('click', () => this.handleQuickSettingChange(btn));
+    });
+  }
+
+  private async loadQuickSettings() {
+    try {
+      const response = await chrome.runtime.sendMessage({ type: 'GET_CONFIG' });
+      console.log('Quick settings config response:', response);
+
+      if (response && response.success) {
+        const config = response.config;
+
+        // Set folder mode buttons
+        const folderMode = config.organization.useExistingFolders ? 'existing' : 'create';
+        console.log('Setting folderMode to:', folderMode);
+        this.updateToggleButtons('folderMode', folderMode);
+
+        // Set history mode buttons
+        const historyMode = config.organization.respectOrganizationHistory || 'organizeAllOnly';
+        console.log('Setting historyMode to:', historyMode);
+        this.updateToggleButtons('historyMode', historyMode);
+      }
+    } catch (error) {
+      console.error('Failed to load quick settings:', error);
+    }
+  }
+
+  private updateToggleButtons(setting: string, value: string) {
+    console.log(`Updating toggle buttons for ${setting} = ${value}`);
+    let foundButtons = 0;
+    this.quickSettingsBtns.forEach(btn => {
+      if (btn.dataset.setting === setting) {
+        foundButtons++;
+        const isActive = btn.dataset.value === value;
+        console.log(`Button ${btn.dataset.value}: ${isActive ? 'ACTIVE' : 'inactive'}`);
+        if (isActive) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      }
+    });
+    console.log(`Found ${foundButtons} buttons for setting ${setting}`);
+  }
+
+  private async handleQuickSettingChange(btn: HTMLButtonElement) {
+    const setting = btn.dataset.setting;
+    const value = btn.dataset.value;
+
+    if (!setting || !value) return;
+
+    try {
+      // Get current config
+      const response = await chrome.runtime.sendMessage({ type: 'GET_CONFIG' });
+      if (!response || !response.success) {
+        throw new Error('Failed to get current config');
+      }
+
+      const config = response.config;
+
+      // Update the specific setting
+      if (setting === 'folderMode') {
+        config.organization.useExistingFolders = (value === 'existing');
+      } else if (setting === 'historyMode') {
+        config.organization.respectOrganizationHistory = value as 'always' | 'never' | 'organizeAllOnly';
+      }
+
+      // Save updated config
+      const saveResponse = await chrome.runtime.sendMessage({
+        type: 'UPDATE_CONFIG',
+        config: config
+      });
+
+      if (saveResponse && saveResponse.success) {
+        // Update UI
+        this.updateToggleButtons(setting, value);
+      } else {
+        throw new Error('Failed to save config');
+      }
+    } catch (error) {
+      console.error('Failed to update quick setting:', error);
+      this.showStatus('Failed to update setting', 'error');
+    }
   }
 
   private async loadFolders() {

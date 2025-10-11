@@ -23,8 +23,10 @@ class OptionsController {
   private ignoreFoldersInput: HTMLInputElement;
   private organizeSavedTabsCheckbox: HTMLInputElement;
   private autoOrganizeCheckbox: HTMLInputElement;
+  private folderModeRadios: NodeListOf<HTMLInputElement>;
   private respectOrganizationHistoryRadios: NodeListOf<HTMLInputElement>;
   private clearHistoryBtn: HTMLButtonElement;
+  private markAllOrganizedBtn: HTMLButtonElement;
   private logLevelSelect: HTMLSelectElement;
   private consoleLoggingCheckbox: HTMLInputElement;
   private saveBtn: HTMLButtonElement;
@@ -40,6 +42,7 @@ class OptionsController {
   private oauthStatusDiv: HTMLElement;
   private openrouterModelsHelp: HTMLElement;
   private authService: OpenRouterAuthService;
+  private apiKeySection: HTMLElement;
   private customEndpointSection: HTMLElement;
   private customEndpointInput: HTMLInputElement;
   private customModelNameInput: HTMLInputElement;
@@ -60,8 +63,10 @@ class OptionsController {
     this.ignoreFoldersInput = document.getElementById('ignoreFolders') as HTMLInputElement;
     this.organizeSavedTabsCheckbox = document.getElementById('organizeSavedTabs') as HTMLInputElement;
     this.autoOrganizeCheckbox = document.getElementById('autoOrganize') as HTMLInputElement;
+    this.folderModeRadios = document.querySelectorAll('input[name="folderMode"]') as NodeListOf<HTMLInputElement>;
     this.respectOrganizationHistoryRadios = document.querySelectorAll('input[name="respectOrganizationHistory"]') as NodeListOf<HTMLInputElement>;
     this.clearHistoryBtn = document.getElementById('clearHistoryBtn') as HTMLButtonElement;
+    this.markAllOrganizedBtn = document.getElementById('markAllOrganizedBtn') as HTMLButtonElement;
     this.logLevelSelect = document.getElementById('logLevel') as HTMLSelectElement;
     this.consoleLoggingCheckbox = document.getElementById('consoleLogging') as HTMLInputElement;
     this.saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
@@ -75,6 +80,7 @@ class OptionsController {
     this.openrouterLogoutBtn = document.getElementById('openrouter-logout-btn') as HTMLButtonElement;
     this.oauthStatusDiv = document.getElementById('oauth-status') as HTMLElement;
     this.openrouterModelsHelp = document.getElementById('openrouter-models-help') as HTMLElement;
+    this.apiKeySection = document.getElementById('api-key-section') as HTMLElement;
     this.customEndpointSection = document.getElementById('custom-endpoint-section') as HTMLElement;
     this.customEndpointInput = document.getElementById('customEndpoint') as HTMLInputElement;
     this.customModelNameInput = document.getElementById('customModelName') as HTMLInputElement;
@@ -99,6 +105,10 @@ class OptionsController {
       this.handleClearHistory();
     });
 
+    this.markAllOrganizedBtn.addEventListener('click', () => {
+      this.handleMarkAllOrganized();
+    });
+
     this.openrouterLoginBtn.addEventListener('click', () => {
       this.handleOpenRouterLogin();
     });
@@ -106,6 +116,9 @@ class OptionsController {
     this.openrouterLogoutBtn.addEventListener('click', () => {
       this.handleOpenRouterLogout();
     });
+
+    // Setup collapsible Advanced Settings
+    this.setupCollapsibleSection();
 
     this.providerSelect.addEventListener('change', () => {
       this.updateModelPlaceholder();
@@ -137,6 +150,13 @@ class OptionsController {
     this.removeEmptyFoldersCheckbox.addEventListener('change', () => this.markUnsavedChanges());
     this.organizeSavedTabsCheckbox.addEventListener('change', () => this.markUnsavedChanges());
     this.autoOrganizeCheckbox.addEventListener('change', () => this.markUnsavedChanges());
+    this.folderModeRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        this.markUnsavedChanges();
+        this.updateFolderModeUI();
+        this.updateRadioCardStates();
+      });
+    });
     this.respectOrganizationHistoryRadios.forEach(radio => {
       radio.addEventListener('change', () => {
         this.markUnsavedChanges();
@@ -174,6 +194,37 @@ class OptionsController {
         card.classList.remove('selected');
       }
     });
+  }
+
+  /**
+   * Update UI based on folder mode selection (enable/disable categories textarea)
+   */
+  private updateFolderModeUI() {
+    let useExisting = false;
+    this.folderModeRadios.forEach(radio => {
+      if (radio.checked && radio.value === 'existing') {
+        useExisting = true;
+      }
+    });
+
+    // Gray out and disable categories textarea when using existing folders
+    this.categoriesTextarea.disabled = useExisting;
+    this.categoriesTextarea.style.opacity = useExisting ? '0.5' : '1';
+    this.categoriesTextarea.style.cursor = useExisting ? 'not-allowed' : 'text';
+
+    // Update help text
+    const helpText = document.getElementById('categories-help');
+    if (helpText) {
+      if (useExisting) {
+        helpText.textContent = 'Categories are not used when "Use Existing Folders Only" mode is selected. Your existing folder structure will be used instead.';
+        helpText.style.fontStyle = 'italic';
+        helpText.style.color = '#999';
+      } else {
+        helpText.textContent = 'One category per line. These categories will be used to organize your bookmarks. Add, remove, or rename categories to match your preferences.';
+        helpText.style.fontStyle = 'normal';
+        helpText.style.color = '';
+      }
+    }
   }
 
   private async loadSystemFolders() {
@@ -259,6 +310,12 @@ class OptionsController {
           this.organizeSavedTabsCheckbox.checked = config.organization.organizeSavedTabs === true;
           this.autoOrganizeCheckbox.checked = config.organization.autoOrganize === true;
 
+          // Set folder mode radio button
+          const folderMode = config.organization.useExistingFolders ? 'existing' : 'create';
+          this.folderModeRadios.forEach(radio => {
+            radio.checked = radio.value === folderMode;
+          });
+
           // Set radio button based on config value (with backward compatibility)
           const historyValue = config.organization.respectOrganizationHistory;
           let selectedValue: string;
@@ -274,6 +331,9 @@ class OptionsController {
 
           // Update radio card visual states after setting values
           this.updateRadioCardStates();
+
+          // Update folder mode UI (enable/disable categories textarea)
+          this.updateFolderModeUI();
 
           // Apply excluded system folder IDs
           const excludedIds = new Set(config.organization.excludedSystemFolderIds || []);
@@ -402,6 +462,14 @@ class OptionsController {
     const organizeSavedTabs = this.organizeSavedTabsCheckbox.checked;
     const autoOrganize = this.autoOrganizeCheckbox.checked;
 
+    // Get folder mode from radio buttons
+    let useExistingFolders = false;
+    this.folderModeRadios.forEach(radio => {
+      if (radio.checked && radio.value === 'existing') {
+        useExistingFolders = true;
+      }
+    });
+
     // Get selected radio button value
     let respectOrganizationHistory: 'always' | 'never' | 'organizeAllOnly' = 'organizeAllOnly';
     this.respectOrganizationHistoryRadios.forEach(radio => {
@@ -472,7 +540,8 @@ class OptionsController {
           renamedSpeedDialFolderIds: currentConfig?.organization?.renamedSpeedDialFolderIds || [],
           organizeSavedTabs,
           autoOrganize,
-          respectOrganizationHistory
+          respectOrganizationHistory,
+          useExistingFolders
         },
         debug: {
           logLevel,
@@ -545,6 +614,11 @@ class OptionsController {
       this.organizeSavedTabsCheckbox.checked = false;
       this.autoOrganizeCheckbox.checked = false;
 
+      // Set default folder mode (create)
+      this.folderModeRadios.forEach(radio => {
+        radio.checked = radio.value === 'create';
+      });
+
       // Set default radio button
       this.respectOrganizationHistoryRadios.forEach(radio => {
         radio.checked = radio.value === 'organizeAllOnly';
@@ -555,6 +629,8 @@ class OptionsController {
 
       this.updateModelPlaceholder();
       this.toggleOpenRouterOAuthSection();
+      this.updateRadioCardStates();
+      this.updateFolderModeUI();
       this.markUnsavedChanges();
       this.showStatus('✓ Reset to defaults! (API key preserved) Click Save to apply changes.', 'success');
     } catch (error) {
@@ -613,7 +689,8 @@ class OptionsController {
     if (isOpenRouter) {
       this.updateOAuthStatus();
     } else {
-      // Re-enable API key field for non-OpenRouter providers
+      // Re-enable and show API key field for non-OpenRouter providers
+      this.apiKeySection.style.display = 'block';
       this.apiKeyInput.disabled = false;
       this.apiKeyInput.placeholder = 'sk-...';
     }
@@ -627,12 +704,13 @@ class OptionsController {
       this.openrouterLogoutBtn.style.display = 'block';
       this.oauthStatusDiv.style.display = 'block';
       this.oauthStatusDiv.innerHTML = '<span style="color: #2e7d32;">✓ Signed in with OpenRouter</span>';
+      this.apiKeySection.style.display = 'none';  // Hide API key field when using OAuth
       this.apiKeyInput.disabled = true;
-      this.apiKeyInput.placeholder = 'Using OAuth - signed in successfully';
     } else {
       this.openrouterLoginBtn.style.display = 'block';
       this.openrouterLogoutBtn.style.display = 'none';
       this.oauthStatusDiv.style.display = 'none';
+      this.apiKeySection.style.display = 'block';  // Show API key field when not using OAuth
       this.apiKeyInput.disabled = false;
       this.apiKeyInput.placeholder = 'sk-or-...';
     }
@@ -722,6 +800,52 @@ class OptionsController {
     } finally {
       this.clearHistoryBtn.disabled = false;
     }
+  }
+
+  private async handleMarkAllOrganized() {
+    if (!confirm('Mark all bookmarks as organized? This will prevent the AI from reorganizing any of your existing bookmarks until you clear the history.')) {
+      return;
+    }
+
+    this.markAllOrganizedBtn.disabled = true;
+
+    try {
+      const response = await chrome.runtime.sendMessage({ type: 'MARK_ALL_ORGANIZED' });
+
+      if (response && response.success) {
+        this.showStatus(`✓ Successfully marked ${response.count} bookmarks as organized`, 'success');
+      } else {
+        throw new Error(response?.error || 'Failed to mark bookmarks as organized');
+      }
+    } catch (error) {
+      console.error('Mark all organized error:', error);
+      this.showStatus(`Error marking bookmarks as organized: ${error}`, 'error');
+    } finally {
+      this.markAllOrganizedBtn.disabled = false;
+    }
+  }
+
+  private setupCollapsibleSection() {
+    const header = document.getElementById('advanced-settings-header');
+    const content = document.getElementById('advanced-settings-content');
+
+    if (!header || !content) {
+      return;
+    }
+
+    header.addEventListener('click', () => {
+      const isCollapsed = header.classList.contains('collapsed');
+
+      if (isCollapsed) {
+        // Expand
+        header.classList.remove('collapsed');
+        content.classList.remove('collapsed');
+      } else {
+        // Collapse
+        header.classList.add('collapsed');
+        content.classList.add('collapsed');
+      }
+    });
   }
 }
 

@@ -480,19 +480,50 @@ Think: "Can I use an existing folder?" FIRST, then "How can I create the FEWEST 
   /**
    * PHASE 2: Assign bookmarks to approved folders
    * This replaces organizeBookmarks - it doesn't create folders, only assigns
+   *
+   * @param allowKeepCurrent - If true, allows bookmarks to stay in their current folder if it's a good fit
    */
   async assignToFolders(
     bookmarks: Bookmark[],
-    approvedFolders: string[]
+    approvedFolders: string[],
+    allowKeepCurrent: boolean = false
   ): Promise<OrganizationPlan> {
-    logger.info('LLMService', `Assigning ${bookmarks.length} bookmarks to ${approvedFolders.length} approved folders`);
+    logger.info('LLMService', `Assigning ${bookmarks.length} bookmarks to ${approvedFolders.length} approved folders (allowKeepCurrent: ${allowKeepCurrent})`);
 
     const bookmarkList = bookmarks.map((b, i) => {
       const domain = b.url ? new URL(b.url).hostname.replace('www.', '') : '';
       return `${i + 1}. ${b.title} [${domain}]`;
     }).join('\n');
 
-    const prompt = `Assign these ${bookmarks.length} bookmarks to the approved folders.
+    let prompt: string;
+
+    if (allowKeepCurrent) {
+      // More lenient mode for "use existing folders" - allows keeping bookmarks where they are
+      prompt = `Review these ${bookmarks.length} bookmarks and decide if they should be moved to a better folder or stay where they are.
+
+APPROVED FOLDERS (you can ONLY move bookmarks to these folders):
+${approvedFolders.map((f, i) => `${i + 1}. ${f}`).join('\n')}
+
+Bookmarks to review:
+${bookmarkList}
+
+For each bookmark, decide:
+- If there's a CLEARLY BETTER folder from the approved list, move it there
+- If the bookmark doesn't fit well in any approved folder, use "KEEP_CURRENT" to leave it where it is
+
+Return COMPACT JSON with ALL ${bookmarks.length} bookmarks:
+{
+  "suggestions": [{"i": 1, "f": "Folder Name or KEEP_CURRENT"}]
+}
+
+CRITICAL RULES:
+1. You MUST include ALL ${bookmarks.length} bookmarks - NO EXCEPTIONS
+2. Use folder names from the APPROVED FOLDERS list above, OR use "KEEP_CURRENT"
+3. Only move a bookmark if there's a CLEARLY BETTER match - when in doubt, use "KEEP_CURRENT"
+4. Use "i" for index (1-${bookmarks.length}), "f" for folder name or "KEEP_CURRENT"`;
+    } else {
+      // Standard mode - must assign to approved folders
+      prompt = `Assign these ${bookmarks.length} bookmarks to the approved folders.
 
 APPROVED FOLDERS (you MUST use ONLY these, NO other folders allowed):
 ${approvedFolders.map((f, i) => `${i + 1}. ${f}`).join('\n')}
@@ -512,6 +543,7 @@ CRITICAL RULES:
 2. You can ONLY use folder names from the APPROVED FOLDERS list above
 3. DO NOT create new folders or use any other folder names
 4. Use "i" for index (1-${bookmarks.length}), "f" for folder name`;
+    }
 
     // Use retry logic for rate limiting
     const maxRetries = 5;
@@ -522,17 +554,30 @@ CRITICAL RULES:
         const { content, usage } = await this.callLLM(prompt);
         const plan = this.parseResponse(content, bookmarks);
 
-        // Validate that all folder names are in approved list
+        // Validate that all folder names are in approved list (or KEEP_CURRENT if allowed)
         const invalidFolders = plan.suggestions
           .map(s => s.folderName)
-          .filter(f => !approvedFolders.includes(f));
+          .filter(f => {
+            if (allowKeepCurrent && f === 'KEEP_CURRENT') {
+              return false; // KEEP_CURRENT is valid in this mode
+            }
+            return !approvedFolders.includes(f);
+          });
 
         if (invalidFolders.length > 0) {
           logger.warn('LLMService', `LLM used unapproved folders:`, invalidFolders);
-          // Map to closest approved folder or first one
+          // Map to closest approved folder or KEEP_CURRENT/first folder depending on mode
           plan.suggestions.forEach(s => {
-            if (!approvedFolders.includes(s.folderName)) {
-              s.folderName = approvedFolders[0]; // Fallback to first approved folder
+            const isValid = allowKeepCurrent
+              ? (s.folderName === 'KEEP_CURRENT' || approvedFolders.includes(s.folderName))
+              : approvedFolders.includes(s.folderName);
+
+            if (!isValid) {
+              if (allowKeepCurrent) {
+                s.folderName = 'KEEP_CURRENT'; // Fallback to keeping current in lenient mode
+              } else {
+                s.folderName = approvedFolders[0]; // Fallback to first approved folder in strict mode
+              }
             }
           });
         }

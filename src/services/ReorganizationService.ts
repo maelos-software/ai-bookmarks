@@ -145,6 +145,11 @@ export class ReorganizationService {
     const emptyFolders: EmptyFolderRemoved[] = [];
 
     try {
+      // Get configuration to check useExistingFolders mode
+      const config = await this.configManager.getConfig();
+      const useExistingFolders = config.organization.useExistingFolders;
+      logger.info('ReorganizationService', `Use Existing Folders mode: ${useExistingFolders}`);
+
       // Step 0: Remove duplicate bookmarks
       logger.info('ReorganizationService', 'Step 0: Removing duplicate bookmarks');
       progressCallback?.(0, 100, 'Removing duplicate bookmarks...');
@@ -234,13 +239,29 @@ export class ReorganizationService {
         }
       }
 
-      // Step 3: TWO-PHASE APPROACH
-      // Use configured categories (no discovery phase needed)
-      logger.info('ReorganizationService', 'Step 3: Using configured categories');
-      progressCallback?.(0, bookmarks.length, 'Using configured categories...');
+      // Step 3: Determine folders to use based on mode
+      let approvedFolders: string[];
 
-      const approvedFolders = this.categories;
-      logger.info('ReorganizationService', `Using ${approvedFolders.length} configured categories:`, approvedFolders);
+      if (useExistingFolders) {
+        // Use ONLY existing folders - no new folder creation
+        logger.info('ReorganizationService', 'Step 3: Using existing folders only (no new folders will be created)');
+        progressCallback?.(0, bookmarks.length, 'Using existing folder structure...');
+        approvedFolders = existingFolderNames;
+
+        if (approvedFolders.length === 0) {
+          logger.error('ReorganizationService', 'No existing folders found. Cannot organize with useExistingFolders=true');
+          errors.push('No existing folders found. Please create some folders first or disable "Use Existing Folders" mode.');
+          throw new Error('No existing folders available for organization');
+        }
+
+        logger.info('ReorganizationService', `Using ${approvedFolders.length} existing folders:`, approvedFolders);
+      } else {
+        // Use configured categories (normal mode - can create new folders)
+        logger.info('ReorganizationService', 'Step 3: Using configured categories (can create new folders)');
+        progressCallback?.(0, bookmarks.length, 'Using configured categories...');
+        approvedFolders = this.categories;
+        logger.info('ReorganizationService', `Using ${approvedFolders.length} configured categories:`, approvedFolders);
+      }
 
       // Assign bookmarks to approved folders in batches
       logger.info('ReorganizationService', 'Step 4: PHASE 2 - Assigning bookmarks to approved folders');
@@ -259,7 +280,8 @@ export class ReorganizationService {
 
         try {
           // Assign bookmarks to approved folders only (no new folder creation)
-          const plan = await this.llmService.assignToFolders(batch, approvedFolders);
+          // In useExistingFolders mode, allow bookmarks to stay where they are if they don't fit well
+          const plan = await this.llmService.assignToFolders(batch, approvedFolders, useExistingFolders);
           allPlans.push(plan);
 
           // Update folder sizes based on this batch's assignments
@@ -326,10 +348,24 @@ export class ReorganizationService {
       });
 
       // Only create folders that have bookmarks AND don't exist yet
-      const foldersToCreate = Array.from(foldersWithBookmarks).filter(f => !existingFolderNames.includes(f));
+      let foldersToCreate: string[];
 
-      logger.info('ReorganizationService', `Need to create ${foldersToCreate.length} folders (only folders with bookmarks):`, foldersToCreate);
-      logger.debug('ReorganizationService', `Folders in assignment but not being created: ${approvedFolders.filter(f => !foldersWithBookmarks.has(f)).join(', ') || 'none'}`);
+      if (useExistingFolders) {
+        // Don't create any new folders in useExistingFolders mode
+        foldersToCreate = [];
+        logger.info('ReorganizationService', 'Skipping folder creation (useExistingFolders mode)');
+
+        // Verify all assigned folders exist
+        const missingFolders = Array.from(foldersWithBookmarks).filter(f => !existingFolderNames.includes(f));
+        if (missingFolders.length > 0) {
+          logger.warn('ReorganizationService', `LLM tried to use non-existent folders: ${missingFolders.join(', ')}`);
+          // These bookmarks will be skipped during the move phase
+        }
+      } else {
+        foldersToCreate = Array.from(foldersWithBookmarks).filter(f => !existingFolderNames.includes(f));
+        logger.info('ReorganizationService', `Need to create ${foldersToCreate.length} folders (only folders with bookmarks):`, foldersToCreate);
+        logger.debug('ReorganizationService', `Folders in assignment but not being created: ${approvedFolders.filter(f => !foldersWithBookmarks.has(f)).join(', ') || 'none'}`);
+      }
 
       // Step 6: Create all approved folders that don't exist yet
       logger.info('ReorganizationService', 'Step 6: Creating folders');
@@ -377,6 +413,12 @@ export class ReorganizationService {
           try {
             const bookmark = bookmarkMap.get(suggestion.bookmarkId);
             if (!bookmark) continue;
+
+            // Skip bookmarks that should stay in their current location
+            if (suggestion.folderName === 'KEEP_CURRENT') {
+              logger.debug('ReorganizationService', `Keeping bookmark "${bookmark.title}" in current location`);
+              continue;
+            }
 
             const fromFolderName = bookmark.parentId ? folderNamesMap.get(bookmark.parentId) || 'Unknown' : 'Root';
 
@@ -581,6 +623,8 @@ export class ReorganizationService {
 
       const config = await this.configManager.getConfig();
       const historyMode = config.organization.respectOrganizationHistory;
+      const useExistingFolders = config.organization.useExistingFolders;
+      logger.info('ReorganizationService', `Use Existing Folders mode: ${useExistingFolders}`);
 
       // Only skip bookmarks based on history if mode is 'always'
       // 'organizeAllOnly' means skip only during full organization, not specific folders
@@ -628,10 +672,27 @@ export class ReorganizationService {
 
       logger.info('ReorganizationService', `Found ${existingFolderNames.length} root-level folders`);
 
-      // Step 2: Use configured categories
-      logger.info('ReorganizationService', 'Step 2: Using configured categories');
-      const approvedFolders = this.categories;
-      logger.info('ReorganizationService', `Using ${approvedFolders.length} configured categories`);
+      // Step 2: Determine folders to use based on mode
+      let approvedFolders: string[];
+
+      if (useExistingFolders) {
+        // Use ONLY existing folders
+        logger.info('ReorganizationService', 'Step 2: Using existing folders only (no new folders will be created)');
+        approvedFolders = existingFolderNames;
+
+        if (approvedFolders.length === 0) {
+          logger.error('ReorganizationService', 'No existing folders found. Cannot organize with useExistingFolders=true');
+          errors.push('No existing folders found. Please create some folders first or disable "Use Existing Folders" mode.');
+          throw new Error('No existing folders available for organization');
+        }
+
+        logger.info('ReorganizationService', `Using ${approvedFolders.length} existing folders:`, approvedFolders);
+      } else {
+        // Use configured categories
+        logger.info('ReorganizationService', 'Step 2: Using configured categories');
+        approvedFolders = this.categories;
+        logger.info('ReorganizationService', `Using ${approvedFolders.length} configured categories`);
+      }
 
       // Step 3: Assign bookmarks to folders in batches
       logger.info('ReorganizationService', 'Step 3: Assigning bookmarks to folders');
@@ -646,7 +707,8 @@ export class ReorganizationService {
         progressCallback?.(i, filteredBookmarks.length, `Assigning batch ${batchNum}/${totalBatches}`);
 
         try {
-          const plan = await this.llmService.assignToFolders(batch, approvedFolders);
+          // In useExistingFolders mode, allow bookmarks to stay where they are if they don't fit well
+          const plan = await this.llmService.assignToFolders(batch, approvedFolders, useExistingFolders);
           allPlans.push(plan);
           logger.debug('ReorganizationService', `Batch ${batchNum} completed successfully`);
         } catch (error) {
@@ -687,8 +749,22 @@ export class ReorganizationService {
         plan.suggestions.forEach(s => foldersWithBookmarks.add(s.folderName));
       });
 
-      const foldersToCreate = Array.from(foldersWithBookmarks).filter(f => !existingFolderNames.includes(f));
-      logger.info('ReorganizationService', `Need to create ${foldersToCreate.length} folders`);
+      let foldersToCreate: string[];
+
+      if (useExistingFolders) {
+        // Don't create any new folders
+        foldersToCreate = [];
+        logger.info('ReorganizationService', 'Skipping folder creation (useExistingFolders mode)');
+
+        // Verify all assigned folders exist
+        const missingFolders = Array.from(foldersWithBookmarks).filter(f => !existingFolderNames.includes(f));
+        if (missingFolders.length > 0) {
+          logger.warn('ReorganizationService', `LLM tried to use non-existent folders: ${missingFolders.join(', ')}`);
+        }
+      } else {
+        foldersToCreate = Array.from(foldersWithBookmarks).filter(f => !existingFolderNames.includes(f));
+        logger.info('ReorganizationService', `Need to create ${foldersToCreate.length} folders`);
+      }
 
       const folderIdMap = new Map<string, string>();
 
@@ -718,6 +794,12 @@ export class ReorganizationService {
           const bookmark = bookmarkMap.get(suggestion.bookmarkId);
           if (!bookmark) {
             logger.warn('ReorganizationService', `Bookmark ${suggestion.bookmarkId} not found in map`);
+            continue;
+          }
+
+          // Skip bookmarks that should stay in their current location
+          if (suggestion.folderName === 'KEEP_CURRENT') {
+            logger.debug('ReorganizationService', `Keeping bookmark "${bookmark.title}" in current location`);
             continue;
           }
 

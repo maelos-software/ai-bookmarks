@@ -74,6 +74,80 @@
             font-weight: 600;
         }
 
+        /* Collapsible Advanced Settings */
+        .collapsible-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+            overflow: hidden;
+        }
+
+        .collapsible-header {
+            padding: 20px 30px;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background: #f0f2f5;
+        }
+
+        .collapsible-header h2 {
+            font-size: 1.5em;
+            color: #667eea;
+            margin: 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .collapsible-toggle {
+            font-size: 1.5em;
+            color: #667eea;
+            transition: transform 0.3s;
+        }
+
+        .collapsible-header.collapsed .collapsible-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding: 0 30px 30px 30px;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .collapsible-subsection {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .collapsible-subsection:last-child {
+            margin-bottom: 0;
+        }
+
+        .collapsible-subsection h3 {
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
         .form-group {
             margin-bottom: 25px;
         }
@@ -443,7 +517,7 @@
                         <div id="oauth-status" style="margin-top: 12px; font-size: 13px; display: none;"></div>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" id="api-key-section">
                         <label for="apiKey">API Key</label>
                         <input type="password" id="apiKey" name="apiKey" placeholder="sk-..." required>
                         <small>Your API key is stored securely in Chrome and never sent anywhere except to your chosen provider.</small>
@@ -485,52 +559,89 @@
                 </section>
 
                 <section class="settings-section">
-                    <h2>🗂️ Organization Settings</h2>
+                    <h2>📑 Bookmark Categories</h2>
+
+                    <div class="info-box" style="margin-bottom: 20px;">
+                        <strong>🎯 How Organization Works</strong>
+                        <p style="margin: 8px 0 4px 0; font-size: 13px; line-height: 1.6;">
+                            This extension uses AI to intelligently sort your bookmarks into folders. You have two approaches:
+                        </p>
+                        <ul style="margin: 4px 0 8px 0; padding-left: 24px; font-size: 13px; line-height: 1.6;">
+                            <li><strong>Create Folders:</strong> AI creates new folders based on your predefined categories below. This ensures <em>consistent folder structure</em> and prevents the AI from inventing new folders each time, which would result in chaos.</li>
+                            <li><strong>Use Existing Folders:</strong> AI organizes bookmarks into your existing folder structure. Bookmarks that don't fit well will be left in their current location rather than forced into an inappropriate folder.</li>
+                        </ul>
+                        <p style="margin: 4px 0 0 0; font-size: 12px; color: #666;">
+                            💡 <strong>Tip:</strong> Pre-defined categories maintain organizational consistency across reorganizations, preventing endless folder proliferation and restructuring.
+                        </p>
+                    </div>
 
                     <div class="form-group">
-                        <label>Automatic Cleanup</label>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="removeDuplicates" name="removeDuplicates" checked>
-                            <label for="removeDuplicates">Remove duplicate bookmarks (same URL)</label>
+                        <label>Organization Mode</label>
+                        <div style="margin-top: 16px;">
+                            <label class="radio-option-card" for="folderModeCreate">
+                                <div class="radio-option-header">
+                                    <input type="radio" id="folderModeCreate" name="folderMode" value="create" checked>
+                                    <span class="radio-option-title">Automatically Create Folders</span>
+                                    <span class="radio-option-badge">Recommended</span>
+                                </div>
+                                <div class="radio-option-description">
+                                    AI will create new folders based on the categories you define below. Best for starting fresh or letting AI organize your bookmarks from scratch.
+                                </div>
+                            </label>
+
+                            <label class="radio-option-card" for="folderModeExisting">
+                                <div class="radio-option-header">
+                                    <input type="radio" id="folderModeExisting" name="folderMode" value="existing">
+                                    <span class="radio-option-title">Use Existing Folders Only</span>
+                                </div>
+                                <div class="radio-option-description">
+                                    AI will organize bookmarks into your existing folder structure without creating new folders. Perfect if you already have a well-organized folder system you want to maintain.
+                                </div>
+                            </label>
                         </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="removeEmptyFolders" name="removeEmptyFolders" checked>
-                            <label for="removeEmptyFolders">Remove empty folders after organizing</label>
-                        </div>
-                        <small>These cleanup operations run automatically during organization.</small>
                     </div>
 
                     <div class="divider"></div>
 
                     <div class="form-group">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="autoOrganize" name="autoOrganize">
-                            <label for="autoOrganize">Automatically organize new bookmarks</label>
-                        </div>
-                        <small>When enabled, new bookmarks are automatically categorized and moved to appropriate folders as you add them. Disabled by default.</small>
+                        <label for="categories">Categories</label>
+                        <textarea id="categories" name="categories" rows="8" style="width: 100%; padding: 12px 16px; font-size: 0.95em; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Courier New', monospace; line-height: 1.6; resize: vertical;"></textarea>
+                        <small id="categories-help">One category per line. These categories will be used to organize your bookmarks. Add, remove, or rename categories to match your preferences.</small>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h2>📋 Organization History Management</h2>
+
+                    <div class="info-box" style="margin-bottom: 20px;">
+                        <strong>💡 What is Organization History?</strong>
+                        <p style="margin: 8px 0 4px 0; font-size: 13px; line-height: 1.6;">
+                            The extension remembers which bookmarks it has organized to avoid moving them again unnecessarily.
+                            Use these settings and tools to control that behavior.
+                        </p>
                     </div>
 
                     <div class="form-group">
                         <label>Remember Previous Organization</label>
                         <div style="margin-top: 16px;">
-                            <label class="radio-option-card" for="historyOrganizeAllOnly">
+                            <label class="radio-option-card" for="historyAlways">
                                 <div class="radio-option-header">
-                                    <input type="radio" id="historyOrganizeAllOnly" name="respectOrganizationHistory" value="organizeAllOnly" checked>
-                                    <span class="radio-option-title">Only During "Organize All"</span>
+                                    <input type="radio" id="historyAlways" name="respectOrganizationHistory" value="always" checked>
+                                    <span class="radio-option-title">Always Remember</span>
                                     <span class="radio-option-badge">Recommended</span>
                                 </div>
                                 <div class="radio-option-description">
-                                    Skip previously organized bookmarks when using "Organize All", but always reorganize when you explicitly select specific folders.
+                                    Skip previously organized bookmarks in all operations (both "Organize All" and specific folder selection). Best for preventing re-organization of bookmarks you've already placed.
                                 </div>
                             </label>
 
-                            <label class="radio-option-card" for="historyAlways">
+                            <label class="radio-option-card" for="historyOrganizeAllOnly">
                                 <div class="radio-option-header">
-                                    <input type="radio" id="historyAlways" name="respectOrganizationHistory" value="always">
-                                    <span class="radio-option-title">Always Remember</span>
+                                    <input type="radio" id="historyOrganizeAllOnly" name="respectOrganizationHistory" value="organizeAllOnly">
+                                    <span class="radio-option-title">Only During "Organize All"</span>
                                 </div>
                                 <div class="radio-option-description">
-                                    Skip previously organized bookmarks in all operations (both "Organize All" and specific folder selection).
+                                    Skip previously organized bookmarks when using "Organize All", but always reorganize when you explicitly select specific folders.
                                 </div>
                             </label>
 
@@ -544,7 +655,58 @@
                                 </div>
                             </label>
                         </div>
-                        <button type="button" id="clearHistoryBtn" class="btn-secondary" style="margin-top: 20px;">Clear Organization History</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoOrganize" name="autoOrganize">
+                            <label for="autoOrganize">Automatically organize new bookmarks</label>
+                        </div>
+                        <small>When enabled, new bookmarks are automatically categorized and moved to appropriate folders as you add them. These bookmarks are also marked in the organization history. Disabled by default.</small>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="form-group">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                                <button type="button" id="markAllOrganizedBtn" class="btn-secondary" style="width: 100%; padding: 12px;">
+                                    <strong>Mark All as Organized</strong>
+                                </button>
+                                <small style="display: block; margin-top: 8px; color: #666;">
+                                    Use this if you've manually organized your bookmarks and want the extension to remember them.
+                                    This prevents the AI from reorganizing bookmarks you've already placed where you want them.
+                                </small>
+                            </div>
+                            <div>
+                                <button type="button" id="clearHistoryBtn" class="btn-secondary" style="width: 100%; padding: 12px;">
+                                    <strong>Clear Organization History</strong>
+                                </button>
+                                <small style="display: block; margin-top: 8px; color: #666;">
+                                    Clears the memory of which bookmarks have been organized.
+                                    Use this to start fresh and allow the AI to reorganize everything from scratch.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h2>🗂️ Additional Organization Settings</h2>
+
+                    <div class="form-group">
+                        <label>Automatic Cleanup</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="removeDuplicates" name="removeDuplicates" checked>
+                            <label for="removeDuplicates">Remove duplicate bookmarks (same URL)</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="removeEmptyFolders" name="removeEmptyFolders" checked>
+                            <label for="removeEmptyFolders">Remove empty folders after organizing</label>
+                        </div>
+                        <small>These cleanup operations run automatically during organization.</small>
                     </div>
 
                     <div class="divider"></div>
@@ -568,86 +730,90 @@
                     <div class="divider"></div>
 
                     <div class="form-group">
-                        <label for="ignoreFolders">Additional Folders to Ignore</label>
-                        <input type="text" id="ignoreFolders" name="ignoreFolders" placeholder="Folder1, Folder2, Folder3">
-                        <small>Comma-separated list of custom folder names to skip during organization.</small>
+                        <label for="ignoreFolders">Custom Folders to Ignore</label>
+                        <input type="text" id="ignoreFolders" name="ignoreFolders" placeholder="MyFolder, Project*, *-Archive">
+                        <small>
+                            Comma-separated list of folder names or patterns to skip during organization.
+                            <strong>Supports wildcards:</strong> Use <code>*</code> for any characters (e.g., <code>Project*</code> matches "Project 2024", "Projects Archive")
+                            or <code>?</code> for a single character (e.g., <code>Temp?</code> matches "Temp1", "Temp2").
+                            <br>
+                            <strong>Note:</strong> System folders (Bookmarks Bar, Other Bookmarks, etc.) are configured above and "Saved Tabs" folders are controlled by the checkbox above.
+                        </small>
                     </div>
                 </section>
 
-                <section class="settings-section">
-                    <h2>📑 Bookmark Categories</h2>
-
-                    <div class="form-group">
-                        <label for="categories">Categories</label>
-                        <textarea id="categories" name="categories" rows="8" style="width: 100%; padding: 12px 16px; font-size: 0.95em; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Courier New', monospace; line-height: 1.6; resize: vertical;"></textarea>
-                        <small>One category per line. These categories will be used to organize your bookmarks. Add, remove, or rename categories to match your preferences.</small>
+                <div class="collapsible-section">
+                    <div class="collapsible-header collapsed" id="advanced-settings-header">
+                        <h2>⚙️ Advanced Settings</h2>
+                        <span class="collapsible-toggle">▼</span>
                     </div>
-                </section>
-
-                <section class="settings-section">
-                    <h2>⏱️ Performance Settings</h2>
-
-                    <div class="info-box" style="margin-bottom: 20px;">
-                        <strong>⚠️ Advanced Settings:</strong>
-                        These settings are optimized for most users. Only modify if you are experiencing rate limiting errors or receiving errors from your LLM provider.
-                    </div>
-
-                    <div class="form-group">
-                        <label for="apiTimeout">API Request Timeout</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="apiTimeout" name="apiTimeout" min="30" max="600" value="180" required>
-                            <span class="unit-label">seconds</span>
+                    <div class="collapsible-content collapsed" id="advanced-settings-content">
+                        <div class="info-box" style="margin-bottom: 20px;">
+                            <strong>⚠️ Notice:</strong>
+                            These settings are optimized for most users. Only modify if you are experiencing issues or need fine-tuned control.
                         </div>
-                        <small>Maximum time to wait for AI API responses. Increase if you have a slow connection. (30-600 seconds)</small>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="batchSize">Batch Processing Size</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="batchSize" name="batchSize" min="10" max="100" value="50" required>
-                            <span class="unit-label">bookmarks</span>
+                        <div class="collapsible-subsection">
+                            <h3>⏱️ Performance Settings</h3>
+
+                            <div class="form-group">
+                                <label for="apiTimeout">API Request Timeout</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="apiTimeout" name="apiTimeout" min="30" max="600" value="180" required>
+                                    <span class="unit-label">seconds</span>
+                                </div>
+                                <small>Maximum time to wait for AI API responses. Increase if you have a slow connection. (30-600 seconds)</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="batchSize">Batch Processing Size</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="batchSize" name="batchSize" min="10" max="100" value="50" required>
+                                    <span class="unit-label">bookmarks</span>
+                                </div>
+                                <small>Number of bookmarks to process in each batch. Smaller batches are faster but may create inconsistent categories. (10-100 bookmarks)</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="maxTokens">Maximum Response Tokens</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="maxTokens" name="maxTokens" min="1024" max="8192" value="4096" required>
+                                    <span class="unit-label">tokens</span>
+                                </div>
+                                <small>Maximum tokens for AI response. Higher values allow processing larger batches but cost more. Rate limiting is handled automatically with smart retry logic. (1024-8192 tokens)</small>
+                            </div>
                         </div>
-                        <small>Number of bookmarks to process in each batch. Smaller batches are faster but may create inconsistent categories. (10-100 bookmarks)</small>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="maxTokens">Maximum Response Tokens</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="maxTokens" name="maxTokens" min="1024" max="8192" value="4096" required>
-                            <span class="unit-label">tokens</span>
+                        <div class="collapsible-subsection">
+                            <h3>🐛 Debug Settings</h3>
+
+                            <div class="form-group">
+                                <label for="logLevel">Logging Level</label>
+                                <select id="logLevel" name="logLevel">
+                                    <option value="0">ERROR - Only critical errors</option>
+                                    <option value="1">WARN - Errors and warnings</option>
+                                    <option value="2">INFO - General information</option>
+                                    <option value="3">DEBUG - Detailed debugging</option>
+                                    <option value="4" selected>TRACE - Everything (verbose)</option>
+                                </select>
+                                <small>Controls how much detail is logged. Use TRACE for troubleshooting, ERROR for production.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="consoleLogging" name="consoleLogging" checked>
+                                    <label for="consoleLogging">Enable console logging</label>
+                                </div>
+                                <small>Show logs in browser console (Chrome DevTools). Disable for better performance.</small>
+                            </div>
+
+                            <div class="info-box">
+                                <strong>💡 Tip:</strong>
+                                Logs are always saved internally (last 1000 entries) and can be viewed in the extension popup, regardless of these settings.
+                            </div>
                         </div>
-                        <small>Maximum tokens for AI response. Higher values allow processing larger batches but cost more. Rate limiting is handled automatically with smart retry logic. (1024-8192 tokens)</small>
                     </div>
-                </section>
-
-                <section class="settings-section">
-                    <h2>🐛 Debug Settings</h2>
-
-                    <div class="form-group">
-                        <label for="logLevel">Logging Level</label>
-                        <select id="logLevel" name="logLevel">
-                            <option value="0">ERROR - Only critical errors</option>
-                            <option value="1">WARN - Errors and warnings</option>
-                            <option value="2">INFO - General information</option>
-                            <option value="3">DEBUG - Detailed debugging</option>
-                            <option value="4" selected>TRACE - Everything (verbose)</option>
-                        </select>
-                        <small>Controls how much detail is logged. Use TRACE for troubleshooting, ERROR for production.</small>
-                    </div>
-
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="consoleLogging" name="consoleLogging" checked>
-                            <label for="consoleLogging">Enable console logging</label>
-                        </div>
-                        <small>Show logs in browser console (Chrome DevTools). Disable for better performance.</small>
-                    </div>
-
-                    <div class="info-box">
-                        <strong>💡 Tip:</strong>
-                        Logs are always saved internally (last 1000 entries) and can be viewed in the extension popup, regardless of these settings.
-                    </div>
-                </section>
+                </div>
             </form>
         </div>
 

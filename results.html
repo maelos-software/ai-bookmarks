@@ -34,6 +34,7 @@
             color: white;
             padding: 40px;
             text-align: center;
+            position: relative;
         }
 
         .header h1 {
@@ -50,6 +51,30 @@
         .success-icon {
             font-size: 4em;
             margin-bottom: 20px;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
         }
 
         .stats-grid {
@@ -380,6 +405,10 @@
 <body>
     <div class="container">
         <div class="header">
+            <button id="settings-btn" class="settings-btn">
+                <span>⚙️</span>
+                <span>Settings</span>
+            </button>
             <div class="success-icon">🎉</div>
             <h1>Organization Complete!</h1>
             <p class="subtitle">Your bookmarks have been successfully organized</p>
@@ -470,6 +499,7 @@
         </div>
 
         <div class="actions">
+            <button class="btn btn-primary" id="organize-again">Organize Again</button>
             <button class="btn btn-primary" id="view-bookmarks">View My Bookmarks</button>
             <button class="btn btn-secondary" id="close-tab">Close This Tab</button>
         </div>

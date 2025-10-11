@@ -40,6 +40,7 @@ export interface OrganizationConfig {
   organizeSavedTabs: boolean; // whether to organize "Saved Tabs" folders (disabled by default)
   autoOrganize: boolean;      // automatically organize bookmarks as they're added (disabled by default)
   respectOrganizationHistory: 'always' | 'never' | 'organizeAllOnly'; // when to skip previously organized bookmarks
+  useExistingFolders: boolean; // when true, only use existing folders and allow bookmarks to stay in current location
 }
 
 export interface DebugConfig {
@@ -146,7 +147,8 @@ const DEFAULT_CONFIG: AppConfig = {
     renamedSpeedDialFolderIds: [],  // Populated during first organization when Speed Dial folders are renamed
     organizeSavedTabs: false,  // Default: exclude "Saved Tabs" folders from organization
     autoOrganize: false,  // Default: don't automatically organize bookmarks as they're added
-    respectOrganizationHistory: 'organizeAllOnly'  // Default: only skip during "Organize All"
+    respectOrganizationHistory: 'always',  // Default: always skip previously organized bookmarks
+    useExistingFolders: false  // Default: allow creating new folders
   },
   debug: {
     logLevel: 0,              // ERROR by default
@@ -216,5 +218,42 @@ export class ConfigurationManager {
 
   async clearOrganizationHistory(): Promise<void> {
     await chrome.storage.local.remove(ConfigurationManager.HISTORY_STORAGE_KEY);
+  }
+
+  async markAllBookmarksAsOrganized(): Promise<number> {
+    // Get all bookmarks recursively
+    const getAllBookmarks = async (nodes: chrome.bookmarks.BookmarkTreeNode[]): Promise<string[]> => {
+      const bookmarkIds: string[] = [];
+      for (const node of nodes) {
+        if (node.url) {
+          // It's a bookmark, not a folder
+          bookmarkIds.push(node.id);
+        }
+        if (node.children) {
+          // Recursively get children
+          const childIds = await getAllBookmarks(node.children);
+          bookmarkIds.push(...childIds);
+        }
+      }
+      return bookmarkIds;
+    };
+
+    // Get entire bookmark tree
+    const tree = await chrome.bookmarks.getTree();
+    const allBookmarkIds = await getAllBookmarks(tree);
+
+    // Mark all as organized
+    const history = await this.getOrganizationHistory();
+    const timestamp = Date.now();
+    for (const bookmarkId of allBookmarkIds) {
+      history[bookmarkId] = {
+        moved: true,
+        timestamp,
+        category: undefined  // No category since this is a manual marking
+      };
+    }
+    await chrome.storage.local.set({ [ConfigurationManager.HISTORY_STORAGE_KEY]: history });
+
+    return allBookmarkIds.length;
   }
 }

@@ -60,6 +60,8 @@ class ResultsController {
   private setupEventListeners() {
     const viewBookmarksBtn = document.getElementById('view-bookmarks');
     const closeTabBtn = document.getElementById('close-tab');
+    const organizeAgainBtn = document.getElementById('organize-again');
+    const settingsBtn = document.getElementById('settings-btn');
 
     viewBookmarksBtn?.addEventListener('click', () => {
       chrome.tabs.create({ url: 'chrome://bookmarks' });
@@ -67,6 +69,16 @@ class ResultsController {
 
     closeTabBtn?.addEventListener('click', () => {
       window.close();
+    });
+
+    organizeAgainBtn?.addEventListener('click', () => {
+      const selectorUrl = chrome.runtime.getURL('folder-selector.html');
+      chrome.tabs.create({ url: selectorUrl });
+    });
+
+    settingsBtn?.addEventListener('click', () => {
+      const optionsUrl = chrome.runtime.getURL('options.html');
+      chrome.tabs.create({ url: optionsUrl });
     });
 
     // Setup collapsible sections
@@ -215,7 +227,9 @@ class ResultsController {
             noErrorsDiv.innerHTML = `
               <h3>✓ All bookmarks already organized</h3>
               <p>All ${this.result.bookmarksSkipped} bookmarks were already organized - no changes needed!</p>
-              <small>To reorganize these bookmarks, disable "Remember previous organization" in settings or click "Clear Organization History".</small>
+              <small>These bookmarks are being skipped due to the <strong>"Remember Previous Organization"</strong> setting.
+              To reorganize them, either change this setting to <strong>"Never Remember"</strong> in Settings,
+              or click <strong>"Clear Organization History"</strong> to reset the memory and start fresh.</small>
             `;
           } else {
             noErrorsDiv.innerHTML = `
