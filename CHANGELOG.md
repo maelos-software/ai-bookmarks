@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-10-11
+
+### Changed
+- **Improved UX**: Popup now automatically closes after opening folder selector
+- **Better Settings Access**: Added Settings button to folder selection page header
+  - Button positioned in top-right corner with translucent styling
+  - Provides quick access to settings without navigating away
+
+### Fixed
+- Popup window remaining open after clicking "Organize Bookmarks"
+
 ## [1.1.0] - 2025-10-08
 
 ### Added
@@ -85,6 +96,7 @@ First public release of AI Bookmark Organizer - a Chrome extension that intellig
 - All processing through user's chosen AI provider
 - Open source for transparency
 
-[Unreleased]: https://github.com/rmk40/ai-bookmarks/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/rmk40/ai-bookmarks/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/rmk40/ai-bookmarks/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/rmk40/ai-bookmarks/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/rmk40/ai-bookmarks/releases/tag/v1.0.1
