@@ -666,30 +666,5 @@
     </div>
 
     <script src="dist/options.js"></script>
-    <script>
-        // Add visual feedback for radio option cards
-        document.addEventListener('DOMContentLoaded', () => {
-            const radioCards = document.querySelectorAll('.radio-option-card');
-            const radioInputs = document.querySelectorAll('input[name="respectOrganizationHistory"]');
-
-            function updateCardStates() {
-                radioCards.forEach(card => {
-                    const radio = card.querySelector('input[type="radio"]');
-                    if (radio && radio.checked) {
-                        card.classList.add('selected');
-                    } else {
-                        card.classList.remove('selected');
-                    }
-                });
-            }
-
-            radioInputs.forEach(radio => {
-                radio.addEventListener('change', updateCardStates);
-            });
-
-            // Initialize on load
-            updateCardStates();
-        });
-    </script>
 </body>
 </html>

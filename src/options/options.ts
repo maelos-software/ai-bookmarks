@@ -138,13 +138,42 @@ class OptionsController {
     this.organizeSavedTabsCheckbox.addEventListener('change', () => this.markUnsavedChanges());
     this.autoOrganizeCheckbox.addEventListener('change', () => this.markUnsavedChanges());
     this.respectOrganizationHistoryRadios.forEach(radio => {
-      radio.addEventListener('change', () => this.markUnsavedChanges());
+      radio.addEventListener('change', () => {
+        this.markUnsavedChanges();
+        this.updateRadioCardStates();
+      });
     });
     this.logLevelSelect.addEventListener('change', () => this.markUnsavedChanges());
     this.consoleLoggingCheckbox.addEventListener('change', () => this.markUnsavedChanges());
 
+    // Setup radio card visual feedback
+    this.setupRadioCardFeedback();
+
     this.loadSystemFolders();
     this.loadConfig();
+  }
+
+  /**
+   * Add visual feedback for radio option cards
+   */
+  private setupRadioCardFeedback() {
+    // Initialize on load (will be called again after config loads)
+    this.updateRadioCardStates();
+  }
+
+  /**
+   * Update visual state of radio option cards based on selection
+   */
+  private updateRadioCardStates() {
+    const radioCards = document.querySelectorAll('.radio-option-card');
+    radioCards.forEach(card => {
+      const radio = card.querySelector('input[type="radio"]') as HTMLInputElement;
+      if (radio && radio.checked) {
+        card.classList.add('selected');
+      } else {
+        card.classList.remove('selected');
+      }
+    });
   }
 
   private async loadSystemFolders() {
@@ -242,6 +271,9 @@ class OptionsController {
           this.respectOrganizationHistoryRadios.forEach(radio => {
             radio.checked = radio.value === selectedValue;
           });
+
+          // Update radio card visual states after setting values
+          this.updateRadioCardStates();
 
           // Apply excluded system folder IDs
           const excludedIds = new Set(config.organization.excludedSystemFolderIds || []);
