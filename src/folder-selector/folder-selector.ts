@@ -35,6 +35,7 @@ class FolderSelectorController {
   private confirmProceedBtn: HTMLButtonElement;
   private confirmFolderCount: HTMLElement;
   private confirmBookmarkCount: HTMLElement;
+  private settingsBtn: HTMLButtonElement;
 
   private isOrganizeAll: boolean = false;
 
@@ -68,6 +69,7 @@ class FolderSelectorController {
     this.confirmProceedBtn = document.getElementById('confirm-proceed-btn') as HTMLButtonElement;
     this.confirmFolderCount = document.getElementById('confirm-folder-count') as HTMLElement;
     this.confirmBookmarkCount = document.getElementById('confirm-bookmark-count') as HTMLElement;
+    this.settingsBtn = document.getElementById('settings-btn') as HTMLButtonElement;
 
     this.setupEventListeners();
     this.loadFolders();
@@ -84,6 +86,7 @@ class FolderSelectorController {
     this.organizeBtn.addEventListener('click', () => this.handleOrganize());
     this.confirmCancelBtn.addEventListener('click', () => this.hideConfirmation());
     this.confirmProceedBtn.addEventListener('click', () => this.handleConfirm());
+    this.settingsBtn.addEventListener('click', () => chrome.runtime.openOptionsPage());
   }
 
   private async loadFolders() {

@@ -34,6 +34,7 @@
             color: white;
             padding: 40px;
             text-align: center;
+            position: relative;
         }
 
         .header h1 {
@@ -53,6 +54,30 @@
 
         .header-icon {
             font-size: 2.5em;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
         }
 
         .content {
@@ -412,6 +437,10 @@
 <body>
     <div class="container">
         <div class="header">
+            <button id="settings-btn" class="settings-btn">
+                <span>⚙️</span>
+                <span>Settings</span>
+            </button>
             <h1><span class="header-icon">📁</span>Select Folders to Organize</h1>
             <p class="subtitle">Choose which folders you want to organize with AI</p>
         </div>

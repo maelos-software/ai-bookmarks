@@ -238,10 +238,11 @@ class PopupController {
     }
   }
 
-  private handleOrganize() {
+  private async handleOrganize() {
     logger.info('PopupController', 'Opening folder selector');
     const selectorUrl = chrome.runtime.getURL('folder-selector.html');
-    chrome.tabs.create({ url: selectorUrl });
+    await chrome.tabs.create({ url: selectorUrl });
+    window.close();
   }
 
   private updateProgress(current: number, total: number, message: string) {
