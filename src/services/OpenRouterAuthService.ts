@@ -85,7 +85,7 @@ export class OpenRouterAuthService {
       logger.info('OpenRouterAuthService', 'Opening authorization URL');
 
       // Launch OAuth flow using Chrome identity API
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, _reject) => {
         chrome.identity.launchWebAuthFlow(
           {
             url: authUrl,

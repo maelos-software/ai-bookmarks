@@ -16,14 +16,14 @@ describe('ConfigurationManager', () => {
     global.chrome = {
       storage: {
         sync: {
-          get: jest.fn((key) => Promise.resolve(mockStorage)),
+          get: jest.fn((_key) => Promise.resolve(mockStorage)),
           set: jest.fn((data) => {
             Object.assign(mockStorage, data);
             return Promise.resolve();
           }),
         },
         local: {
-          get: jest.fn((key) => Promise.resolve({})),
+          get: jest.fn((_key) => Promise.resolve({})),
           set: jest.fn(() => Promise.resolve()),
           remove: jest.fn(() => Promise.resolve()),
         },

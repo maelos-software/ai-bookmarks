@@ -567,10 +567,13 @@ class ResultsController {
   }
 
   private showError() {
-    document.querySelector('.header h1')!.textContent = 'Unable to Load Results';
-    document.querySelector('.header .subtitle')!.textContent =
-      'Could not retrieve organization results';
-    document.querySelector('.success-icon')!.textContent = '⚠️';
+    const title = document.querySelector('.header h1');
+    const subtitle = document.querySelector('.header .subtitle');
+    const icon = document.querySelector('.success-icon');
+
+    if (title) title.textContent = 'Unable to Load Results';
+    if (subtitle) subtitle.textContent = 'Could not retrieve organization results';
+    if (icon) icon.textContent = '⚠️';
 
     // Hide all content sections
     document.querySelectorAll('.stats-grid, .content-section').forEach((el) => {

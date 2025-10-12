@@ -214,7 +214,10 @@ export class BookmarkManager {
       if (!urlMap.has(normalized)) {
         urlMap.set(normalized, []);
       }
-      urlMap.get(normalized)!.push(bookmark.id);
+      const bookmarks = urlMap.get(normalized);
+      if (bookmarks) {
+        bookmarks.push(bookmark.id);
+      }
     }
 
     // Filter to only duplicates (more than one bookmark per URL)

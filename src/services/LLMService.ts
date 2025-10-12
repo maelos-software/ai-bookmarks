@@ -461,7 +461,7 @@ Target: 5-15 folders total.`;
     if (existingFolders.length > 0) {
       if (batchContext?.folderSizes && Object.keys(batchContext.folderSizes).length > 0) {
         const foldersWithSizes = existingFolders.map((folder) => {
-          const count = batchContext.folderSizes![folder] || 0;
+          const count = (batchContext.folderSizes && batchContext.folderSizes[folder]) || 0;
           return count > 0 ? `${folder} (${count} bookmarks)` : folder;
         });
         existingList = `\nExisting folders: ${foldersWithSizes.join(', ')}`;

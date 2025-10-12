@@ -21,7 +21,7 @@ module.exports = {
   rules: {
     'prefer-const': 'error',
     'no-var': 'error',
-    'no-console': 'warn',
+    'no-console': 'off', // Console logging is acceptable in Chrome extensions for debugging
     '@typescript-eslint/no-unused-vars': ['warn', {
       'argsIgnorePattern': '^_',
       'varsIgnorePattern': '^_'
@@ -30,5 +30,15 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/no-non-null-assertion': 'warn'
   },
-  ignorePatterns: ['dist/', 'node_modules/', 'coverage/', '*.config.js', 'build-release-zip.sh']
+  ignorePatterns: ['dist/', 'node_modules/', 'coverage/', '*.config.js', 'build-release-zip.sh'],
+  overrides: [
+    {
+      // Relax rules in test files for mocking purposes
+      files: ['**/__tests__/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+      },
+    },
+  ]
 };

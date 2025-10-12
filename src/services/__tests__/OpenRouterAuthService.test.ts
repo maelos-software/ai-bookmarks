@@ -25,7 +25,7 @@ Object.defineProperty(global, 'crypto', {
       return array;
     },
     subtle: {
-      digest: async (algorithm: string, data: BufferSource) => {
+      digest: async (_algorithm: string, _data: BufferSource) => {
         // Mock SHA-256 digest - return a proper ArrayBuffer
         return new Uint8Array(32).buffer;
       },
