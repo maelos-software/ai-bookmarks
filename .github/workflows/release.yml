@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Matches v1.0.0, v1.2.3, etc.
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Type check
+      run: npm run type-check
+
+    - name: Run tests
+      run: npm run test:coverage
+
+    - name: Build extension
+      run: npm run build
+
+  create-release:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build release package
+      run: |
+        chmod +x build-release-zip.sh
+        ./build-release-zip.sh .
+
+    - name: Get version and filename
+      id: version
+      run: |
+        VERSION=$(grep '"version"' manifest.json | sed 's/.*"version": "\(.*\)".*/\1/')
+        GIT_HASH=$(git rev-parse --short=8 HEAD)
+        FILENAME="ai-bookmarks-${VERSION}-${GIT_HASH}.zip"
+        TAG_NAME=${GITHUB_REF#refs/tags/}
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "filename=${FILENAME}" >> $GITHUB_OUTPUT
+        echo "git_hash=${GIT_HASH}" >> $GITHUB_OUTPUT
+        echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        # Get the previous tag
+        PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+        if [ -z "$PREV_TAG" ]; then
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "Initial release" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        else
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "## Changes since $PREV_TAG" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          git log ${PREV_TAG}..HEAD --pretty=format:"- %s" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.tag_name }}
+        name: Release ${{ steps.version.outputs.tag_name }}
+        body: |
+          ## AI Bookmark Organizer ${{ steps.version.outputs.tag_name }}
+
+          **Version**: ${{ steps.version.outputs.version }}
+          **Commit**: ${{ steps.version.outputs.git_hash }}
+
+          ${{ steps.release_notes.outputs.notes }}
+
+          ### Installation
+          1. Download the `.zip` file below
+          2. Go to `chrome://extensions/`
+          3. Enable "Developer mode"
+          4. Click "Load unpacked" and select the extracted folder
+
+          Or submit to Chrome Web Store for public distribution.
+
+          ### Files
+          - `${{ steps.version.outputs.filename }}` - Chrome extension package ready for installation or Web Store submission
+        files: ${{ steps.version.outputs.filename }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

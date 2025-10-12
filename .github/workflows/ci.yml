@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, devel ]
+  pull_request:
+    branches: [ main, devel ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Type check
+      run: npm run type-check
+
+    - name: Run tests
+      run: npm run test:coverage
+
+    - name: Build extension
+      run: npm run build
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      if: matrix.node-version == '20.x'
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/coverage-final.json
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Archive build artifacts
+      if: matrix.node-version == '20.x'
+      uses: actions/upload-artifact@v4
+      with:
+        name: extension-build
+        path: dist/
+        retention-days: 7
+
+    - name: Archive test coverage
+      if: matrix.node-version == '20.x'
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-coverage
+        path: coverage/
+        retention-days: 7
+
+  publish-snapshot:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build release package
+      run: |
+        chmod +x build-release-zip.sh
+        ./build-release-zip.sh .
+
+    - name: Get version and filename
+      id: version
+      run: |
+        VERSION=$(grep '"version"' manifest.json | sed 's/.*"version": "\(.*\)".*/\1/')
+        GIT_HASH=$(git rev-parse --short=8 HEAD)
+        FILENAME="ai-bookmarks-${VERSION}-${GIT_HASH}.zip"
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "filename=${FILENAME}" >> $GITHUB_OUTPUT
+        echo "git_hash=${GIT_HASH}" >> $GITHUB_OUTPUT
+
+    - name: Update latest snapshot release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest
+        name: "Latest Snapshot (Development Build)"
+        body: |
+          **Automatic build from main branch**
+
+          This is an automatically generated development build from the latest commit on the main branch.
+
+          - **Version**: ${{ steps.version.outputs.version }}
+          - **Commit**: ${{ steps.version.outputs.git_hash }} (${{ github.sha }})
+          - **Built**: ${{ github.event.head_commit.timestamp }}
+          - **Commit Message**: ${{ github.event.head_commit.message }}
+
+          ⚠️ **This is a development build** - For stable releases, see the versioned releases below.
+
+          The zip file name includes the git commit hash for traceability.
+        files: ${{ steps.version.outputs.filename }}
+        prerelease: true
+        draft: false
+        make_latest: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
