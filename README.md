@@ -11,11 +11,14 @@ A Chrome extension that uses AI to intelligently organize your bookmarks into ca
 
 ### Core Functionality
 - **AI-Powered Categorization**: Automatically assigns bookmarks to predefined categories using LLMs
-- **Selective Organization**: Choose specific folders to organize or organize all bookmarks through unified interface
+- **Flexible Organization Modes**:
+  - **Organize All**: Organize all bookmarks across your entire library
+  - **Organize Selected Folders**: Choose specific folders from a visual tree selector
+  - **Use Existing Folders Mode**: Work only with your existing folders, no new ones created
 - **Multi-Provider Support**: Compatible with OpenRouter, OpenAI, Claude (Anthropic), Grok (xAI), and custom OpenAI-compatible endpoints
 - **Batch Processing**: Efficiently processes bookmarks in configurable batches (default: 50)
 - **Smart Cleanup**: Removes duplicate bookmarks and empty folders automatically
-- **Organization History**: Remembers previously organized bookmarks to preserve manual changes
+- **Organization History**: Remembers previously organized bookmarks to preserve manual changes with flexible policies
 - **Auto-Organize**: Optionally categorize new bookmarks in real-time as you add them
 
 ### User Experience
@@ -73,12 +76,13 @@ Coming soon
    - **Others**: Enter your API key from the provider's dashboard
 
 3. **Organize Your Bookmarks**
-   - Click the extension icon
+   - Click the extension icon in Chrome toolbar
    - Click "Organize Bookmarks"
-   - Choose either:
-     - **Organize Selected Folders**: Select specific folders from the tree
-     - **Organize All**: Organize all bookmarks at once
-   - Review the results
+   - Choose your organization method:
+     - **Organize All**: Process all bookmarks across your entire library
+     - **Organize Selected Folders**: Pick specific folders from a visual tree selector
+   - Wait for processing (progress shown with real-time updates)
+   - Review detailed results with statistics and item-by-item breakdown
 
 **Important**: Always backup your bookmarks first!
 - Go to `chrome://bookmarks`
@@ -115,14 +119,22 @@ Coming soon
 ## Configuration
 
 ### Organization Settings
+
+**Organization Modes**:
+- **Use Existing Folders**: When enabled, AI only assigns bookmarks to your existing folders and can leave bookmarks in their current location if they don't fit well (no new folders created)
+- **Remove Empty Folders**: Automatically clean up empty folders after reorganization (enabled by default)
+
+**Organization Behavior**:
 - **Auto-Organize New Bookmarks**: Categorize bookmarks automatically as you add them (disabled by default)
 - **Remember Previous Organization**: Control how previously organized bookmarks are handled:
-  - **Only During "Organize All"** (Recommended): Skip previously organized bookmarks when using "Organize All", but always reorganize when you explicitly select specific folders
-  - **Always Remember**: Skip previously organized bookmarks in all operations (both "Organize All" and specific folder selection)
-  - **Never Remember**: Always reorganize all bookmarks regardless of previous organization
+  - **Always** (Default): Skip previously organized bookmarks in all operations to preserve manual changes
+  - **Only During "Organize All"**: Skip during full organization, but always reorganize when selecting specific folders
+  - **Never**: Always reorganize all bookmarks regardless of previous organization
+
+**Folder Selection**:
 - **System Folders**: Choose which root folders to organize (Bookmarks Bar, Other Bookmarks, Mobile Bookmarks)
-- **Saved Tabs**: Optionally include browser-generated "Saved Tabs" folders (disabled by default)
-- **Custom Ignore List**: Specify additional folders to skip
+- **Saved Tabs**: Optionally include browser-generated "Saved Tabs" folders (disabled by default - Vivaldi-specific)
+- **Custom Ignore List**: Specify additional folders to skip by name
 
 ### Bookmark Categories
 Customize the 25 default categories to match your needs. Default categories include:
@@ -148,13 +160,25 @@ Customize the 25 default categories to match your needs. Default categories incl
 
 ## How It Works
 
-1. **Bookmark Collection**: Gathers all bookmarks from selected folders
-2. **Duplicate Removal**: Identifies and removes bookmarks with identical URLs
-3. **Batch Categorization**: Sends bookmarks to AI in configurable batches
-4. **Folder Creation**: Creates only the folders needed for assigned categories
-5. **Bookmark Organization**: Moves bookmarks to their assigned folders
-6. **Cleanup**: Removes empty folders left behind
-7. **Results Display**: Shows detailed statistics and item-by-item breakdown
+### Standard Mode (Default)
+1. **Bookmark Collection**: Gathers all bookmarks from selected scope (all bookmarks or specific folders)
+2. **History Filtering**: Optionally skips previously organized bookmarks based on policy
+3. **Duplicate Removal**: Identifies and removes bookmarks with identical URLs (when enabled)
+4. **Batch Categorization**: Sends bookmarks to AI in configurable batches (default: 50)
+5. **Folder Creation**: Creates only the folders needed for assigned categories
+6. **Bookmark Organization**: Moves bookmarks to their assigned folders
+7. **Cleanup**: Removes empty folders left behind (when enabled)
+8. **Results Display**: Shows detailed statistics, timeline, and item-by-item breakdown
+
+### Use Existing Folders Mode
+When enabled, the workflow changes to work within your existing structure:
+1. **Existing Folder Detection**: Scans your current folder structure
+2. **Restricted Categorization**: AI assigns bookmarks only to existing folders
+3. **Smart Fallback**: AI can use special `KEEP_CURRENT` designation to leave bookmarks in place if no existing folder is a good fit
+4. **No New Folders**: Prevents creating new folders, maintaining your existing organization
+5. **Folder Validation**: Warns if AI attempts to use non-existent folders
+
+This mode is ideal for refining an existing structure without introducing new categories.
 
 ## Development
 
