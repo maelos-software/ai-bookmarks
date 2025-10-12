@@ -37,8 +37,8 @@ This project follows standard open source community guidelines:
 ## Development Setup
 
 ### Prerequisites
-- Node.js 16 or higher
-- npm or yarn
+- Node.js 20.x (LTS)
+- npm 9.x or higher
 - Chrome browser for testing
 - Git
 
@@ -63,11 +63,26 @@ This project follows standard open source community guidelines:
 ### Development Commands
 
 ```bash
+# Building
 npm run build          # Production build
 npm run build:dev      # Development build
 npm run dev            # Watch mode (rebuilds on changes)
-npm run type-check     # TypeScript type checking
 npm run clean          # Remove build artifacts
+
+# Code Quality
+npm run type-check     # TypeScript type checking
+npm run lint           # Run ESLint
+npm run lint:fix       # Auto-fix ESLint issues
+npm run format         # Format code with Prettier
+npm run format:check   # Check code formatting
+
+# Testing
+npm run test           # Run all tests
+npm run test:watch     # Run tests in watch mode
+npm run test:coverage  # Run tests with coverage report
+
+# Security
+npm run audit          # Check for security vulnerabilities
 ```
 
 ## Making Changes
@@ -82,10 +97,20 @@ npm run clean          # Remove build artifacts
 2. **Make your changes** following the coding standards below
 
 3. **Test your changes** thoroughly:
+   ```bash
+   # Run all quality checks
+   npm run type-check     # Must pass
+   npm run lint           # Must pass (0 errors)
+   npm run format:check   # Must pass
+   npm run test:coverage  # Must pass with 90%+ coverage
+   npm run build          # Must build successfully
+   ```
+
    - Load the extension in Chrome
    - Test all affected functionality
    - Verify no console errors
    - Check different AI providers if applicable
+   - Add tests for new features or bug fixes
 
 4. **Commit your changes**:
    ```bash
@@ -128,12 +153,20 @@ Update README with new configuration options
 ### PR Checklist
 
 Before submitting, ensure:
-- [ ] Code builds without errors (`npm run build`)
-- [ ] TypeScript types are correct (`npm run type-check`)
+- [ ] All CI checks pass locally:
+  - [ ] `npm run type-check` - No TypeScript errors
+  - [ ] `npm run lint` - No ESLint errors (warnings acceptable)
+  - [ ] `npm run format:check` - Code properly formatted
+  - [ ] `npm run test:coverage` - All tests pass, 90%+ coverage
+  - [ ] `npm run audit` - No high/critical security vulnerabilities
+  - [ ] `npm run build` - Builds successfully
 - [ ] Extension loads and functions in Chrome
-- [ ] No console errors or warnings
+- [ ] No console errors or warnings in browser
+- [ ] Tests added/updated for new features or bug fixes
 - [ ] Documentation updated if needed
 - [ ] CHANGELOG.md updated for user-facing changes
+
+**Note**: GitHub Actions CI will run these same checks automatically. All checks must pass before your PR can be merged.
 
 ## Coding Standards
 
@@ -168,14 +201,27 @@ function getBookmarks(): any {
 
 ### Code Style
 
+The project uses **Prettier** for automatic code formatting and **ESLint** for code quality.
+
+**Formatting Rules** (enforced by Prettier):
 - **Indentation**: 2 spaces
 - **Line Length**: 100 characters max
 - **Semicolons**: Required
 - **Quotes**: Single quotes for strings
-- **Naming**:
-  - `camelCase` for variables and functions
-  - `PascalCase` for classes and interfaces
-  - `UPPER_SNAKE_CASE` for constants
+- **Trailing Commas**: ES5 style
+
+**Naming Conventions**:
+- `camelCase` for variables and functions
+- `PascalCase` for classes and interfaces
+- `UPPER_SNAKE_CASE` for constants
+
+**Linting Rules** (enforced by ESLint):
+- No `var` keyword (use `const` or `let`)
+- Prefer `const` over `let` when possible
+- Minimize use of `any` type (warnings acceptable in error handlers)
+- Avoid non-null assertions (`!`) when possible
+
+Run `npm run lint:fix` and `npm run format` to automatically fix most issues.
 
 ### Project Structure
 
@@ -208,7 +254,44 @@ try {
 
 ## Testing
 
-Currently, testing is manual. When testing:
+### Automated Testing
+
+The project uses **Jest** for unit testing with a **90%+ coverage requirement** for all service layer code.
+
+**Running Tests**:
+```bash
+npm run test              # Run all tests
+npm run test:watch        # Run tests in watch mode
+npm run test:coverage     # Run with coverage report
+```
+
+**Writing Tests**:
+- Place test files in `src/services/__tests__/` directory
+- Name test files `*.test.ts` or `*.spec.ts`
+- Use descriptive test names: `it('should do something when condition')`
+- Mock Chrome APIs using Jest mocks
+- Aim for 90%+ coverage for new code
+
+**Example Test**:
+```typescript
+describe('MyService', () => {
+  let service: MyService;
+
+  beforeEach(() => {
+    service = new MyService();
+    // Setup mocks
+  });
+
+  it('should process bookmarks successfully', async () => {
+    const result = await service.process(mockBookmarks);
+    expect(result).toHaveLength(5);
+  });
+});
+```
+
+### Manual Testing
+
+After automated tests pass, perform manual testing:
 
 1. **Test Core Functionality**:
    - Bookmark organization with different providers
@@ -224,6 +307,18 @@ Currently, testing is manual. When testing:
 3. **Browser Compatibility**:
    - Test in Chrome
    - Verify Manifest V3 compliance
+
+### Continuous Integration
+
+GitHub Actions automatically runs all tests on every push and pull request:
+- Type checking
+- Linting
+- Code formatting
+- Unit tests with coverage
+- Security audit
+- Production build
+
+View CI results in the "Actions" tab or on your pull request.
 
 ## Reporting Bugs
 

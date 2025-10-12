@@ -3,6 +3,8 @@
 A Chrome extension that uses AI to intelligently organize your bookmarks into categorized folders.
 
 [![License](https://img.shields.io/badge/License-MPL--2.0-blue.svg)](https://opensource.org/licenses/MPL-2.0)
+[![CI](https://github.com/rmk40/ai-bookmarks/actions/workflows/ci.yml/badge.svg)](https://github.com/rmk40/ai-bookmarks/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/rmk40/ai-bookmarks/branch/main/graph/badge.svg)](https://codecov.io/gh/rmk40/ai-bookmarks)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue)](https://chrome.google.com/webstore)
 
 ## Features
@@ -157,17 +159,40 @@ Customize the 25 default categories to match your needs. Default categories incl
 ## Development
 
 ### Prerequisites
-- Node.js 16+
-- npm or yarn
+- Node.js 20.x (LTS)
+- npm 9.x or higher
 
-### Build Commands
+### Quick Start Commands
 ```bash
+# Development
+npm run dev            # Watch mode (auto-rebuild on changes)
 npm run build          # Production build
 npm run build:dev      # Development build
-npm run dev            # Watch mode
-npm run type-check     # TypeScript validation
 npm run clean          # Remove build artifacts
+
+# Code Quality
+npm run type-check     # TypeScript validation
+npm run lint           # ESLint (must pass with 0 errors)
+npm run lint:fix       # Auto-fix lint issues
+npm run format         # Format code with Prettier
+npm run format:check   # Check code formatting
+
+# Testing
+npm run test           # Run all tests
+npm run test:watch     # Run tests in watch mode
+npm run test:coverage  # Run tests with coverage (90%+ required)
+
+# Security
+npm run audit          # Check for vulnerabilities
 ```
+
+### Quality Standards
+
+- ✅ **90%+ test coverage** required for service layer
+- ✅ **TypeScript** strict type checking
+- ✅ **ESLint** with 0 errors (warnings acceptable)
+- ✅ **Prettier** code formatting enforced
+- ✅ **Automated CI** runs on all pushes and PRs
 
 ### Project Structure
 ```
@@ -194,13 +219,11 @@ ai-bookmarks/
 └── dist/                  # Compiled output
 ```
 
-### Contributing
+### Documentation
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
-- Setting up your development environment
-- Code style and standards
-- Submitting pull requests
-- Reporting bugs
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contributing guidelines, code standards, and PR process
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Detailed development guide, testing, CI/CD, and architecture
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
 
 ## Privacy
 
