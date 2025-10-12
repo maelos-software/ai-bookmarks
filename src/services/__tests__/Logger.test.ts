@@ -19,9 +19,9 @@ describe('Logger', () => {
       storage: {
         local: {
           get: jest.fn(() => Promise.resolve({})),
-          set: jest.fn(() => Promise.resolve())
-        }
-      }
+          set: jest.fn(() => Promise.resolve()),
+        },
+      },
     } as any;
 
     // Spy on console methods
@@ -137,7 +137,7 @@ describe('Logger', () => {
         level: 'INFO',
         component: 'TestComponent',
         message: 'Test message',
-        data: { extra: 'data' }
+        data: { extra: 'data' },
       });
       expect(logs[0].timestamp).toBeDefined();
     });

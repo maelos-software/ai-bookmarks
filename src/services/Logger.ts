@@ -11,14 +11,20 @@ export enum LogLevel {
   WARN = 1,
   INFO = 2,
   DEBUG = 3,
-  TRACE = 4
+  TRACE = 4,
 }
 
 export class Logger {
   private static instance: Logger;
   private logLevel: LogLevel = LogLevel.TRACE; // Default to most verbose
   private enableConsole: boolean = true;
-  private logs: Array<{ timestamp: string; level: string; component: string; message: string; data?: any }> = [];
+  private logs: Array<{
+    timestamp: string;
+    level: string;
+    component: string;
+    message: string;
+    data?: any;
+  }> = [];
   private maxLogs: number = 1000;
 
   private constructor() {
@@ -76,7 +82,7 @@ export class Logger {
       level: levelName,
       component,
       message,
-      data
+      data,
     };
 
     // Store in memory
@@ -88,9 +94,12 @@ export class Logger {
     // Console output
     if (this.enableConsole) {
       const prefix = `[${timestamp}] [${levelName}] [${component}]`;
-      const consoleMethod = level === LogLevel.ERROR ? console.error :
-                           level === LogLevel.WARN ? console.warn :
-                           console.log;
+      const consoleMethod =
+        level === LogLevel.ERROR
+          ? console.error
+          : level === LogLevel.WARN
+            ? console.warn
+            : console.log;
 
       if (data !== undefined) {
         consoleMethod(prefix, message, data);
@@ -120,7 +129,13 @@ export class Logger {
     this.log(LogLevel.TRACE, 'TRACE', component, message, data);
   }
 
-  getLogs(): Array<{ timestamp: string; level: string; component: string; message: string; data?: any }> {
+  getLogs(): Array<{
+    timestamp: string;
+    level: string;
+    component: string;
+    message: string;
+    data?: any;
+  }> {
     return [...this.logs];
   }
 

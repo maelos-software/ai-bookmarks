@@ -25,7 +25,7 @@ describe('ReorganizationService', () => {
       removeEmptyFolders: jest.fn(),
       getBookmarksInFolders: jest.fn(),
       getBookmarksInFolder: jest.fn(),
-      renameFolder: jest.fn().mockResolvedValue(undefined)
+      renameFolder: jest.fn().mockResolvedValue(undefined),
     } as any;
 
     mockLLMService = {
@@ -34,10 +34,10 @@ describe('ReorganizationService', () => {
         suggestions: [
           { bookmarkId: '1', folderName: 'Tech' },
           { bookmarkId: '2', folderName: 'News' },
-          { bookmarkId: '3', folderName: 'Tech' }
+          { bookmarkId: '3', folderName: 'Tech' },
         ],
-        tokenUsage: { prompt: 100, completion: 50, total: 150 }
-      })
+        tokenUsage: { prompt: 100, completion: 50, total: 150 },
+      }),
     } as any;
 
     mockConfigManager = {
@@ -45,29 +45,29 @@ describe('ReorganizationService', () => {
       saveConfig: jest.fn().mockResolvedValue(undefined),
       isBookmarkOrganized: jest.fn(),
       markBookmarkAsOrganized: jest.fn(),
-      getOrganizationHistory: jest.fn().mockResolvedValue({})
+      getOrganizationHistory: jest.fn().mockResolvedValue({}),
     } as any;
 
     // Setup default mock responses
     mockBookmarkManager.getAllBookmarks.mockResolvedValue([
       { id: '1', title: 'GitHub', url: 'https://github.com', parentId: '10' },
       { id: '2', title: 'BBC News', url: 'https://bbc.com', parentId: '10' },
-      { id: '3', title: 'Stack Overflow', url: 'https://stackoverflow.com', parentId: '10' }
+      { id: '3', title: 'Stack Overflow', url: 'https://stackoverflow.com', parentId: '10' },
     ]);
 
     mockBookmarkManager.getAllFolders.mockResolvedValue([
       { id: '1', title: 'Bookmarks bar', parentId: '0' },
-      { id: '10', title: 'Unsorted', parentId: '1' }
+      { id: '10', title: 'Unsorted', parentId: '1' },
     ]);
 
     mockBookmarkManager.removeDuplicates.mockResolvedValue({
       removed: 0,
-      details: []
+      details: [],
     });
 
     mockBookmarkManager.removeEmptyFolders.mockResolvedValue({
       removed: 0,
-      details: []
+      details: [],
     });
 
     mockConfigManager.getConfig.mockResolvedValue({
@@ -83,10 +83,10 @@ describe('ReorganizationService', () => {
         organizeSavedTabs: false,
         autoOrganize: false,
         respectOrganizationHistory: 'never',
-        useExistingFolders: false
+        useExistingFolders: false,
       },
       debug: { logLevel: 0, consoleLogging: false },
-      ignorePatterns: []
+      ignorePatterns: [],
     });
 
     mockConfigManager.isBookmarkOrganized.mockResolvedValue(false);
@@ -95,10 +95,10 @@ describe('ReorganizationService', () => {
       suggestions: [
         { bookmarkId: '1', folderName: 'Tech' },
         { bookmarkId: '2', folderName: 'News' },
-        { bookmarkId: '3', folderName: 'Tech' }
+        { bookmarkId: '3', folderName: 'Tech' },
       ],
       foldersToCreate: ['Tech', 'News'],
-      tokenUsage: { prompt: 100, completion: 50, total: 150 }
+      tokenUsage: { prompt: 100, completion: 50, total: 150 },
     });
 
     mockBookmarkManager.ensureFolder.mockImplementation(async (name) => {
@@ -139,7 +139,7 @@ describe('ReorganizationService', () => {
     it('should exclude existing folders from creation list', async () => {
       mockBookmarkManager.getAllFolders.mockResolvedValue([
         { id: '1', title: 'Bookmarks bar', parentId: '0' },
-        { id: '10', title: 'Tech', parentId: '1' }
+        { id: '10', title: 'Tech', parentId: '1' },
       ]);
 
       const preview = await service.generatePreview(['2', '3', '4']);
@@ -201,9 +201,7 @@ describe('ReorganizationService', () => {
     it('should remove duplicates when configured', async () => {
       mockBookmarkManager.removeDuplicates.mockResolvedValue({
         removed: 5,
-        details: [
-          { title: 'Dup', url: 'http://example.com', bookmarkId: '99' }
-        ]
+        details: [{ title: 'Dup', url: 'http://example.com', bookmarkId: '99' }],
       });
 
       const result = await service.executeReorganization(['2', '3', '4']);
@@ -215,9 +213,7 @@ describe('ReorganizationService', () => {
     it('should remove empty folders when configured', async () => {
       mockBookmarkManager.removeEmptyFolders.mockResolvedValue({
         removed: 3,
-        details: [
-          { name: 'Empty Folder', id: '88' }
-        ]
+        details: [{ name: 'Empty Folder', id: '88' }],
       });
 
       const result = await service.executeReorganization(['2', '3', '4']);
@@ -239,17 +235,17 @@ describe('ReorganizationService', () => {
           organizeSavedTabs: false,
           autoOrganize: false,
           respectOrganizationHistory: 'always',
-          useExistingFolders: false
+          useExistingFolders: false,
         },
         debug: { logLevel: 0, consoleLogging: false },
-        ignorePatterns: []
+        ignorePatterns: [],
       });
 
       // Mock all bookmarks as already organized
       mockConfigManager.getOrganizationHistory.mockResolvedValue({
         '1': { moved: true, timestamp: Date.now() },
         '2': { moved: true, timestamp: Date.now() },
-        '3': { moved: true, timestamp: Date.now() }
+        '3': { moved: true, timestamp: Date.now() },
       });
 
       const result = await service.executeReorganization(['2', '3', '4']);
@@ -288,19 +284,19 @@ describe('ReorganizationService', () => {
           organizeSavedTabs: false,
           autoOrganize: false,
           respectOrganizationHistory: 'never',
-          useExistingFolders: true
+          useExistingFolders: true,
         },
         debug: { logLevel: 0, consoleLogging: false },
-        ignorePatterns: []
+        ignorePatterns: [],
       });
 
       mockLLMService.assignToFolders.mockResolvedValue({
         suggestions: [
           { bookmarkId: '1', folderName: 'Tech' },
-          { bookmarkId: '2', folderName: 'KEEP_CURRENT' }
+          { bookmarkId: '2', folderName: 'KEEP_CURRENT' },
         ],
         foldersToCreate: [],
-        tokenUsage: { prompt: 100, completion: 50, total: 150 }
+        tokenUsage: { prompt: 100, completion: 50, total: 150 },
       });
 
       const result = await service.executeReorganization(['2', '3', '4']);
@@ -314,7 +310,7 @@ describe('ReorganizationService', () => {
     it('should organize bookmarks in specific folders', async () => {
       mockBookmarkManager.getBookmarksInFolders.mockResolvedValue([
         { id: '1', title: 'GitHub', url: 'https://github.com', parentId: '10' },
-        { id: '2', title: 'BBC News', url: 'https://bbc.com', parentId: '10' }
+        { id: '2', title: 'BBC News', url: 'https://bbc.com', parentId: '10' },
       ]);
 
       const result = await service.reorganizeSpecificFolders(['10']);
@@ -336,7 +332,7 @@ describe('ReorganizationService', () => {
 
     it('should call progress callback during reorganization', async () => {
       mockBookmarkManager.getBookmarksInFolders.mockResolvedValue([
-        { id: '1', title: 'GitHub', url: 'https://github.com', parentId: '10' }
+        { id: '1', title: 'GitHub', url: 'https://github.com', parentId: '10' },
       ]);
 
       const progressCallback = jest.fn();
@@ -347,7 +343,7 @@ describe('ReorganizationService', () => {
 
     it('should handle LLM errors in specific folder reorganization', async () => {
       mockBookmarkManager.getBookmarksInFolders.mockResolvedValue([
-        { id: '1', title: 'Test', url: 'https://test.com', parentId: '10' }
+        { id: '1', title: 'Test', url: 'https://test.com', parentId: '10' },
       ]);
 
       mockLLMService.assignToFolders.mockRejectedValue(new Error('LLM Error'));
@@ -360,7 +356,7 @@ describe('ReorganizationService', () => {
 
     it('should handle bookmark move errors in specific folders', async () => {
       mockBookmarkManager.getBookmarksInFolders.mockResolvedValue([
-        { id: '1', title: 'Test', url: 'https://test.com', parentId: '10' }
+        { id: '1', title: 'Test', url: 'https://test.com', parentId: '10' },
       ]);
 
       mockBookmarkManager.moveBookmark.mockRejectedValue(new Error('Move failed'));
@@ -374,7 +370,7 @@ describe('ReorganizationService', () => {
     it('should track token usage across batches', async () => {
       mockBookmarkManager.getBookmarksInFolders.mockResolvedValue([
         { id: '1', title: 'Test1', url: 'https://test1.com', parentId: '10' },
-        { id: '2', title: 'Test2', url: 'https://test2.com', parentId: '10' }
+        { id: '2', title: 'Test2', url: 'https://test2.com', parentId: '10' },
       ]);
 
       const result = await service.reorganizeSpecificFolders(['10']);
@@ -395,11 +391,12 @@ describe('ReorganizationService', () => {
     });
 
     it('should continue after batch errors', async () => {
-      mockLLMService.assignToFolders.mockRejectedValueOnce(new Error('Batch 1 failed'))
+      mockLLMService.assignToFolders
+        .mockRejectedValueOnce(new Error('Batch 1 failed'))
         .mockResolvedValueOnce({
           suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
           foldersToCreate: [],
-          tokenUsage: { prompt: 100, completion: 50, total: 150 }
+          tokenUsage: { prompt: 100, completion: 50, total: 150 },
         });
 
       const result = await service.executeReorganization(['2', '3', '4']);
@@ -426,9 +423,7 @@ describe('ReorganizationService', () => {
     it('should handle getAllBookmarks errors', async () => {
       mockBookmarkManager.getAllBookmarks.mockRejectedValue(new Error('Bookmark fetch failed'));
 
-      await expect(
-        service.generatePreview(['2', '3', '4'])
-      ).rejects.toThrow();
+      await expect(service.generatePreview(['2', '3', '4'])).rejects.toThrow();
     });
   });
 
@@ -443,7 +438,9 @@ describe('ReorganizationService', () => {
     });
 
     it('should handle removeEmptyFolders errors', async () => {
-      mockBookmarkManager.removeEmptyFolders.mockRejectedValue(new Error('Remove empty folders failed'));
+      mockBookmarkManager.removeEmptyFolders.mockRejectedValue(
+        new Error('Remove empty folders failed')
+      );
 
       const result = await service.executeReorganization(['2', '3', '4']);
 
@@ -465,7 +462,7 @@ describe('ReorganizationService', () => {
       mockBookmarkManager.getAllFolders.mockResolvedValue([
         { id: '1', title: 'Bookmarks Bar', parentId: '0' },
         { id: '20', title: 'Home', parentId: '1' },
-        { id: '21', title: 'Shopping', parentId: '1' }
+        { id: '21', title: 'Shopping', parentId: '1' },
       ]);
 
       const result = await service.executeReorganization(['2', '3', '4']);
@@ -478,10 +475,10 @@ describe('ReorganizationService', () => {
         suggestions: [
           { bookmarkId: '1', folderName: 'Tech' },
           { bookmarkId: '2', folderName: 'KEEP_CURRENT' },
-          { bookmarkId: '3', folderName: 'Tech' }
+          { bookmarkId: '3', folderName: 'Tech' },
         ],
         foldersToCreate: [],
-        tokenUsage: { prompt: 100, completion: 50, total: 150 }
+        tokenUsage: { prompt: 100, completion: 50, total: 150 },
       });
 
       const result = await service.executeReorganization(['2', '3', '4']);
@@ -496,7 +493,7 @@ describe('ReorganizationService', () => {
     it('should handle config save errors during specific folder reorganization', async () => {
       mockConfigManager.saveConfig.mockRejectedValue(new Error('Save failed'));
       mockBookmarkManager.getBookmarksInFolders.mockResolvedValue([
-        { id: '1', title: 'Test', url: 'https://test.com', parentId: '10' }
+        { id: '1', title: 'Test', url: 'https://test.com', parentId: '10' },
       ]);
 
       const result = await service.reorganizeSpecificFolders(['10']);
@@ -508,7 +505,7 @@ describe('ReorganizationService', () => {
 
     it('should handle duplicate removal errors in specific folders', async () => {
       mockBookmarkManager.getBookmarksInFolders.mockResolvedValue([
-        { id: '1', title: 'Test', url: 'https://test.com', parentId: '10' }
+        { id: '1', title: 'Test', url: 'https://test.com', parentId: '10' },
       ]);
       mockConfigManager.getConfig.mockResolvedValue({
         api: { provider: 'openai', apiKey: 'test' },
@@ -523,10 +520,10 @@ describe('ReorganizationService', () => {
           organizeSavedTabs: false,
           autoOrganize: false,
           respectOrganizationHistory: 'never',
-          useExistingFolders: false
+          useExistingFolders: false,
         },
         debug: { logLevel: 0, consoleLogging: false },
-        ignorePatterns: []
+        ignorePatterns: [],
       });
       mockBookmarkManager.removeDuplicates.mockRejectedValue(new Error('Duplicate removal failed'));
 
@@ -539,7 +536,7 @@ describe('ReorganizationService', () => {
 
     it('should handle empty folder removal errors in specific folders', async () => {
       mockBookmarkManager.getBookmarksInFolders.mockResolvedValue([
-        { id: '1', title: 'Test', url: 'https://test.com', parentId: '10' }
+        { id: '1', title: 'Test', url: 'https://test.com', parentId: '10' },
       ]);
       mockConfigManager.getConfig.mockResolvedValue({
         api: { provider: 'openai', apiKey: 'test' },
@@ -554,12 +551,14 @@ describe('ReorganizationService', () => {
           organizeSavedTabs: false,
           autoOrganize: false,
           respectOrganizationHistory: 'never',
-          useExistingFolders: false
+          useExistingFolders: false,
         },
         debug: { logLevel: 0, consoleLogging: false },
-        ignorePatterns: []
+        ignorePatterns: [],
       });
-      mockBookmarkManager.removeEmptyFolders.mockRejectedValue(new Error('Empty folder removal failed'));
+      mockBookmarkManager.removeEmptyFolders.mockRejectedValue(
+        new Error('Empty folder removal failed')
+      );
 
       const result = await service.reorganizeSpecificFolders(['10']);
 

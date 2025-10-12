@@ -20,17 +20,17 @@ describe('ConfigurationManager', () => {
           set: jest.fn((data) => {
             Object.assign(mockStorage, data);
             return Promise.resolve();
-          })
+          }),
         },
         local: {
           get: jest.fn((key) => Promise.resolve({})),
           set: jest.fn(() => Promise.resolve()),
-          remove: jest.fn(() => Promise.resolve())
-        }
+          remove: jest.fn(() => Promise.resolve()),
+        },
       },
       bookmarks: {
-        getTree: jest.fn(() => Promise.resolve([]))
-      }
+        getTree: jest.fn(() => Promise.resolve([])),
+      },
     } as any;
   });
 
@@ -49,7 +49,7 @@ describe('ConfigurationManager', () => {
     it('should merge stored config with defaults', async () => {
       mockStorage['app_config'] = {
         api: { provider: 'openai', apiKey: 'test-key' },
-        organization: { removeDuplicates: false }
+        organization: { removeDuplicates: false },
       };
 
       const config = await configManager.getConfig();
@@ -76,16 +76,16 @@ describe('ConfigurationManager', () => {
           organizeSavedTabs: false,
           autoOrganize: false,
           respectOrganizationHistory: 'never',
-          useExistingFolders: true
+          useExistingFolders: true,
         },
         debug: { logLevel: 2, consoleLogging: true },
-        ignorePatterns: []
+        ignorePatterns: [],
       };
 
       await configManager.saveConfig(testConfig);
 
       expect(chrome.storage.sync.set).toHaveBeenCalledWith({
-        app_config: testConfig
+        app_config: testConfig,
       });
     });
   });
@@ -96,7 +96,7 @@ describe('ConfigurationManager', () => {
 
       await configManager.updateAPIConfig({
         provider: 'claude',
-        apiKey: 'new-key'
+        apiKey: 'new-key',
       });
 
       const updatedConfig = await configManager.getConfig();
@@ -109,7 +109,7 @@ describe('ConfigurationManager', () => {
     it('should return false when no API key is set', async () => {
       // Explicitly set empty apiKey
       mockStorage['app_config'] = {
-        api: { apiKey: '' }
+        api: { apiKey: '' },
       };
 
       const configured = await configManager.isConfigured();
@@ -118,7 +118,7 @@ describe('ConfigurationManager', () => {
 
     it('should return true when API key is set', async () => {
       mockStorage['app_config'] = {
-        api: { apiKey: 'test-key' }
+        api: { apiKey: 'test-key' },
       };
 
       const configured = await configManager.isConfigured();
@@ -172,19 +172,19 @@ describe('ConfigurationManager', () => {
     });
 
     it('should mark all bookmarks as organized', async () => {
-      const mockTree = [{
-        id: '0',
-        children: [
-          { id: '1', url: 'http://example.com' },
-          { id: '2', url: 'http://test.com' },
-          {
-            id: '3',
-            children: [
-              { id: '4', url: 'http://nested.com' }
-            ]
-          }
-        ]
-      }];
+      const mockTree = [
+        {
+          id: '0',
+          children: [
+            { id: '1', url: 'http://example.com' },
+            { id: '2', url: 'http://test.com' },
+            {
+              id: '3',
+              children: [{ id: '4', url: 'http://nested.com' }],
+            },
+          ],
+        },
+      ];
 
       (chrome.bookmarks.getTree as jest.Mock).mockResolvedValue(mockTree);
 

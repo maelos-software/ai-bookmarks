@@ -7,7 +7,11 @@
  */
 
 import { logger } from './Logger.js';
-import { SYSTEM_FOLDER_IDS, PROTECTED_FOLDER_NAMES, SPEED_DIAL_RENAMED_FOLDERS } from './ConfigurationManager.js';
+import {
+  SYSTEM_FOLDER_IDS,
+  PROTECTED_FOLDER_NAMES,
+  SPEED_DIAL_RENAMED_FOLDERS,
+} from './ConfigurationManager.js';
 
 export interface Bookmark {
   id: string;
@@ -38,18 +42,18 @@ export class BookmarkManager {
    * Find folders by name (case-insensitive)
    */
   async findFoldersByName(name: string, allFolders?: Bookmark[]): Promise<Bookmark[]> {
-    const folders = allFolders || await this.getAllFolders();
+    const folders = allFolders || (await this.getAllFolders());
     const normalized = BookmarkManager.normalizeTitle(name);
-    return folders.filter(f => BookmarkManager.normalizeTitle(f.title) === normalized);
+    return folders.filter((f) => BookmarkManager.normalizeTitle(f.title) === normalized);
   }
 
   /**
    * Find folders by name pattern (case-insensitive, starts with)
    */
   async findFoldersByPattern(pattern: string, allFolders?: Bookmark[]): Promise<Bookmark[]> {
-    const folders = allFolders || await this.getAllFolders();
+    const folders = allFolders || (await this.getAllFolders());
     const normalized = BookmarkManager.normalizeTitle(pattern);
-    return folders.filter(f => BookmarkManager.normalizeTitle(f.title).startsWith(normalized));
+    return folders.filter((f) => BookmarkManager.normalizeTitle(f.title).startsWith(normalized));
   }
 
   /**
@@ -77,7 +81,7 @@ export class BookmarkManager {
             id: node.id,
             title: node.title,
             url: node.url,
-            parentId: node.parentId
+            parentId: node.parentId,
           });
         }
         if (node.children) {
@@ -105,7 +109,7 @@ export class BookmarkManager {
           folders.push({
             id: node.id,
             title: node.title,
-            parentId: node.parentId
+            parentId: node.parentId,
           });
         }
         if (node.children) {
@@ -127,8 +131,11 @@ export class BookmarkManager {
     const folders = await this.getAllFolders();
     const normalized = name.toLowerCase().trim();
 
-    const folder = folders.find(f => f.title.toLowerCase().trim() === normalized);
-    logger.debug('BookmarkManager', `findFolderByName("${name}")`, { found: !!folder, id: folder?.id });
+    const folder = folders.find((f) => f.title.toLowerCase().trim() === normalized);
+    logger.debug('BookmarkManager', `findFolderByName("${name}")`, {
+      found: !!folder,
+      id: folder?.id,
+    });
     return folder ? folder.id : null;
   }
 
@@ -140,12 +147,15 @@ export class BookmarkManager {
     // Check if already exists at this parent location
     const folders = await this.getAllFolders();
     const normalized = name.toLowerCase().trim();
-    const existing = folders.find(f =>
-      f.title.toLowerCase().trim() === normalized && f.parentId === parentId
+    const existing = folders.find(
+      (f) => f.title.toLowerCase().trim() === normalized && f.parentId === parentId
     );
 
     if (existing) {
-      logger.debug('BookmarkManager', `Folder "${name}" already exists at parent ${parentId} with ID ${existing.id}`);
+      logger.debug(
+        'BookmarkManager',
+        `Folder "${name}" already exists at parent ${parentId} with ID ${existing.id}`
+      );
       return existing.id;
     }
 
@@ -153,7 +163,7 @@ export class BookmarkManager {
     logger.info('BookmarkManager', `Creating new folder "${name}" at parent ${parentId}`);
     const folder = await chrome.bookmarks.create({
       title: name,
-      parentId: parentId
+      parentId: parentId,
     });
 
     logger.info('BookmarkManager', `Created folder "${name}" with ID ${folder.id}`);
@@ -174,7 +184,7 @@ export class BookmarkManager {
    */
   async getBookmarksInFolder(folderId: string): Promise<Bookmark[]> {
     const allBookmarks = await this.getAllBookmarks();
-    return allBookmarks.filter(b => b.parentId === folderId);
+    return allBookmarks.filter((b) => b.parentId === folderId);
   }
 
   /**
@@ -224,7 +234,10 @@ export class BookmarkManager {
    * Remove duplicate bookmarks, keeping only the first occurrence
    * Returns details about duplicates removed
    */
-  async removeDuplicates(): Promise<{ removed: number; details: Array<{ title: string; url: string; bookmarkId: string }> }> {
+  async removeDuplicates(): Promise<{
+    removed: number;
+    details: Array<{ title: string; url: string; bookmarkId: string }>;
+  }> {
     logger.info('BookmarkManager', 'removeDuplicates() called');
     const allBookmarks = await this.getAllBookmarks();
     const bookmarkMap = new Map<string, Bookmark>();
@@ -251,7 +264,7 @@ export class BookmarkManager {
             details.push({
               title: bookmark.title,
               url: bookmark.url || url,
-              bookmarkId: ids[i]
+              bookmarkId: ids[i],
             });
           }
           logger.trace('BookmarkManager', `Removed duplicate bookmark ${ids[i]}`);
@@ -291,7 +304,8 @@ export class BookmarkManager {
 
     const traverse = (nodes: chrome.bookmarks.BookmarkTreeNode[], parentId?: string) => {
       for (const node of nodes) {
-        if (!node.url) { // It's a folder
+        if (!node.url) {
+          // It's a folder
           const isRoot = !parentId || parentId === '0' || rootIds.includes(node.id);
 
           // Add root folders and well-known system folders
@@ -299,7 +313,7 @@ export class BookmarkManager {
             systemFolders.push({
               id: node.id,
               title: node.title,
-              isRoot
+              isRoot,
             });
           }
 
@@ -329,7 +343,7 @@ export class BookmarkManager {
       'bookmarks menu',
       'toolbar',
       'unsorted bookmarks',
-      'bookmarks toolbar'
+      'bookmarks toolbar',
     ]);
 
     return wellKnownNames.has(title.toLowerCase().trim());
@@ -388,7 +402,10 @@ export class BookmarkManager {
 
     for (const folder of folders) {
       if (this.isProtectedFolder(folder, allowRemoveSavedTabs)) {
-        logger.trace('BookmarkManager', `Skipping protected folder: ${folder.title} (${folder.id})`);
+        logger.trace(
+          'BookmarkManager',
+          `Skipping protected folder: ${folder.title} (${folder.id})`
+        );
         continue;
       }
 
@@ -430,7 +447,10 @@ export class BookmarkManager {
       logger.warn('BookmarkManager', `Failed to get descendants for folder ${folderId}`, error);
     }
 
-    logger.debug('BookmarkManager', `Found ${descendants.length} descendant folders for ${folderId}`);
+    logger.debug(
+      'BookmarkManager',
+      `Found ${descendants.length} descendant folders for ${folderId}`
+    );
     return descendants;
   }
 
@@ -438,20 +458,26 @@ export class BookmarkManager {
    * Get bookmarks that are in any of the specified folders (including subfolders)
    */
   async getBookmarksInFolders(folderIds: string[]): Promise<Bookmark[]> {
-    logger.trace('BookmarkManager', `getBookmarksInFolders called with ${folderIds.length} folders`);
+    logger.trace(
+      'BookmarkManager',
+      `getBookmarksInFolders called with ${folderIds.length} folders`
+    );
 
     // Get all descendant folders for each specified folder
     const allFolderIds = new Set<string>();
     for (const folderId of folderIds) {
       const descendants = await this.getFolderDescendants(folderId);
-      descendants.forEach(id => allFolderIds.add(id));
+      descendants.forEach((id) => allFolderIds.add(id));
     }
 
-    logger.debug('BookmarkManager', `Total folders to check (including descendants): ${allFolderIds.size}`);
+    logger.debug(
+      'BookmarkManager',
+      `Total folders to check (including descendants): ${allFolderIds.size}`
+    );
 
     // Get all bookmarks and filter to those in our folder set
     const allBookmarks = await this.getAllBookmarks();
-    const filtered = allBookmarks.filter(b => b.parentId && allFolderIds.has(b.parentId));
+    const filtered = allBookmarks.filter((b) => b.parentId && allFolderIds.has(b.parentId));
 
     logger.info('BookmarkManager', `Found ${filtered.length} bookmarks in specified folders`);
     return filtered;
@@ -476,8 +502,8 @@ export class BookmarkManager {
     // Convert Chrome tree to our format with counts
     const convert = (nodes: chrome.bookmarks.BookmarkTreeNode[]): BookmarkTreeNode[] => {
       return nodes
-        .filter(node => !node.url) // Only folders
-        .map(node => {
+        .filter((node) => !node.url) // Only folders
+        .map((node) => {
           const directCount = bookmarkCounts.get(node.id) || 0;
           let totalCount = directCount;
 
@@ -495,7 +521,7 @@ export class BookmarkManager {
             parentId: node.parentId,
             directBookmarks: directCount,
             totalBookmarks: totalCount,
-            children
+            children,
           };
         });
     };
@@ -509,14 +535,21 @@ export class BookmarkManager {
    * Remove empty folders (excluding system folders)
    * Returns details about folders removed
    */
-  async removeEmptyFolders(renamedSpeedDialIds: string[] = [], allowRemoveSavedTabs: boolean = false): Promise<{ removed: number; details: Array<{ name: string; id: string }> }> {
-    logger.info('BookmarkManager', 'removeEmptyFolders() called', { renamedSpeedDialIdsCount: renamedSpeedDialIds.length, allowRemoveSavedTabs });
+  async removeEmptyFolders(
+    renamedSpeedDialIds: string[] = [],
+    allowRemoveSavedTabs: boolean = false
+  ): Promise<{ removed: number; details: Array<{ name: string; id: string }> }> {
+    logger.info('BookmarkManager', 'removeEmptyFolders() called', {
+      renamedSpeedDialIdsCount: renamedSpeedDialIds.length,
+      allowRemoveSavedTabs,
+    });
 
     // Multiple passes to handle nested empty folders
     const details: Array<{ name: string; id: string }> = [];
     let totalRemoved = 0;
     let passNumber = 1;
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       logger.debug('BookmarkManager', `Empty folder removal pass ${passNumber}`);
       const emptyFolders = await this.findEmptyFolders(allowRemoveSavedTabs);
@@ -528,36 +561,60 @@ export class BookmarkManager {
 
       let removedThisPass = 0;
       for (const folder of emptyFolders) {
-        logger.info('BookmarkManager', `Attempting to remove empty folder: ${folder.title} (${folder.id}, parentId: ${folder.parentId})`);
+        logger.info(
+          'BookmarkManager',
+          `Attempting to remove empty folder: ${folder.title} (${folder.id}, parentId: ${folder.parentId})`
+        );
 
         // Double-check protection before attempting removal
-        if (this.isProtectedFolder(folder, allowRemoveSavedTabs) || renamedSpeedDialIds.includes(folder.id)) {
+        if (
+          this.isProtectedFolder(folder, allowRemoveSavedTabs) ||
+          renamedSpeedDialIds.includes(folder.id)
+        ) {
           if (renamedSpeedDialIds.includes(folder.id)) {
-            logger.warn('BookmarkManager', `Skipping renamed Speed Dial folder: ${folder.title} (${folder.id})`);
+            logger.warn(
+              'BookmarkManager',
+              `Skipping renamed Speed Dial folder: ${folder.title} (${folder.id})`
+            );
           } else {
-            logger.warn('BookmarkManager', `Skipping protected folder that passed initial filter: ${folder.title} (${folder.id})`);
+            logger.warn(
+              'BookmarkManager',
+              `Skipping protected folder that passed initial filter: ${folder.title} (${folder.id})`
+            );
           }
           continue;
         }
 
         try {
           // Check if Vivaldi Speed Dial API exists and try to remove from Speed Dial first
-          // @ts-ignore - Vivaldi-specific API
+          // @ts-expect-error - Vivaldi-specific API not in Chrome types
           if (typeof chrome.speedDial !== 'undefined' && chrome.speedDial) {
             try {
-              logger.info('BookmarkManager', `Vivaldi detected - checking if ${folder.title} is in Speed Dial...`);
-              // @ts-ignore - Vivaldi-specific API
+              logger.info(
+                'BookmarkManager',
+                `Vivaldi detected - checking if ${folder.title} is in Speed Dial...`
+              );
+              // @ts-expect-error - Vivaldi-specific API not in Chrome types
               const speedDialFolders = await chrome.speedDial.getFolders();
               const speedDialFolder = speedDialFolders?.find((f: any) => f.id === folder.id);
 
               if (speedDialFolder) {
-                logger.info('BookmarkManager', `Removing folder from Speed Dial: ${folder.title} (${folder.id})`);
-                // @ts-ignore - Vivaldi-specific API
+                logger.info(
+                  'BookmarkManager',
+                  `Removing folder from Speed Dial: ${folder.title} (${folder.id})`
+                );
+                // @ts-expect-error - Vivaldi-specific API not in Chrome types
                 await chrome.speedDial.removeFolder(folder.id);
-                logger.info('BookmarkManager', `Successfully removed from Speed Dial: ${folder.title}`);
+                logger.info(
+                  'BookmarkManager',
+                  `Successfully removed from Speed Dial: ${folder.title}`
+                );
               }
             } catch (speedDialError: any) {
-              logger.debug('BookmarkManager', `Speed Dial check/removal failed (folder may not be in Speed Dial): ${speedDialError?.message || speedDialError}`);
+              logger.debug(
+                'BookmarkManager',
+                `Speed Dial check/removal failed (folder may not be in Speed Dial): ${speedDialError?.message || speedDialError}`
+              );
             }
           }
 
@@ -567,32 +624,51 @@ export class BookmarkManager {
           totalRemoved++;
           details.push({
             name: folder.title,
-            id: folder.id
+            id: folder.id,
           });
           logger.debug('BookmarkManager', `Removed empty folder: ${folder.title} (${folder.id})`);
         } catch (error: any) {
           // Log more detail about what failed
           const errorMsg = error?.message || String(error);
-          logger.warn('BookmarkManager', `Failed to remove folder "${folder.title}" (${folder.id}): ${errorMsg}`);
+          logger.warn(
+            'BookmarkManager',
+            `Failed to remove folder "${folder.title}" (${folder.id}): ${errorMsg}`
+          );
 
           // Try removeTree as fallback
           try {
-            logger.info('BookmarkManager', `Attempting removeTree for "${folder.title}" (${folder.id})`);
+            logger.info(
+              'BookmarkManager',
+              `Attempting removeTree for "${folder.title}" (${folder.id})`
+            );
             await chrome.bookmarks.removeTree(folder.id);
             removedThisPass++;
             totalRemoved++;
             details.push({
               name: folder.title,
-              id: folder.id
+              id: folder.id,
             });
-            logger.info('BookmarkManager', `Successfully removed with removeTree: ${folder.title} (${folder.id})`);
+            logger.info(
+              'BookmarkManager',
+              `Successfully removed with removeTree: ${folder.title} (${folder.id})`
+            );
           } catch (removeTreeError: any) {
             const removeTreeMsg = removeTreeError?.message || String(removeTreeError);
-            logger.error('BookmarkManager', `removeTree also failed for "${folder.title}" (${folder.id}): ${removeTreeMsg}`);
+            logger.error(
+              'BookmarkManager',
+              `removeTree also failed for "${folder.title}" (${folder.id}): ${removeTreeMsg}`
+            );
 
             // If it's a Chrome error about modifying root, mark as protected
-            if (errorMsg.includes('Can\'t modify') || errorMsg.includes('root') || errorMsg.includes('system')) {
-              logger.info('BookmarkManager', `Folder "${folder.title}" appears to be system-protected, will skip in future`);
+            if (
+              errorMsg.includes("Can't modify") ||
+              errorMsg.includes('root') ||
+              errorMsg.includes('system')
+            ) {
+              logger.info(
+                'BookmarkManager',
+                `Folder "${folder.title}" appears to be system-protected, will skip in future`
+              );
             }
           }
         }
@@ -616,11 +692,12 @@ export class BookmarkManager {
 
     // Deduplicate folder names in details (when importing, many duplicate empty folders exist)
     // Keep the count accurate but don't show "Shopping" 10 times
-    const uniqueDetails = Array.from(
-      new Map(details.map(d => [d.name, d])).values()
-    );
+    const uniqueDetails = Array.from(new Map(details.map((d) => [d.name, d])).values());
 
-    logger.info('BookmarkManager', `Total removed: ${totalRemoved} empty folders (${uniqueDetails.length} unique names) in ${passNumber - 1} passes`);
+    logger.info(
+      'BookmarkManager',
+      `Total removed: ${totalRemoved} empty folders (${uniqueDetails.length} unique names) in ${passNumber - 1} passes`
+    );
     return { removed: totalRemoved, details: uniqueDetails };
   }
 }

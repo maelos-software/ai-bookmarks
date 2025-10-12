@@ -12,46 +12,56 @@ describe('BookmarkManager', () => {
     manager = new BookmarkManager();
 
     // Create a mock bookmark tree
-    mockBookmarkTree = [{
-      id: '0',
-      title: '',
-      children: [
-        {
-          id: '1',
-          title: 'Bookmarks Bar',
-          children: [
-            { id: '10', title: 'Tech Folder', children: [
-              { id: '100', title: 'GitHub', url: 'https://github.com' },
-              { id: '101', title: 'Stack Overflow', url: 'https://stackoverflow.com' }
-            ]},
-            { id: '11', title: 'News Folder', children: [
-              { id: '110', title: 'BBC', url: 'https://bbc.com' }
-            ]},
-            { id: '12', title: 'Empty Folder', children: [] }
-          ]
-        },
-        {
-          id: '2',
-          title: 'Other Bookmarks',
-          children: [
-            { id: '200', title: 'Random Site', url: 'https://example.com' },
-            { id: '201', title: 'Duplicate', url: 'https://github.com' }
-          ]
-        },
-        {
-          id: '3',
-          title: 'Mobile Bookmarks',
-          children: []
-        }
-      ]
-    }];
+    mockBookmarkTree = [
+      {
+        id: '0',
+        title: '',
+        children: [
+          {
+            id: '1',
+            title: 'Bookmarks Bar',
+            children: [
+              {
+                id: '10',
+                title: 'Tech Folder',
+                children: [
+                  { id: '100', title: 'GitHub', url: 'https://github.com' },
+                  { id: '101', title: 'Stack Overflow', url: 'https://stackoverflow.com' },
+                ],
+              },
+              {
+                id: '11',
+                title: 'News Folder',
+                children: [{ id: '110', title: 'BBC', url: 'https://bbc.com' }],
+              },
+              { id: '12', title: 'Empty Folder', children: [] },
+            ],
+          },
+          {
+            id: '2',
+            title: 'Other Bookmarks',
+            children: [
+              { id: '200', title: 'Random Site', url: 'https://example.com' },
+              { id: '201', title: 'Duplicate', url: 'https://github.com' },
+            ],
+          },
+          {
+            id: '3',
+            title: 'Mobile Bookmarks',
+            children: [],
+          },
+        ],
+      },
+    ];
 
     // Mock Chrome APIs
     global.chrome = {
       bookmarks: {
         getTree: jest.fn(() => Promise.resolve(mockBookmarkTree)),
         getChildren: jest.fn((id) => {
-          const findNode = (nodes: chrome.bookmarks.BookmarkTreeNode[]): chrome.bookmarks.BookmarkTreeNode | undefined => {
+          const findNode = (
+            nodes: chrome.bookmarks.BookmarkTreeNode[]
+          ): chrome.bookmarks.BookmarkTreeNode | undefined => {
             for (const node of nodes) {
               if (node.id === id) return node;
               if (node.children) {
@@ -65,7 +75,9 @@ describe('BookmarkManager', () => {
           return Promise.resolve(node?.children || []);
         }),
         getSubTree: jest.fn((id) => {
-          const findNode = (nodes: chrome.bookmarks.BookmarkTreeNode[]): chrome.bookmarks.BookmarkTreeNode | undefined => {
+          const findNode = (
+            nodes: chrome.bookmarks.BookmarkTreeNode[]
+          ): chrome.bookmarks.BookmarkTreeNode | undefined => {
             for (const node of nodes) {
               if (node.id === id) return node;
               if (node.children) {
@@ -78,16 +90,18 @@ describe('BookmarkManager', () => {
           const node = findNode(mockBookmarkTree);
           return Promise.resolve(node ? [node] : []);
         }),
-        create: jest.fn((details) => Promise.resolve({
-          id: 'new-folder-id',
-          title: details.title,
-          parentId: details.parentId
-        })),
+        create: jest.fn((details) =>
+          Promise.resolve({
+            id: 'new-folder-id',
+            title: details.title,
+            parentId: details.parentId,
+          })
+        ),
         update: jest.fn(() => Promise.resolve({})),
         move: jest.fn(() => Promise.resolve({})),
         remove: jest.fn(() => Promise.resolve()),
-        removeTree: jest.fn(() => Promise.resolve())
-      }
+        removeTree: jest.fn(() => Promise.resolve()),
+      },
     } as any;
   });
 
@@ -104,16 +118,16 @@ describe('BookmarkManager', () => {
       const bookmarks = await manager.getAllBookmarks();
 
       expect(bookmarks.length).toBeGreaterThanOrEqual(4);
-      expect(bookmarks.find(b => b.title === 'GitHub')).toBeDefined();
-      expect(bookmarks.find(b => b.title === 'BBC')).toBeDefined();
-      expect(bookmarks.find(b => b.title === 'Random Site')).toBeDefined();
-      expect(bookmarks.find(b => b.title === 'Duplicate')).toBeDefined();
+      expect(bookmarks.find((b) => b.title === 'GitHub')).toBeDefined();
+      expect(bookmarks.find((b) => b.title === 'BBC')).toBeDefined();
+      expect(bookmarks.find((b) => b.title === 'Random Site')).toBeDefined();
+      expect(bookmarks.find((b) => b.title === 'Duplicate')).toBeDefined();
     });
 
     it('should include url for each bookmark', async () => {
       const bookmarks = await manager.getAllBookmarks();
 
-      bookmarks.forEach(bookmark => {
+      bookmarks.forEach((bookmark) => {
         expect(bookmark.url).toBeDefined();
       });
     });
@@ -124,16 +138,16 @@ describe('BookmarkManager', () => {
       const folders = await manager.getAllFolders();
 
       expect(folders.length).toBeGreaterThan(0);
-      expect(folders.find(f => f.title === 'Tech Folder')).toBeDefined();
-      expect(folders.find(f => f.title === 'News Folder')).toBeDefined();
-      expect(folders.find(f => f.title === 'Empty Folder')).toBeDefined();
+      expect(folders.find((f) => f.title === 'Tech Folder')).toBeDefined();
+      expect(folders.find((f) => f.title === 'News Folder')).toBeDefined();
+      expect(folders.find((f) => f.title === 'Empty Folder')).toBeDefined();
     });
 
     it('should not include bookmarks', async () => {
       const folders = await manager.getAllFolders();
 
-      expect(folders.find(f => f.title === 'GitHub')).toBeUndefined();
-      expect(folders.find(f => f.title === 'BBC')).toBeUndefined();
+      expect(folders.find((f) => f.title === 'GitHub')).toBeUndefined();
+      expect(folders.find((f) => f.title === 'BBC')).toBeUndefined();
     });
   });
 
@@ -178,7 +192,7 @@ describe('BookmarkManager', () => {
       // Mock getAllFolders to return our test folders
       jest.spyOn(manager, 'getAllFolders').mockResolvedValue([
         { id: '10', title: 'Tech Folder', parentId: '1' },
-        { id: '11', title: 'News Folder', parentId: '1' }
+        { id: '11', title: 'News Folder', parentId: '1' },
       ]);
 
       const folderId = await manager.ensureFolder('Tech Folder', '1');
@@ -188,16 +202,16 @@ describe('BookmarkManager', () => {
     });
 
     it('should create new folder if it does not exist', async () => {
-      jest.spyOn(manager, 'getAllFolders').mockResolvedValue([
-        { id: '10', title: 'Tech Folder', parentId: '1' }
-      ]);
+      jest
+        .spyOn(manager, 'getAllFolders')
+        .mockResolvedValue([{ id: '10', title: 'Tech Folder', parentId: '1' }]);
 
       const folderId = await manager.ensureFolder('New Folder', '1');
 
       expect(folderId).toBe('new-folder-id');
       expect(chrome.bookmarks.create).toHaveBeenCalledWith({
         title: 'New Folder',
-        parentId: '1'
+        parentId: '1',
       });
     });
   });
@@ -224,20 +238,22 @@ describe('BookmarkManager', () => {
       jest.spyOn(manager, 'getAllBookmarks').mockResolvedValue([
         { id: '100', title: 'GitHub', url: 'https://github.com', parentId: '10' },
         { id: '101', title: 'Stack Overflow', url: 'https://stackoverflow.com', parentId: '10' },
-        { id: '110', title: 'BBC', url: 'https://bbc.com', parentId: '11' }
+        { id: '110', title: 'BBC', url: 'https://bbc.com', parentId: '11' },
       ]);
 
       const bookmarks = await manager.getBookmarksInFolder('10');
 
       expect(bookmarks).toHaveLength(2);
-      expect(bookmarks.find(b => b.title === 'GitHub')).toBeDefined();
-      expect(bookmarks.find(b => b.title === 'Stack Overflow')).toBeDefined();
+      expect(bookmarks.find((b) => b.title === 'GitHub')).toBeDefined();
+      expect(bookmarks.find((b) => b.title === 'Stack Overflow')).toBeDefined();
     });
 
     it('should return empty array for folder with no bookmarks', async () => {
-      jest.spyOn(manager, 'getAllBookmarks').mockResolvedValue([
-        { id: '100', title: 'GitHub', url: 'https://github.com', parentId: '10' }
-      ]);
+      jest
+        .spyOn(manager, 'getAllBookmarks')
+        .mockResolvedValue([
+          { id: '100', title: 'GitHub', url: 'https://github.com', parentId: '10' },
+        ]);
 
       const bookmarks = await manager.getBookmarksInFolder('12');
 
@@ -282,16 +298,16 @@ describe('BookmarkManager', () => {
     it('should find empty folders', async () => {
       const emptyFolders = await manager.findEmptyFolders();
 
-      const emptyFolder = emptyFolders.find(f => f.title === 'Empty Folder');
+      const emptyFolder = emptyFolders.find((f) => f.title === 'Empty Folder');
       expect(emptyFolder).toBeDefined();
     });
 
     it('should not include system folders', async () => {
       const emptyFolders = await manager.findEmptyFolders();
 
-      expect(emptyFolders.find(f => f.title === 'Bookmarks Bar')).toBeUndefined();
-      expect(emptyFolders.find(f => f.title === 'Other Bookmarks')).toBeUndefined();
-      expect(emptyFolders.find(f => f.title === 'Mobile Bookmarks')).toBeUndefined();
+      expect(emptyFolders.find((f) => f.title === 'Bookmarks Bar')).toBeUndefined();
+      expect(emptyFolders.find((f) => f.title === 'Other Bookmarks')).toBeUndefined();
+      expect(emptyFolders.find((f) => f.title === 'Mobile Bookmarks')).toBeUndefined();
     });
   });
 
@@ -316,7 +332,7 @@ describe('BookmarkManager', () => {
     it('should get bookmarks from multiple folders and subfolders', async () => {
       jest.spyOn(manager, 'getAllBookmarks').mockResolvedValue([
         { id: '100', title: 'GitHub', url: 'https://github.com', parentId: '10' },
-        { id: '110', title: 'BBC', url: 'https://bbc.com', parentId: '11' }
+        { id: '110', title: 'BBC', url: 'https://bbc.com', parentId: '11' },
       ]);
 
       jest.spyOn(manager, 'getFolderDescendants').mockResolvedValue(['1', '10', '11']);
@@ -324,22 +340,22 @@ describe('BookmarkManager', () => {
       const bookmarks = await manager.getBookmarksInFolders(['1']);
 
       expect(bookmarks.length).toBeGreaterThan(0);
-      expect(bookmarks.find(b => b.title === 'GitHub')).toBeDefined();
-      expect(bookmarks.find(b => b.title === 'BBC')).toBeDefined();
+      expect(bookmarks.find((b) => b.title === 'GitHub')).toBeDefined();
+      expect(bookmarks.find((b) => b.title === 'BBC')).toBeDefined();
     });
 
     it('should include bookmarks from descendant folders', async () => {
       jest.spyOn(manager, 'getAllBookmarks').mockResolvedValue([
         { id: '100', title: 'Test1', url: 'https://test1.com', parentId: '10' },
-        { id: '110', title: 'Test2', url: 'https://test2.com', parentId: '11' }
+        { id: '110', title: 'Test2', url: 'https://test2.com', parentId: '11' },
       ]);
 
       jest.spyOn(manager, 'getFolderDescendants').mockResolvedValue(['1', '10', '11']);
 
       const bookmarks = await manager.getBookmarksInFolders(['1']);
 
-      expect(bookmarks.find(b => b.parentId === '10')).toBeDefined();
-      expect(bookmarks.find(b => b.parentId === '11')).toBeDefined();
+      expect(bookmarks.find((b) => b.parentId === '10')).toBeDefined();
+      expect(bookmarks.find((b) => b.parentId === '11')).toBeDefined();
     });
   });
 
@@ -347,14 +363,14 @@ describe('BookmarkManager', () => {
     it('should return system folders', async () => {
       const systemFolders = await manager.getSystemFolders();
 
-      expect(systemFolders.find(f => f.title === 'Bookmarks Bar')).toBeDefined();
-      expect(systemFolders.find(f => f.title === 'Other Bookmarks')).toBeDefined();
+      expect(systemFolders.find((f) => f.title === 'Bookmarks Bar')).toBeDefined();
+      expect(systemFolders.find((f) => f.title === 'Other Bookmarks')).toBeDefined();
     });
 
     it('should mark root folders correctly', async () => {
       const systemFolders = await manager.getSystemFolders();
 
-      const bookmarksBar = systemFolders.find(f => f.title === 'Bookmarks Bar');
+      const bookmarksBar = systemFolders.find((f) => f.title === 'Bookmarks Bar');
       expect(bookmarksBar?.isRoot).toBe(true);
     });
   });
@@ -372,7 +388,7 @@ describe('BookmarkManager', () => {
     it('should include folder metadata', async () => {
       const tree = await manager.getBookmarkTreeWithCounts();
 
-      tree.forEach(node => {
+      tree.forEach((node) => {
         expect(node.id).toBeDefined();
         expect(node.title).toBeDefined();
         expect(typeof node.directBookmarks).toBe('number');
@@ -384,7 +400,7 @@ describe('BookmarkManager', () => {
     it('should calculate bookmark counts correctly', async () => {
       jest.spyOn(manager, 'getAllBookmarks').mockResolvedValue([
         { id: '100', title: 'Test1', url: 'https://test1.com', parentId: '10' },
-        { id: '101', title: 'Test2', url: 'https://test2.com', parentId: '10' }
+        { id: '101', title: 'Test2', url: 'https://test2.com', parentId: '10' },
       ]);
 
       const tree = await manager.getBookmarkTreeWithCounts();
@@ -424,13 +440,13 @@ describe('BookmarkManager', () => {
       const folders = await manager.findFoldersByPattern('tech');
 
       expect(folders.length).toBeGreaterThan(0);
-      expect(folders.some(f => f.title === 'Tech Folder')).toBe(true);
+      expect(folders.some((f) => f.title === 'Tech Folder')).toBe(true);
     });
 
     it('should normalize folder names for matching', async () => {
       const folders = await manager.findFoldersByPattern('TECH');
 
-      expect(folders.some(f => f.title === 'Tech Folder')).toBe(true);
+      expect(folders.some((f) => f.title === 'Tech Folder')).toBe(true);
     });
 
     it('should return empty array when no matches', async () => {
@@ -463,17 +479,17 @@ describe('BookmarkManager', () => {
                 {
                   id: '100',
                   title: 'GitHub',
-                  url: 'https://github.com'
+                  url: 'https://github.com',
                 },
                 {
                   id: '101',
                   title: 'GitHub Duplicate',
-                  url: 'https://github.com'
-                }
-              ]
-            }
-          ]
-        }
+                  url: 'https://github.com',
+                },
+              ],
+            },
+          ],
+        },
       ]);
 
       const result = await manager.removeDuplicates();
@@ -506,11 +522,13 @@ describe('BookmarkManager', () => {
           title: 'Parent',
           children: [
             { id: '10', title: 'Child 1', children: [] },
-            { id: '11', title: 'Child 2', children: [
-              { id: '20', title: 'Grandchild', children: [] }
-            ]}
-          ]
-        }
+            {
+              id: '11',
+              title: 'Child 2',
+              children: [{ id: '20', title: 'Grandchild', children: [] }],
+            },
+          ],
+        },
       ]);
 
       const descendants = await manager.getFolderDescendants('1');
@@ -547,9 +565,12 @@ describe('BookmarkManager', () => {
     it('should break when no empty folders found', async () => {
       // Mock getAllFolders to return no empty folders
       jest.spyOn(manager, 'getAllFolders').mockResolvedValue([
-        { id: '1', title: 'Bookmarks Bar', parentId: '0', children: [
-          { id: '10', title: 'Folder with bookmarks', url: 'https://test.com' }
-        ]}
+        {
+          id: '1',
+          title: 'Bookmarks Bar',
+          parentId: '0',
+          children: [{ id: '10', title: 'Folder with bookmarks', url: 'https://test.com' }],
+        },
       ]);
 
       const result = await manager.removeEmptyFolders();
@@ -572,9 +593,7 @@ describe('BookmarkManager', () => {
     it('should handle errors in moveBookmark', async () => {
       (chrome.bookmarks.move as jest.Mock).mockRejectedValueOnce(new Error('Move failed'));
 
-      await expect(
-        manager.moveBookmark('1', '2')
-      ).rejects.toThrow('Move failed');
+      await expect(manager.moveBookmark('1', '2')).rejects.toThrow('Move failed');
     });
 
     it('should handle findFolderByName when no folders exist', async () => {
@@ -586,9 +605,9 @@ describe('BookmarkManager', () => {
     });
 
     it('should normalize titles with special characters', async () => {
-      jest.spyOn(manager, 'getAllFolders').mockResolvedValue([
-        { id: '10', title: 'Tech Folder', parentId: '1' }
-      ]);
+      jest
+        .spyOn(manager, 'getAllFolders')
+        .mockResolvedValue([{ id: '10', title: 'Tech Folder', parentId: '1' }]);
 
       const result = await manager.findFolderByName('TECH FOLDER');
 

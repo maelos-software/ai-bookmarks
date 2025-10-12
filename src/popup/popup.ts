@@ -87,7 +87,11 @@ class PopupController {
         logger.info('PopupController', 'Reorganization in progress, restoring state');
         this.showStatus('🔄 Organizing...', 'active');
         this.showActivity(true);
-        this.updateProgress(response.progress.current, response.progress.total, response.progress.message);
+        this.updateProgress(
+          response.progress.current,
+          response.progress.total,
+          response.progress.message
+        );
         this.organizeBtn.disabled = true;
         return true;
       }
@@ -194,9 +198,11 @@ class PopupController {
             // No capacity if no credits AND no remaining requests
             if (credits === 0 && rateLimit.remaining === 0) {
               hasCapacity = false;
-              const resetTime = rateLimit.reset ? new Date(rateLimit.reset).toLocaleTimeString() : 'later';
+              const resetTime = rateLimit.reset
+                ? new Date(rateLimit.reset).toLocaleTimeString()
+                : 'later';
               warningMessage = `⚠️ No credits or free requests remaining. Rate limit resets at ${resetTime}.`;
-            } else if (rateLimit.remaining <= 5 && credits < 0.10) {
+            } else if (rateLimit.remaining <= 5 && credits < 0.1) {
               warningMessage = `⚠️ Low capacity: only ${rateLimit.remaining} free requests and $${credits.toFixed(2)} credits remaining.`;
             }
           } else if (credits < 1) {
@@ -222,12 +228,15 @@ class PopupController {
             status: statusMessage,
             type: 'ready',
             isConfigured: true,
-            organizeEnabled: true
+            organizeEnabled: true,
           });
         }
       } else {
         this.showStatus(`✗ ${provider} API Not Available`, 'error');
-        this.showInfo(`${connectionTest?.error || 'Unable to connect to API. Please check your settings.'}`, true);
+        this.showInfo(
+          `${connectionTest?.error || 'Unable to connect to API. Please check your settings.'}`,
+          true
+        );
         this.organizeBtn.disabled = true;
       }
     } catch (error) {
@@ -259,7 +268,12 @@ class PopupController {
   }
 
   private showStatus(message: string, type: 'ready' | 'active' | 'warning' | 'error') {
-    this.statusText.textContent = message.replace(/[✓✗🔄⚠️]/g, '').trim();
+    this.statusText.textContent = message
+      .replace(/✓/gu, '')
+      .replace(/✗/gu, '')
+      .replace(/🔄/gu, '')
+      .replace(/⚠️/gu, '')
+      .trim();
 
     // Update icon based on type
     const icon = this.statusValue.querySelector('.status-icon');
@@ -307,7 +321,7 @@ class PopupController {
       this.recentActivitySection.style.display = 'block';
       this.activityList.innerHTML = '';
 
-      activityLog.forEach(entry => {
+      activityLog.forEach((entry) => {
         const li = document.createElement('li');
         li.className = `activity-item ${entry.type}`;
 
@@ -409,7 +423,6 @@ class PopupController {
       this.toggleStatus.textContent = 'OFF';
     }
   }
-
 }
 
 // Initialize

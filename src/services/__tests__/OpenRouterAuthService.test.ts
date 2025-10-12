@@ -12,7 +12,7 @@ Object.defineProperty(global, 'TextEncoder', {
       const buf = Buffer.from(str, 'utf-8');
       return new Uint8Array(buf);
     }
-  }
+  },
 });
 
 Object.defineProperty(global, 'crypto', {
@@ -28,14 +28,14 @@ Object.defineProperty(global, 'crypto', {
       digest: async (algorithm: string, data: BufferSource) => {
         // Mock SHA-256 digest - return a proper ArrayBuffer
         return new Uint8Array(32).buffer;
-      }
-    }
-  }
+      },
+    },
+  },
 });
 
 Object.defineProperty(global, 'btoa', {
   writable: true,
-  value: (str: string) => Buffer.from(str).toString('base64')
+  value: (str: string) => Buffer.from(str).toString('base64'),
 });
 
 describe('OpenRouterAuthService', () => {
@@ -47,17 +47,17 @@ describe('OpenRouterAuthService', () => {
     global.chrome = {
       runtime: {
         id: 'test-extension-id',
-        lastError: undefined
+        lastError: undefined,
       },
       identity: {
-        launchWebAuthFlow: jest.fn()
+        launchWebAuthFlow: jest.fn(),
       },
       storage: {
         sync: {
           get: jest.fn(() => Promise.resolve({})),
-          set: jest.fn(() => Promise.resolve())
-        }
-      }
+          set: jest.fn(() => Promise.resolve()),
+        },
+      },
     } as any;
 
     mockFetch = jest.fn();
@@ -82,7 +82,7 @@ describe('OpenRouterAuthService', () => {
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ key: mockApiKey })
+        json: async () => ({ key: mockApiKey }),
       });
 
       const result = await service.login();
@@ -126,7 +126,7 @@ describe('OpenRouterAuthService', () => {
       mockFetch.mockResolvedValue({
         ok: false,
         status: 400,
-        text: async () => 'Invalid code'
+        text: async () => 'Invalid code',
       });
 
       const result = await service.login();
@@ -142,7 +142,7 @@ describe('OpenRouterAuthService', () => {
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({}) // No key field
+        json: async () => ({}), // No key field
       });
 
       const result = await service.login();
@@ -169,9 +169,9 @@ describe('OpenRouterAuthService', () => {
         app_config: {
           api: {
             provider: 'openrouter',
-            apiKey: 'sk-or-valid-key-123'
-          }
-        }
+            apiKey: 'sk-or-valid-key-123',
+          },
+        },
       });
 
       const hasKey = await service.hasValidKey();
@@ -184,9 +184,9 @@ describe('OpenRouterAuthService', () => {
         app_config: {
           api: {
             provider: 'openrouter',
-            apiKey: ''
-          }
-        }
+            apiKey: '',
+          },
+        },
       });
 
       const hasKey = await service.hasValidKey();
@@ -199,9 +199,9 @@ describe('OpenRouterAuthService', () => {
         app_config: {
           api: {
             provider: 'openai',
-            apiKey: 'sk-test-key'
-          }
-        }
+            apiKey: 'sk-test-key',
+          },
+        },
       });
 
       const hasKey = await service.hasValidKey();
@@ -214,9 +214,9 @@ describe('OpenRouterAuthService', () => {
         app_config: {
           api: {
             provider: 'openrouter',
-            apiKey: 'invalid-key'
-          }
-        }
+            apiKey: 'invalid-key',
+          },
+        },
       });
 
       const hasKey = await service.hasValidKey();
@@ -239,9 +239,9 @@ describe('OpenRouterAuthService', () => {
         app_config: {
           api: {
             provider: 'openrouter',
-            apiKey: 'sk-or-test-key'
-          }
-        }
+            apiKey: 'sk-or-test-key',
+          },
+        },
       });
 
       await service.logout();
@@ -250,9 +250,9 @@ describe('OpenRouterAuthService', () => {
         app_config: {
           api: {
             provider: 'openrouter',
-            apiKey: ''
-          }
-        }
+            apiKey: '',
+          },
+        },
       });
     });
 
@@ -261,9 +261,9 @@ describe('OpenRouterAuthService', () => {
         app_config: {
           api: {
             provider: 'openai',
-            apiKey: 'sk-test-key'
-          }
-        }
+            apiKey: 'sk-test-key',
+          },
+        },
       });
 
       await service.logout();
@@ -290,7 +290,7 @@ describe('OpenRouterAuthService', () => {
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ key: 'sk-or-test-key' })
+        json: async () => ({ key: 'sk-or-test-key' }),
       });
 
       await service.login();
@@ -300,7 +300,7 @@ describe('OpenRouterAuthService', () => {
         expect.any(String),
         expect.objectContaining({
           method: 'POST',
-          body: expect.stringContaining('code_verifier')
+          body: expect.stringContaining('code_verifier'),
         })
       );
     });

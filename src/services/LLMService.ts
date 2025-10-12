@@ -64,13 +64,19 @@ export class LLMService {
     this.maxTokens = maxTokens || DEFAULT_PERFORMANCE.maxTokens;
 
     const endpointInfo = this.customEndpoint ? `, endpoint=${this.customEndpoint}` : '';
-    logger.info('LLMService', `Initialized with provider=${provider}, model=${this.model}, timeout=${this.timeout}ms, maxTokens=${this.maxTokens}${endpointInfo}`);
+    logger.info(
+      'LLMService',
+      `Initialized with provider=${provider}, model=${this.model}, timeout=${this.timeout}ms, maxTokens=${this.maxTokens}${endpointInfo}`
+    );
   }
 
   /**
    * Validate API key format for the given provider
    */
-  static validateApiKeyFormat(apiKey: string, provider: string): { valid: boolean; error?: string } {
+  static validateApiKeyFormat(
+    apiKey: string,
+    provider: string
+  ): { valid: boolean; error?: string } {
     logger.trace('LLMService', `Validating API key format for ${provider}`);
 
     if (!apiKey || apiKey.trim().length === 0) {
@@ -84,13 +90,13 @@ export class LLMService {
         if (!trimmedKey.startsWith('sk-') && !trimmedKey.startsWith('sk-proj-')) {
           return {
             valid: false,
-            error: 'OpenAI API keys must start with "sk-" or "sk-proj-"'
+            error: 'OpenAI API keys must start with "sk-" or "sk-proj-"',
           };
         }
         if (trimmedKey.length < 20) {
           return {
             valid: false,
-            error: 'OpenAI API key appears too short (minimum 20 characters)'
+            error: 'OpenAI API key appears too short (minimum 20 characters)',
           };
         }
         break;
@@ -99,13 +105,13 @@ export class LLMService {
         if (!trimmedKey.startsWith('sk-ant-')) {
           return {
             valid: false,
-            error: 'Claude (Anthropic) API keys must start with "sk-ant-"'
+            error: 'Claude (Anthropic) API keys must start with "sk-ant-"',
           };
         }
         if (trimmedKey.length < 20) {
           return {
             valid: false,
-            error: 'Claude API key appears too short (minimum 20 characters)'
+            error: 'Claude API key appears too short (minimum 20 characters)',
           };
         }
         break;
@@ -114,13 +120,13 @@ export class LLMService {
         if (!trimmedKey.startsWith('xai-')) {
           return {
             valid: false,
-            error: 'Grok (xAI) API keys must start with "xai-"'
+            error: 'Grok (xAI) API keys must start with "xai-"',
           };
         }
         if (trimmedKey.length < 20) {
           return {
             valid: false,
-            error: 'Grok API key appears too short (minimum 20 characters)'
+            error: 'Grok API key appears too short (minimum 20 characters)',
           };
         }
         break;
@@ -129,13 +135,13 @@ export class LLMService {
         if (!trimmedKey.startsWith('sk-or-')) {
           return {
             valid: false,
-            error: 'OpenRouter API keys must start with "sk-or-"'
+            error: 'OpenRouter API keys must start with "sk-or-"',
           };
         }
         if (trimmedKey.length < 20) {
           return {
             valid: false,
-            error: 'OpenRouter API key appears too short (minimum 20 characters)'
+            error: 'OpenRouter API key appears too short (minimum 20 characters)',
           };
         }
         break;
@@ -143,7 +149,7 @@ export class LLMService {
       default:
         return {
           valid: false,
-          error: `Unknown provider: ${provider}`
+          error: `Unknown provider: ${provider}`,
         };
     }
 
@@ -183,7 +189,7 @@ export class LLMService {
 
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     };
 
     switch (this.provider) {
@@ -207,7 +213,9 @@ export class LLMService {
    * Categorize a single bookmark into one of the provided categories
    */
   async categorizeSingleBookmark(bookmark: Bookmark, categories: string[]): Promise<string> {
-    logger.info('LLMService', `categorizeSingleBookmark called for "${bookmark.title}"`, { categories: categories.length });
+    logger.info('LLMService', `categorizeSingleBookmark called for "${bookmark.title}"`, {
+      categories: categories.length,
+    });
 
     const prompt = `Categorize this bookmark into ONE category from the list below.
 
@@ -240,10 +248,13 @@ Your response (category name only):`;
 
       // Validate the response is one of our categories (case-insensitive match)
       const categoryLower = categoryResponse.toLowerCase();
-      const matchedCategory = categories.find(c => c.toLowerCase() === categoryLower);
+      const matchedCategory = categories.find((c) => c.toLowerCase() === categoryLower);
 
       if (!matchedCategory) {
-        logger.warn('LLMService', `LLM returned invalid category "${categoryResponse}", available: ${categories.join(', ')}`);
+        logger.warn(
+          'LLMService',
+          `LLM returned invalid category "${categoryResponse}", available: ${categories.join(', ')}`
+        );
         logger.warn('LLMService', `Using first category as fallback: "${categories[0]}"`);
         return categories[0];
       }
@@ -262,11 +273,22 @@ Your response (category name only):`;
   async organizeBookmarks(
     bookmarks: Bookmark[],
     existingFolders: string[] = [],
-    batchContext?: { current: number; total: number; totalBookmarks: number; folderSizes?: Record<string, number> }
+    batchContext?: {
+      current: number;
+      total: number;
+      totalBookmarks: number;
+      folderSizes?: Record<string, number>;
+    }
   ): Promise<OrganizationPlan> {
-    logger.info('LLMService', `organizeBookmarks called with ${bookmarks.length} bookmarks, ${existingFolders.length} existing folders`);
+    logger.info(
+      'LLMService',
+      `organizeBookmarks called with ${bookmarks.length} bookmarks, ${existingFolders.length} existing folders`
+    );
     if (batchContext) {
-      logger.info('LLMService', `Batch ${batchContext.current}/${batchContext.total}, processing ${bookmarks.length} of ${batchContext.totalBookmarks} total bookmarks`);
+      logger.info(
+        'LLMService',
+        `Batch ${batchContext.current}/${batchContext.total}, processing ${bookmarks.length} of ${batchContext.totalBookmarks} total bookmarks`
+      );
     }
     logger.trace('LLMService', 'Bookmarks', bookmarks);
     logger.trace('LLMService', 'Existing folders', existingFolders);
@@ -285,7 +307,10 @@ Your response (category name only):`;
 
         const plan = this.parseResponse(content, bookmarks);
         plan.tokenUsage = usage; // Add token usage to plan
-        logger.info('LLMService', `Parsed plan: ${plan.suggestions.length} suggestions, ${plan.foldersToCreate.length} new folders, tokens: ${usage.total}`);
+        logger.info(
+          'LLMService',
+          `Parsed plan: ${plan.suggestions.length} suggestions, ${plan.foldersToCreate.length} new folders, tokens: ${usage.total}`
+        );
         logger.trace('LLMService', 'Organization plan', plan);
 
         return plan;
@@ -293,8 +318,9 @@ Your response (category name only):`;
         lastError = error instanceof Error ? error : new Error(String(error));
 
         // Check if it's a rate limit error (429)
-        const isRateLimit = error.statusCode === 429 ||
-                           (error.message && error.message.toLowerCase().includes('rate limit'));
+        const isRateLimit =
+          error.statusCode === 429 ||
+          (error.message && error.message.toLowerCase().includes('rate limit'));
 
         if (!isRateLimit || attempt === maxRetries) {
           // Not a rate limit error, or we've exhausted retries
@@ -304,7 +330,10 @@ Your response (category name only):`;
 
         // Rate limit hit - calculate backoff and retry
         const backoffSeconds = Math.min(Math.pow(2, attempt) * 5, 60); // 5s, 10s, 20s, 40s, 60s max
-        logger.warn('LLMService', `Rate limit hit (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${backoffSeconds}s...`);
+        logger.warn(
+          'LLMService',
+          `Rate limit hit (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${backoffSeconds}s...`
+        );
 
         // Try to parse rate limit reset time from error
         if (error.apiResponse) {
@@ -314,9 +343,13 @@ Your response (category name only):`;
             if (resetTime) {
               const resetDate = new Date(parseInt(resetTime));
               const waitSeconds = Math.ceil((resetDate.getTime() - Date.now()) / 1000);
-              if (waitSeconds > 0 && waitSeconds < 300) { // Only use if reasonable (< 5 min)
-                logger.info('LLMService', `Rate limit resets at ${resetDate.toLocaleTimeString()}, waiting ${waitSeconds}s`);
-                await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
+              if (waitSeconds > 0 && waitSeconds < 300) {
+                // Only use if reasonable (< 5 min)
+                logger.info(
+                  'LLMService',
+                  `Rate limit resets at ${resetDate.toLocaleTimeString()}, waiting ${waitSeconds}s`
+                );
+                await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
                 continue; // Skip the exponential backoff, we waited for the exact reset time
               }
             }
@@ -325,7 +358,7 @@ Your response (category name only):`;
           }
         }
 
-        await new Promise(resolve => setTimeout(resolve, backoffSeconds * 1000));
+        await new Promise((resolve) => setTimeout(resolve, backoffSeconds * 1000));
       }
     }
 
@@ -337,10 +370,7 @@ Your response (category name only):`;
    * PHASE 1: Discover what folders should be created by analyzing all bookmarks
    * Returns a list of folder names (no assignments yet)
    */
-  async discoverFolders(
-    bookmarks: Bookmark[],
-    existingFolders: string[]
-  ): Promise<string[]> {
+  async discoverFolders(bookmarks: Bookmark[], existingFolders: string[]): Promise<string[]> {
     logger.info('LLMService', `Discovering folders for ${bookmarks.length} bookmarks`);
 
     // For discovery, we can sample bookmarks to reduce tokens
@@ -352,14 +382,15 @@ Your response (category name only):`;
     logger.debug('LLMService', `Using ${sample.length} bookmark samples for folder discovery`);
 
     // Build a compact list of bookmarks showing title and domain
-    const bookmarkList = sample.map((b, i) => {
-      const domain = b.url ? new URL(b.url).hostname.replace('www.', '') : '';
-      return `${i + 1}. ${b.title} [${domain}]`;
-    }).join('\n');
+    const bookmarkList = sample
+      .map((b, i) => {
+        const domain = b.url ? new URL(b.url).hostname.replace('www.', '') : '';
+        return `${i + 1}. ${b.title} [${domain}]`;
+      })
+      .join('\n');
 
-    const existingList = existingFolders.length > 0
-      ? `\n\nExisting folders: ${existingFolders.join(', ')}`
-      : '';
+    const existingList =
+      existingFolders.length > 0 ? `\n\nExisting folders: ${existingFolders.join(', ')}` : '';
 
     const prompt = `Analyze these ${sample.length} bookmarks (sampled from ${bookmarks.length} total) and determine what folder categories to create.
 
@@ -388,7 +419,8 @@ Target: 5-15 folders total.`;
       const { content, usage } = await this.callLLM(prompt);
 
       // Parse response
-      const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/```\n([\s\S]*?)\n```/);
+      const jsonMatch =
+        content.match(/```json\n([\s\S]*?)\n```/) || content.match(/```\n([\s\S]*?)\n```/);
       const jsonStr = jsonMatch ? jsonMatch[1] : content;
       const parsed = JSON.parse(jsonStr);
 
@@ -409,19 +441,26 @@ Target: 5-15 folders total.`;
   private buildPrompt(
     bookmarks: Bookmark[],
     existingFolders: string[],
-    batchContext?: { current: number; total: number; totalBookmarks: number; folderSizes?: Record<string, number> }
+    batchContext?: {
+      current: number;
+      total: number;
+      totalBookmarks: number;
+      folderSizes?: Record<string, number>;
+    }
   ): string {
     // Extract domain from URL for categorization (much shorter than full URL)
-    const bookmarkList = bookmarks.map((b, i) => {
-      const domain = b.url ? new URL(b.url).hostname.replace('www.', '') : '';
-      return `${i + 1}. ${b.title} [${domain}]`;
-    }).join('\n');
+    const bookmarkList = bookmarks
+      .map((b, i) => {
+        const domain = b.url ? new URL(b.url).hostname.replace('www.', '') : '';
+        return `${i + 1}. ${b.title} [${domain}]`;
+      })
+      .join('\n');
 
     // Build existing folders list with sizes if available
     let existingList = '';
     if (existingFolders.length > 0) {
       if (batchContext?.folderSizes && Object.keys(batchContext.folderSizes).length > 0) {
-        const foldersWithSizes = existingFolders.map(folder => {
+        const foldersWithSizes = existingFolders.map((folder) => {
           const count = batchContext.folderSizes![folder] || 0;
           return count > 0 ? `${folder} (${count} bookmarks)` : folder;
         });
@@ -488,12 +527,17 @@ Think: "Can I use an existing folder?" FIRST, then "How can I create the FEWEST 
     approvedFolders: string[],
     allowKeepCurrent: boolean = false
   ): Promise<OrganizationPlan> {
-    logger.info('LLMService', `Assigning ${bookmarks.length} bookmarks to ${approvedFolders.length} approved folders (allowKeepCurrent: ${allowKeepCurrent})`);
+    logger.info(
+      'LLMService',
+      `Assigning ${bookmarks.length} bookmarks to ${approvedFolders.length} approved folders (allowKeepCurrent: ${allowKeepCurrent})`
+    );
 
-    const bookmarkList = bookmarks.map((b, i) => {
-      const domain = b.url ? new URL(b.url).hostname.replace('www.', '') : '';
-      return `${i + 1}. ${b.title} [${domain}]`;
-    }).join('\n');
+    const bookmarkList = bookmarks
+      .map((b, i) => {
+        const domain = b.url ? new URL(b.url).hostname.replace('www.', '') : '';
+        return `${i + 1}. ${b.title} [${domain}]`;
+      })
+      .join('\n');
 
     let prompt: string;
 
@@ -556,8 +600,8 @@ CRITICAL RULES:
 
         // Validate that all folder names are in approved list (or KEEP_CURRENT if allowed)
         const invalidFolders = plan.suggestions
-          .map(s => s.folderName)
-          .filter(f => {
+          .map((s) => s.folderName)
+          .filter((f) => {
             if (allowKeepCurrent && f === 'KEEP_CURRENT') {
               return false; // KEEP_CURRENT is valid in this mode
             }
@@ -567,9 +611,9 @@ CRITICAL RULES:
         if (invalidFolders.length > 0) {
           logger.warn('LLMService', `LLM used unapproved folders:`, invalidFolders);
           // Map to closest approved folder or KEEP_CURRENT/first folder depending on mode
-          plan.suggestions.forEach(s => {
+          plan.suggestions.forEach((s) => {
             const isValid = allowKeepCurrent
-              ? (s.folderName === 'KEEP_CURRENT' || approvedFolders.includes(s.folderName))
+              ? s.folderName === 'KEEP_CURRENT' || approvedFolders.includes(s.folderName)
               : approvedFolders.includes(s.folderName);
 
             if (!isValid) {
@@ -588,16 +632,20 @@ CRITICAL RULES:
       } catch (error: any) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        const isRateLimit = error.statusCode === 429 ||
-                           (error.message && error.message.toLowerCase().includes('rate limit'));
+        const isRateLimit =
+          error.statusCode === 429 ||
+          (error.message && error.message.toLowerCase().includes('rate limit'));
 
         if (!isRateLimit || attempt === maxRetries) {
           throw lastError;
         }
 
         const backoffSeconds = Math.min(Math.pow(2, attempt) * 5, 60);
-        logger.warn('LLMService', `Rate limit hit (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${backoffSeconds}s...`);
-        await new Promise(resolve => setTimeout(resolve, backoffSeconds * 1000));
+        logger.warn(
+          'LLMService',
+          `Rate limit hit (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${backoffSeconds}s...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, backoffSeconds * 1000));
       }
     }
 
@@ -611,12 +659,17 @@ CRITICAL RULES:
     allAssignments: Array<{ bookmarkId: string; title: string; url: string; folderName: string }>,
     folderSizes: Record<string, number>
   ): Promise<OrganizationPlan> {
-    logger.info('LLMService', `Reviewing ${allAssignments.length} bookmark assignments across ${Object.keys(folderSizes).length} folders`);
+    logger.info(
+      'LLMService',
+      `Reviewing ${allAssignments.length} bookmark assignments across ${Object.keys(folderSizes).length} folders`
+    );
 
-    const bookmarkList = allAssignments.map((a, i) => {
-      const domain = a.url ? new URL(a.url).hostname.replace('www.', '') : '';
-      return `${i + 1}. "${a.title}" [${domain}] → currently in "${a.folderName}"`;
-    }).join('\n');
+    const bookmarkList = allAssignments
+      .map((a, i) => {
+        const domain = a.url ? new URL(a.url).hostname.replace('www.', '') : '';
+        return `${i + 1}. "${a.title}" [${domain}] → currently in "${a.folderName}"`;
+      })
+      .join('\n');
 
     const folderDistribution = Object.entries(folderSizes)
       .sort((a, b) => b[1] - a[1])
@@ -656,9 +709,15 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
 
     try {
       const { content, usage } = await this.callLLM(prompt);
-      const plan = this.parseResponse(content, allAssignments.map(a => ({ id: a.bookmarkId, title: a.title, url: a.url })));
+      const plan = this.parseResponse(
+        content,
+        allAssignments.map((a) => ({ id: a.bookmarkId, title: a.title, url: a.url }))
+      );
       plan.tokenUsage = usage;
-      logger.info('LLMService', `Review complete: ${plan.suggestions.length} assignments, ${plan.foldersToCreate.length} folders, tokens: ${usage.total}`);
+      logger.info(
+        'LLMService',
+        `Review complete: ${plan.suggestions.length} assignments, ${plan.foldersToCreate.length} folders, tokens: ${usage.total}`
+      );
       return plan;
     } catch (error) {
       logger.error('LLMService', 'Review and optimize failed', error);
@@ -666,7 +725,9 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
     }
   }
 
-  private async callLLM(prompt: string): Promise<{ content: string; usage: { prompt: number; completion: number; total: number } }> {
+  private async callLLM(
+    prompt: string
+  ): Promise<{ content: string; usage: { prompt: number; completion: number; total: number } }> {
     logger.trace('LLMService', 'callLLM started');
     const endpoint = this.getAPIEndpoint();
     const headers = this.getHeaders();
@@ -678,43 +739,56 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
       payload = {
         model: this.model,
         max_tokens: this.maxTokens,
-        messages: [{
-          role: 'user',
-          content: prompt
-        }]
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
       };
     } else if (this.provider === 'openrouter') {
       // OpenRouter - don't use response_format as not all models support it
       payload = {
         model: this.model,
         max_tokens: this.maxTokens,
-        messages: [{
-          role: 'system',
-          content: 'You are a helpful assistant that organizes bookmarks. Always respond with valid JSON only, no markdown formatting.'
-        }, {
-          role: 'user',
-          content: prompt
-        }],
-        temperature: 0.7
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a helpful assistant that organizes bookmarks. Always respond with valid JSON only, no markdown formatting.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
       };
     } else {
       // OpenAI and Grok support response_format
       payload = {
         model: this.model,
         max_tokens: this.maxTokens,
-        messages: [{
-          role: 'system',
-          content: 'You are a helpful assistant that organizes bookmarks. Always respond with valid JSON.'
-        }, {
-          role: 'user',
-          content: prompt
-        }],
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a helpful assistant that organizes bookmarks. Always respond with valid JSON.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
         temperature: 0.7,
-        response_format: { type: 'json_object' }
+        response_format: { type: 'json_object' },
       };
     }
 
-    logger.trace('LLMService', 'Request payload', { model: payload.model, messageCount: payload.messages.length });
+    logger.trace('LLMService', 'Request payload', {
+      model: payload.model,
+      messageCount: payload.messages.length,
+    });
 
     try {
       logger.info('LLMService', 'Sending request to LLM API...');
@@ -731,15 +805,21 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           method: 'POST',
           headers,
           body: JSON.stringify(payload),
-          signal: controller.signal
+          signal: controller.signal,
         });
 
         clearTimeout(timeoutId);
-        logger.debug('LLMService', `Got response: status=${response.status} ${response.statusText}`);
+        logger.debug(
+          'LLMService',
+          `Got response: status=${response.status} ${response.statusText}`
+        );
 
         if (!response.ok) {
           const errorBody = await response.text();
-          logger.error('LLMService', `API error: ${response.status}`, { error: errorBody, endpoint });
+          logger.error('LLMService', `API error: ${response.status}`, {
+            error: errorBody,
+            endpoint,
+          });
 
           // Parse common error scenarios with user-friendly messages
           let userMessage = `API Error (${response.status})`;
@@ -749,15 +829,24 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           } else if (response.status === 403) {
             userMessage = 'Access denied. Your API key may not have permission for this model.';
           } else if (response.status === 429) {
-            userMessage = 'Rate limit exceeded. Please wait a moment and try again, or upgrade your API plan.';
-          } else if (response.status === 500 || response.status === 502 || response.status === 503) {
+            userMessage =
+              'Rate limit exceeded. Please wait a moment and try again, or upgrade your API plan.';
+          } else if (
+            response.status === 500 ||
+            response.status === 502 ||
+            response.status === 503
+          ) {
             userMessage = `${this.provider} API is experiencing issues. Please try again later.`;
           } else if (response.status === 400) {
             // Try to parse error for token limit issues
             try {
               const errorData = JSON.parse(errorBody);
-              if (errorData.error?.message?.includes('token') || errorData.error?.message?.includes('context_length')) {
-                userMessage = 'Token limit exceeded. Try reducing batch size or max tokens in settings.';
+              if (
+                errorData.error?.message?.includes('token') ||
+                errorData.error?.message?.includes('context_length')
+              ) {
+                userMessage =
+                  'Token limit exceeded. Try reducing batch size or max tokens in settings.';
               } else {
                 userMessage = `Invalid request: ${errorData.error?.message || errorBody}`;
               }
@@ -784,7 +873,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           usage = {
             prompt: data.usage?.input_tokens || 0,
             completion: data.usage?.output_tokens || 0,
-            total: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0)
+            total: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
           };
         } else {
           // OpenAI, Grok, OpenRouter use same format
@@ -792,11 +881,14 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           usage = {
             prompt: data.usage?.prompt_tokens || 0,
             completion: data.usage?.completion_tokens || 0,
-            total: data.usage?.total_tokens || 0
+            total: data.usage?.total_tokens || 0,
           };
         }
 
-        logger.info('LLMService', `LLM call successful, response length=${content.length} chars, tokens: ${usage.total} (prompt: ${usage.prompt}, completion: ${usage.completion})`);
+        logger.info(
+          'LLMService',
+          `LLM call successful, response length=${content.length} chars, tokens: ${usage.total} (prompt: ${usage.prompt}, completion: ${usage.completion})`
+        );
         return { content, usage };
       } catch (fetchError) {
         clearTimeout(timeoutId);
@@ -833,8 +925,8 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
       const response = await fetch('https://openrouter.ai/api/v1/auth/key', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`
-        }
+          Authorization: `Bearer ${this.apiKey}`,
+        },
       });
 
       if (!response.ok) {
@@ -859,9 +951,14 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
         rateLimit = {
           limit: parseInt(rateLimitLimitHeader),
           remaining: parseInt(rateLimitHeader),
-          reset: rateLimitResetHeader ? new Date(parseInt(rateLimitResetHeader) * 1000) : new Date()
+          reset: rateLimitResetHeader
+            ? new Date(parseInt(rateLimitResetHeader) * 1000)
+            : new Date(),
         };
-        logger.info('LLMService', `OpenRouter rate limit: ${rateLimit.remaining}/${rateLimit.limit}`);
+        logger.info(
+          'LLMService',
+          `OpenRouter rate limit: ${rateLimit.remaining}/${rateLimit.limit}`
+        );
       }
 
       logger.info('LLMService', `OpenRouter credits: $${credits.toFixed(2)}`);
@@ -917,20 +1014,24 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
         payload = {
           model: this.model,
           max_tokens: testMaxTokens,
-          messages: [{
-            role: 'user',
-            content: testPrompt
-          }]
+          messages: [
+            {
+              role: 'user',
+              content: testPrompt,
+            },
+          ],
         };
       } else {
         // OpenAI, OpenRouter, and Grok
         payload = {
           model: this.model,
           max_tokens: testMaxTokens,
-          messages: [{
-            role: 'user',
-            content: testPrompt
-          }]
+          messages: [
+            {
+              role: 'user',
+              content: testPrompt,
+            },
+          ],
         };
       }
 
@@ -944,7 +1045,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           method: 'POST',
           headers,
           body: JSON.stringify(payload),
-          signal: controller.signal
+          signal: controller.signal,
         });
 
         clearTimeout(timeoutId);
@@ -983,7 +1084,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           return {
             success: false,
             error: errorMessage,
-            responseTime
+            responseTime,
           };
         }
 
@@ -1009,7 +1110,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           contentLength: content.length,
           finishReason,
           credits,
-          rateLimit
+          rateLimit,
         });
 
         if (!responseValid) {
@@ -1019,47 +1120,64 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
             error: 'API response has unexpected format',
             responseTime,
             credits,
-            rateLimit
+            rateLimit,
           };
         }
 
         // Check if response was truncated due to length limit
         if (finishReason === 'length') {
-          logger.warn('LLMService', 'Test response truncated with configured max_tokens, retrying with lower value', {
-            configuredMaxTokens: testMaxTokens,
-            contentLength: content.length,
-            finishReason,
-            credits,
-            rateLimit
-          });
+          logger.warn(
+            'LLMService',
+            'Test response truncated with configured max_tokens, retrying with lower value',
+            {
+              configuredMaxTokens: testMaxTokens,
+              contentLength: content.length,
+              finishReason,
+              credits,
+              rateLimit,
+            }
+          );
 
           // Retry with a much smaller max_tokens to see if it's a config issue
           const fallbackMaxTokens = 100;
-          const fallbackPayload = this.provider === 'claude'
-            ? { model: this.model, max_tokens: fallbackMaxTokens, messages: [{ role: 'user', content: testPrompt }] }
-            : { model: this.model, max_tokens: fallbackMaxTokens, messages: [{ role: 'user', content: testPrompt }] };
+          const fallbackPayload =
+            this.provider === 'claude'
+              ? {
+                  model: this.model,
+                  max_tokens: fallbackMaxTokens,
+                  messages: [{ role: 'user', content: testPrompt }],
+                }
+              : {
+                  model: this.model,
+                  max_tokens: fallbackMaxTokens,
+                  messages: [{ role: 'user', content: testPrompt }],
+                };
 
           try {
             const fallbackResponse = await fetch(endpoint, {
               method: 'POST',
               headers,
               body: JSON.stringify(fallbackPayload),
-              signal: controller.signal
+              signal: controller.signal,
             });
 
             if (fallbackResponse.ok) {
               const fallbackData = await fallbackResponse.json();
-              const fallbackFinishReason = this.provider === 'claude'
-                ? fallbackData.stop_reason
-                : fallbackData.choices[0]?.finish_reason;
+              const fallbackFinishReason =
+                this.provider === 'claude'
+                  ? fallbackData.stop_reason
+                  : fallbackData.choices[0]?.finish_reason;
 
               if (fallbackFinishReason !== 'length') {
                 // Success with lower tokens - it's a config issue
-                logger.info('LLMService', 'Fallback test succeeded with lower max_tokens', { fallbackMaxTokens });
+                logger.info('LLMService', 'Fallback test succeeded with lower max_tokens', {
+                  fallbackMaxTokens,
+                });
 
                 let errorMsg = `Connection test succeeded with ${fallbackMaxTokens} tokens, but failed with your configured ${testMaxTokens} tokens. `;
                 if (this.provider === 'openrouter' && credits !== undefined && credits === 0) {
-                  errorMsg += 'Free tier models have lower output limits. Try reducing max tokens to 500-1000 in Settings.';
+                  errorMsg +=
+                    'Free tier models have lower output limits. Try reducing max tokens to 500-1000 in Settings.';
                 } else {
                   errorMsg += 'Try reducing max tokens to 1000-2000 in Settings.';
                 }
@@ -1069,7 +1187,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
                   error: errorMsg,
                   responseTime,
                   credits,
-                  rateLimit
+                  rateLimit,
                 };
               }
             }
@@ -1078,9 +1196,11 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           }
 
           // Even fallback failed or was truncated - more serious issue
-          let errorMsg = 'Connection test failed: Model output truncated even with low token limit.';
+          let errorMsg =
+            'Connection test failed: Model output truncated even with low token limit.';
           if (this.provider === 'openrouter' && credits !== undefined && credits === 0) {
-            errorMsg += ' Your account has $0.00 credits, or you have used all free requests for the day. Please add credits at https://openrouter.ai/credits to use this extension.';
+            errorMsg +=
+              ' Your account has $0.00 credits, or you have used all free requests for the day. Please add credits at https://openrouter.ai/credits to use this extension.';
           } else {
             errorMsg += ' There may be an issue with your API access or model selection.';
           }
@@ -1090,20 +1210,21 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
             error: errorMsg,
             responseTime,
             credits,
-            rateLimit
+            rateLimit,
           };
         }
 
         // Verify the response contains valid JSON
         // This is just a basic connectivity test - we're not testing full workload capability
         try {
-          const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/```\n([\s\S]*?)\n```/);
+          const jsonMatch =
+            content.match(/```json\n([\s\S]*?)\n```/) || content.match(/```\n([\s\S]*?)\n```/);
           const jsonStr = jsonMatch ? jsonMatch[1] : content;
           const parsed = JSON.parse(jsonStr);
 
           logger.info('LLMService', 'Test response parsed successfully', {
             parsed,
-            contentLength: content.length
+            contentLength: content.length,
           });
 
           // Just verify we got valid JSON - that's enough to confirm API is working
@@ -1112,7 +1233,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
               parsed,
               contentLength: content.length,
               credits,
-              rateLimit
+              rateLimit,
             });
 
             return {
@@ -1120,7 +1241,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
               error: 'Connection test failed: Model response invalid.',
               responseTime,
               credits,
-              rateLimit
+              rateLimit,
             };
           }
         } catch (parseError) {
@@ -1130,13 +1251,14 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
             contentPreview: content.substring(0, 500),
             fullContent: content,
             credits,
-            rateLimit
+            rateLimit,
           });
 
           // Provide appropriate error message based on credits
           let errorMsg = 'Connection test failed: Model response truncated or invalid JSON.';
           if (this.provider === 'openrouter' && credits !== undefined && credits === 0) {
-            errorMsg += ' Your account has $0.00 credits, or you have used all free requests for the day. Please add credits at https://openrouter.ai/credits to use this extension.';
+            errorMsg +=
+              ' Your account has $0.00 credits, or you have used all free requests for the day. Please add credits at https://openrouter.ai/credits to use this extension.';
           } else {
             errorMsg += ' Try reducing max tokens to 2000-3000 or batch size to 20-30 in Settings.';
           }
@@ -1146,7 +1268,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
             error: errorMsg,
             responseTime,
             credits,
-            rateLimit
+            rateLimit,
           };
         }
 
@@ -1158,9 +1280,8 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           responseTime,
           model: this.model,
           credits,
-          rateLimit
+          rateLimit,
         };
-
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         const responseTime = Date.now() - startTime;
@@ -1170,7 +1291,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           return {
             success: false,
             error: 'Connection timeout (30 seconds) - API not responding',
-            responseTime
+            responseTime,
           };
         }
 
@@ -1178,27 +1299,30 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
         return {
           success: false,
           error: `Network error: ${fetchError.message || 'Cannot reach API'}`,
-          responseTime
+          responseTime,
         };
       }
-
     } catch (error: any) {
       const responseTime = Date.now() - startTime;
       logger.error('LLMService', 'Connection validation failed', error);
       return {
         success: false,
         error: error.message || 'Unknown error during connection test',
-        responseTime
+        responseTime,
       };
     }
   }
 
   private parseResponse(response: string, bookmarks: Bookmark[]): OrganizationPlan {
-    logger.trace('LLMService', 'parseResponse called', { responseLength: response.length, bookmarkCount: bookmarks.length });
+    logger.trace('LLMService', 'parseResponse called', {
+      responseLength: response.length,
+      bookmarkCount: bookmarks.length,
+    });
 
     try {
       // Extract JSON from markdown code blocks if present
-      const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || response.match(/```\n([\s\S]*?)\n```/);
+      const jsonMatch =
+        response.match(/```json\n([\s\S]*?)\n```/) || response.match(/```\n([\s\S]*?)\n```/);
       const jsonStr = jsonMatch ? jsonMatch[1] : response;
       logger.debug('LLMService', `Extracted JSON string, length=${jsonStr.length}`);
 
@@ -1222,13 +1346,13 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           }
           return {
             bookmarkId: bookmark.id,
-            folderName: s.f
+            folderName: s.f,
           };
         } else if (s.bookmarkId !== undefined && s.folderName !== undefined) {
           // Old format - pass through
           return {
             bookmarkId: s.bookmarkId,
-            folderName: s.folderName
+            folderName: s.folderName,
           };
         } else {
           throw new Error(`Invalid suggestion format: ${JSON.stringify(s)}`);
@@ -1237,36 +1361,47 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
 
       // Ensure all bookmarks have suggestions
       const suggestedIds = new Set(normalizedSuggestions.map((s: any) => s.bookmarkId));
-      const missingBookmarks = bookmarks.filter(b => !suggestedIds.has(b.id));
+      const missingBookmarks = bookmarks.filter((b) => !suggestedIds.has(b.id));
 
       if (missingBookmarks.length > 0) {
-        logger.error('LLMService', `CRITICAL: ${missingBookmarks.length} bookmarks had no suggestions from LLM`, {
-          missingIds: missingBookmarks.map(b => b.id),
-          missingTitles: missingBookmarks.map(b => b.title),
-          receivedSuggestions: normalizedSuggestions.length,
-          expectedBookmarks: bookmarks.length,
-          responseLength: response.length
-        });
-        throw new Error(`LLM failed to categorize ${missingBookmarks.length} of ${bookmarks.length} bookmarks. This should never happen.`);
+        logger.error(
+          'LLMService',
+          `CRITICAL: ${missingBookmarks.length} bookmarks had no suggestions from LLM`,
+          {
+            missingIds: missingBookmarks.map((b) => b.id),
+            missingTitles: missingBookmarks.map((b) => b.title),
+            receivedSuggestions: normalizedSuggestions.length,
+            expectedBookmarks: bookmarks.length,
+            responseLength: response.length,
+          }
+        );
+        throw new Error(
+          `LLM failed to categorize ${missingBookmarks.length} of ${bookmarks.length} bookmarks. This should never happen.`
+        );
       }
 
       const plan = {
         suggestions: normalizedSuggestions,
-        foldersToCreate: parsed.foldersToCreate || []
+        foldersToCreate: parsed.foldersToCreate || [],
       };
 
-      logger.info('LLMService', `Successfully parsed response: ${plan.suggestions.length} suggestions, ${plan.foldersToCreate.length} folders to create`);
+      logger.info(
+        'LLMService',
+        `Successfully parsed response: ${plan.suggestions.length} suggestions, ${plan.foldersToCreate.length} folders to create`
+      );
       return plan;
     } catch (error) {
       logger.error('LLMService', 'CRITICAL: Failed to parse LLM response', {
         error,
         response: response.substring(0, 1000),
-        fullResponseLength: response.length
+        fullResponseLength: response.length,
       });
 
       // Do NOT fallback to Uncategorized - that defeats the purpose
       // Re-throw to alert user that something went wrong
-      throw new Error(`Failed to parse LLM response: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to parse LLM response: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 }

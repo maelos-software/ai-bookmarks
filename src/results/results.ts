@@ -82,7 +82,7 @@ class ResultsController {
     });
 
     // Setup collapsible sections
-    document.querySelectorAll('.section-toggle').forEach(toggle => {
+    document.querySelectorAll('.section-toggle').forEach((toggle) => {
       toggle.addEventListener('click', () => {
         const targetId = toggle.getAttribute('data-target');
         if (targetId) {
@@ -135,7 +135,8 @@ class ResultsController {
       const header = document.querySelector('.header');
       if (header) {
         // Change header background to warning colors
-        (header as HTMLElement).style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+        (header as HTMLElement).style.background =
+          'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
         header.innerHTML = `
           <div class="success-icon">⚠️</div>
           <h1>Organization Failed</h1>
@@ -166,7 +167,11 @@ class ResultsController {
       }
 
       // Still show duplicates if any were removed (that happens before batching)
-      if (this.result.duplicatesRemoved > 0 && this.result.duplicates && this.result.duplicates.length > 0) {
+      if (
+        this.result.duplicatesRemoved > 0 &&
+        this.result.duplicates &&
+        this.result.duplicates.length > 0
+      ) {
         this.displayDuplicates();
       }
 
@@ -205,19 +210,19 @@ class ResultsController {
 
     // Show errors if any, or success message
     // Filter out informational messages that aren't actual errors
-    const actualErrors = this.result.errors?.filter(error =>
-      !error.includes('No bookmarks need organizing')
-    ) || [];
+    const actualErrors =
+      this.result.errors?.filter((error) => !error.includes('No bookmarks need organizing')) || [];
 
     if (actualErrors.length > 0) {
       this.displayErrors(actualErrors);
     } else {
       // Check if nothing was done because everything was skipped
-      const nothingDone = this.result.bookmarksMoved === 0 &&
-                          this.result.foldersCreated === 0 &&
-                          this.result.duplicatesRemoved === 0 &&
-                          this.result.emptyFoldersRemoved === 0 &&
-                          this.result.bookmarksSkipped > 0;
+      const nothingDone =
+        this.result.bookmarksMoved === 0 &&
+        this.result.foldersCreated === 0 &&
+        this.result.duplicatesRemoved === 0 &&
+        this.result.emptyFoldersRemoved === 0 &&
+        this.result.bookmarksSkipped > 0;
 
       const noErrorsSection = document.getElementById('no-errors-section');
       if (noErrorsSection) {
@@ -317,58 +322,61 @@ class ResultsController {
     if (this.result.duplicatesRemoved > 0) {
       steps.push({
         title: 'Removed Duplicate Bookmarks',
-        description: `Found and removed ${this.result.duplicatesRemoved} duplicate bookmark${this.result.duplicatesRemoved === 1 ? '' : 's'} with identical URLs.`
+        description: `Found and removed ${this.result.duplicatesRemoved} duplicate bookmark${this.result.duplicatesRemoved === 1 ? '' : 's'} with identical URLs.`,
       });
     }
 
     steps.push({
       title: 'Analyzed Your Bookmarks',
-      description: `Scanned your collection and used AI to understand the content and context of each bookmark.`
+      description: `Scanned your collection and used AI to understand the content and context of each bookmark.`,
     });
 
     if (this.result.foldersCreated > 0) {
       steps.push({
         title: 'Created Organized Folders',
-        description: `Created ${this.result.foldersCreated} new folder${this.result.foldersCreated === 1 ? '' : 's'} to categorize your bookmarks intelligently.`
+        description: `Created ${this.result.foldersCreated} new folder${this.result.foldersCreated === 1 ? '' : 's'} to categorize your bookmarks intelligently.`,
       });
     }
 
     if (this.result.bookmarksMoved > 0) {
       steps.push({
         title: 'Organized Bookmarks',
-        description: `Moved ${this.result.bookmarksMoved} bookmark${this.result.bookmarksMoved === 1 ? '' : 's'} into appropriate folders based on their content.`
+        description: `Moved ${this.result.bookmarksMoved} bookmark${this.result.bookmarksMoved === 1 ? '' : 's'} into appropriate folders based on their content.`,
       });
     }
 
     if (this.result.bookmarksSkipped > 0) {
       steps.push({
         title: 'Skipped Previously Organized',
-        description: `Skipped ${this.result.bookmarksSkipped} bookmark${this.result.bookmarksSkipped === 1 ? '' : 's'} that ${this.result.bookmarksSkipped === 1 ? 'was' : 'were'} previously organized. This preserves any manual moves you've made. You can disable "Remember previous organization" in settings to reorganize these bookmarks.`
+        description: `Skipped ${this.result.bookmarksSkipped} bookmark${this.result.bookmarksSkipped === 1 ? '' : 's'} that ${this.result.bookmarksSkipped === 1 ? 'was' : 'were'} previously organized. This preserves any manual moves you've made. You can disable "Remember previous organization" in settings to reorganize these bookmarks.`,
       });
     }
 
     if (this.result.emptyFoldersRemoved > 0) {
       steps.push({
         title: 'Cleaned Up Empty Folders',
-        description: `Removed ${this.result.emptyFoldersRemoved} empty folder${this.result.emptyFoldersRemoved === 1 ? '' : 's'} to keep your bookmarks tidy.`
+        description: `Removed ${this.result.emptyFoldersRemoved} empty folder${this.result.emptyFoldersRemoved === 1 ? '' : 's'} to keep your bookmarks tidy.`,
       });
     }
 
     // Customize completion message based on what happened
-    const nothingDone = this.result.bookmarksMoved === 0 &&
-                        this.result.foldersCreated === 0 &&
-                        this.result.duplicatesRemoved === 0 &&
-                        this.result.emptyFoldersRemoved === 0 &&
-                        this.result.bookmarksSkipped > 0;
+    const nothingDone =
+      this.result.bookmarksMoved === 0 &&
+      this.result.foldersCreated === 0 &&
+      this.result.duplicatesRemoved === 0 &&
+      this.result.emptyFoldersRemoved === 0 &&
+      this.result.bookmarksSkipped > 0;
 
     steps.push({
       title: 'Complete!',
       description: nothingDone
         ? 'Your bookmarks are already well organized! To reorganize them, visit settings and disable "Remember previous organization", or click "Clear Organization History".'
-        : 'Your bookmarks are now organized and ready to use.'
+        : 'Your bookmarks are now organized and ready to use.',
     });
 
-    timeline.innerHTML = steps.map(step => `
+    timeline.innerHTML = steps
+      .map(
+        (step) => `
       <div class="timeline-item">
         <div class="timeline-dot"></div>
         <div class="timeline-content">
@@ -376,7 +384,9 @@ class ResultsController {
           <p>${step.description}</p>
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join('');
   }
 
   private displayErrors(errors?: string[]) {
@@ -389,7 +399,7 @@ class ResultsController {
     if (errorsSection && errorList) {
       errorsSection.style.display = 'block';
       errorList.innerHTML = errorsToDisplay
-        .map(error => `<li>${this.escapeHtml(error)}</li>`)
+        .map((error) => `<li>${this.escapeHtml(error)}</li>`)
         .join('');
     }
   }
@@ -420,12 +430,16 @@ class ResultsController {
             </tr>
           </thead>
           <tbody>
-            ${this.result.duplicates.map(dup => `
+            ${this.result.duplicates
+              .map(
+                (dup) => `
               <tr>
                 <td>${this.escapeHtml(dup.title)}</td>
                 <td><div class="bookmark-url">${this.escapeHtml(dup.url)}</div></td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
       `;
@@ -441,7 +455,7 @@ class ResultsController {
 
     if (section && content && count) {
       // Filter out moves where source and destination are the same
-      const actualMoves = this.result.moves.filter(move => move.fromFolder !== move.toFolder);
+      const actualMoves = this.result.moves.filter((move) => move.fromFolder !== move.toFolder);
 
       if (actualMoves.length === 0) {
         // No actual moves to display
@@ -461,7 +475,9 @@ class ResultsController {
             </tr>
           </thead>
           <tbody>
-            ${actualMoves.map(move => `
+            ${actualMoves
+              .map(
+                (move) => `
               <tr>
                 <td>
                   <strong>${this.escapeHtml(move.title)}</strong>
@@ -473,7 +489,9 @@ class ResultsController {
                   <span class="folder-badge">${this.escapeHtml(move.toFolder)}</span>
                 </td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
       `;
@@ -499,11 +517,15 @@ class ResultsController {
             </tr>
           </thead>
           <tbody>
-            ${this.result.folders.map(folder => `
+            ${this.result.folders
+              .map(
+                (folder) => `
               <tr>
                 <td><span class="folder-badge">${this.escapeHtml(folder.name)}</span></td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
       `;
@@ -529,11 +551,15 @@ class ResultsController {
             </tr>
           </thead>
           <tbody>
-            ${this.result.emptyFolders.map(folder => `
+            ${this.result.emptyFolders
+              .map(
+                (folder) => `
               <tr>
                 <td><span class="folder-badge">${this.escapeHtml(folder.name)}</span></td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
       `;
@@ -542,11 +568,12 @@ class ResultsController {
 
   private showError() {
     document.querySelector('.header h1')!.textContent = 'Unable to Load Results';
-    document.querySelector('.header .subtitle')!.textContent = 'Could not retrieve organization results';
+    document.querySelector('.header .subtitle')!.textContent =
+      'Could not retrieve organization results';
     document.querySelector('.success-icon')!.textContent = '⚠️';
 
     // Hide all content sections
-    document.querySelectorAll('.stats-grid, .content-section').forEach(el => {
+    document.querySelectorAll('.stats-grid, .content-section').forEach((el) => {
       (el as HTMLElement).style.display = 'none';
     });
   }

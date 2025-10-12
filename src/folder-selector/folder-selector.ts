@@ -43,7 +43,7 @@ class FolderSelectorController {
   private state: FolderSelectionState = {
     selectedFolderIds: new Set(),
     expandedFolderIds: new Set(),
-    folderTree: []
+    folderTree: [],
   };
 
   private folderMap = new Map<string, BookmarkTreeNode>();
@@ -71,7 +71,9 @@ class FolderSelectorController {
     this.confirmFolderCount = document.getElementById('confirm-folder-count') as HTMLElement;
     this.confirmBookmarkCount = document.getElementById('confirm-bookmark-count') as HTMLElement;
     this.settingsBtn = document.getElementById('settings-btn') as HTMLButtonElement;
-    this.quickSettingsBtns = document.querySelectorAll('.toggle-btn') as NodeListOf<HTMLButtonElement>;
+    this.quickSettingsBtns = document.querySelectorAll(
+      '.toggle-btn'
+    ) as NodeListOf<HTMLButtonElement>;
 
     this.setupEventListeners();
     this.loadQuickSettings();
@@ -92,7 +94,7 @@ class FolderSelectorController {
     this.settingsBtn.addEventListener('click', () => chrome.runtime.openOptionsPage());
 
     // Quick settings toggle buttons
-    this.quickSettingsBtns.forEach(btn => {
+    this.quickSettingsBtns.forEach((btn) => {
       btn.addEventListener('click', () => this.handleQuickSettingChange(btn));
     });
   }
@@ -123,7 +125,7 @@ class FolderSelectorController {
   private updateToggleButtons(setting: string, value: string) {
     console.log(`Updating toggle buttons for ${setting} = ${value}`);
     let foundButtons = 0;
-    this.quickSettingsBtns.forEach(btn => {
+    this.quickSettingsBtns.forEach((btn) => {
       if (btn.dataset.setting === setting) {
         foundButtons++;
         const isActive = btn.dataset.value === value;
@@ -155,15 +157,18 @@ class FolderSelectorController {
 
       // Update the specific setting
       if (setting === 'folderMode') {
-        config.organization.useExistingFolders = (value === 'existing');
+        config.organization.useExistingFolders = value === 'existing';
       } else if (setting === 'historyMode') {
-        config.organization.respectOrganizationHistory = value as 'always' | 'never' | 'organizeAllOnly';
+        config.organization.respectOrganizationHistory = value as
+          | 'always'
+          | 'never'
+          | 'organizeAllOnly';
       }
 
       // Save updated config
       const saveResponse = await chrome.runtime.sendMessage({
         type: 'UPDATE_CONFIG',
-        config: config
+        config: config,
       });
 
       if (saveResponse && saveResponse.success) {
@@ -561,14 +566,14 @@ class FolderSelectorController {
       if (this.isOrganizeAll) {
         // Execute full reorganization
         response = await chrome.runtime.sendMessage({
-          type: 'EXECUTE_REORGANIZATION'
+          type: 'EXECUTE_REORGANIZATION',
         });
       } else {
         // Execute selective reorganization
         const folderIds = Array.from(this.state.selectedFolderIds);
         response = await chrome.runtime.sendMessage({
           type: 'EXECUTE_SELECTIVE_REORGANIZATION',
-          folderIds
+          folderIds,
         });
       }
 

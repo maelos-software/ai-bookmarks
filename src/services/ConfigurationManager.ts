@@ -20,31 +20,31 @@ export interface APIConfig {
   provider: 'openai' | 'claude' | 'grok' | 'openrouter' | 'custom';
   apiKey: string;
   model?: string;
-  customEndpoint?: string;     // For custom OpenAI-compatible endpoints
-  customModelName?: string;    // Custom model name to use
+  customEndpoint?: string; // For custom OpenAI-compatible endpoints
+  customModelName?: string; // Custom model name to use
 }
 
 export interface PerformanceConfig {
-  apiTimeout: number;         // seconds
-  batchSize: number;          // number of bookmarks per batch
-  maxTokens: number;          // maximum tokens for LLM response
+  apiTimeout: number; // seconds
+  batchSize: number; // number of bookmarks per batch
+  maxTokens: number; // maximum tokens for LLM response
 }
 
 export interface OrganizationConfig {
   removeDuplicates: boolean;
   removeEmptyFolders: boolean;
-  ignoreFolders: string[];    // folder names to ignore
-  excludedSystemFolderIds: string[];  // system folder IDs to exclude from organization
-  categories: string[];       // predefined bookmark categories
-  renamedSpeedDialFolderIds: string[];  // IDs of Speed Dial folders that were renamed (can't be deleted)
+  ignoreFolders: string[]; // folder names to ignore
+  excludedSystemFolderIds: string[]; // system folder IDs to exclude from organization
+  categories: string[]; // predefined bookmark categories
+  renamedSpeedDialFolderIds: string[]; // IDs of Speed Dial folders that were renamed (can't be deleted)
   organizeSavedTabs: boolean; // whether to organize "Saved Tabs" folders (disabled by default)
-  autoOrganize: boolean;      // automatically organize bookmarks as they're added (disabled by default)
+  autoOrganize: boolean; // automatically organize bookmarks as they're added (disabled by default)
   respectOrganizationHistory: 'always' | 'never' | 'organizeAllOnly'; // when to skip previously organized bookmarks
   useExistingFolders: boolean; // when true, only use existing folders and allow bookmarks to stay in current location
 }
 
 export interface DebugConfig {
-  logLevel: number;           // 0=ERROR, 1=WARN, 2=INFO, 3=DEBUG, 4=TRACE
+  logLevel: number; // 0=ERROR, 1=WARN, 2=INFO, 3=DEBUG, 4=TRACE
   consoleLogging: boolean;
 }
 
@@ -53,7 +53,7 @@ export interface AppConfig {
   performance: PerformanceConfig;
   organization: OrganizationConfig;
   debug: DebugConfig;
-  ignorePatterns: string[];   // deprecated, use organization.ignoreFolders
+  ignorePatterns: string[]; // deprecated, use organization.ignoreFolders
 }
 
 export const DEFAULT_CATEGORIES = [
@@ -81,7 +81,7 @@ export const DEFAULT_CATEGORIES = [
   'Science & Research',
   'Government & Legal',
   'Home & Lifestyle',
-  'Automotive'
+  'Automotive',
 ];
 
 // Default model names by provider
@@ -89,14 +89,14 @@ export const DEFAULT_MODELS = {
   openai: 'gpt-4o-mini',
   claude: 'claude-3-haiku-20240307',
   grok: 'grok-beta',
-  openrouter: 'meta-llama/llama-3.3-70b-instruct:free'
+  openrouter: 'meta-llama/llama-3.3-70b-instruct:free',
 } as const;
 
 // Default performance settings
 export const DEFAULT_PERFORMANCE = {
   apiTimeout: 180,
   batchSize: 50,
-  maxTokens: 4096
+  maxTokens: 4096,
 } as const;
 
 // System folder IDs (browser-specific, immutable)
@@ -113,48 +113,48 @@ export const PROTECTED_FOLDER_NAMES = [
   'bookmarks menu',
   'toolbar',
   'unsorted bookmarks',
-  'shopping',  // Vivaldi Speed Dial folder - can't be deleted
-  'travel'     // Vivaldi Speed Dial folder - can't be deleted
+  'shopping', // Vivaldi Speed Dial folder - can't be deleted
+  'travel', // Vivaldi Speed Dial folder - can't be deleted
 ];
 
 // Vivaldi Speed Dial folders that get renamed to match categories
 export const SPEED_DIAL_RENAMES: Record<string, string> = {
-  'Home': 'Home & Lifestyle',
-  'Shopping': 'Shopping & E-commerce',
-  'Travel': 'Travel & Transportation'
+  Home: 'Home & Lifestyle',
+  Shopping: 'Shopping & E-commerce',
+  Travel: 'Travel & Transportation',
 };
 
 // Protected renamed Speed Dial folder names (case-insensitive)
 export const SPEED_DIAL_RENAMED_FOLDERS = [
   'home & lifestyle',
   'shopping & e-commerce',
-  'travel & transportation'
+  'travel & transportation',
 ];
 
 const DEFAULT_CONFIG: AppConfig = {
   api: {
     provider: 'openrouter',
     apiKey: '',
-    model: undefined
+    model: undefined,
   },
   performance: DEFAULT_PERFORMANCE,
   organization: {
     removeDuplicates: true,
     removeEmptyFolders: true,
     ignoreFolders: [],
-    excludedSystemFolderIds: ['3'],  // Default: exclude Mobile Bookmarks only (Trash handled dynamically)
+    excludedSystemFolderIds: ['3'], // Default: exclude Mobile Bookmarks only (Trash handled dynamically)
     categories: DEFAULT_CATEGORIES,
-    renamedSpeedDialFolderIds: [],  // Populated during first organization when Speed Dial folders are renamed
-    organizeSavedTabs: false,  // Default: exclude "Saved Tabs" folders from organization
-    autoOrganize: false,  // Default: don't automatically organize bookmarks as they're added
-    respectOrganizationHistory: 'always',  // Default: always skip previously organized bookmarks
-    useExistingFolders: false  // Default: allow creating new folders
+    renamedSpeedDialFolderIds: [], // Populated during first organization when Speed Dial folders are renamed
+    organizeSavedTabs: false, // Default: exclude "Saved Tabs" folders from organization
+    autoOrganize: false, // Default: don't automatically organize bookmarks as they're added
+    respectOrganizationHistory: 'always', // Default: always skip previously organized bookmarks
+    useExistingFolders: false, // Default: allow creating new folders
   },
   debug: {
-    logLevel: 0,              // ERROR by default
-    consoleLogging: true
+    logLevel: 0, // ERROR by default
+    consoleLogging: true,
   },
-  ignorePatterns: []
+  ignorePatterns: [],
 };
 
 export class ConfigurationManager {
@@ -172,13 +172,13 @@ export class ConfigurationManager {
       performance: { ...DEFAULT_CONFIG.performance, ...stored.performance },
       organization: { ...DEFAULT_CONFIG.organization, ...stored.organization },
       debug: { ...DEFAULT_CONFIG.debug, ...stored.debug },
-      ignorePatterns: stored.ignorePatterns || []
+      ignorePatterns: stored.ignorePatterns || [],
     };
   }
 
   async saveConfig(config: AppConfig): Promise<void> {
     await chrome.storage.sync.set({
-      [ConfigurationManager.STORAGE_KEY]: config
+      [ConfigurationManager.STORAGE_KEY]: config,
     });
   }
 
@@ -206,7 +206,7 @@ export class ConfigurationManager {
     history[bookmarkId] = {
       moved: true,
       timestamp: Date.now(),
-      category
+      category,
     };
     await chrome.storage.local.set({ [ConfigurationManager.HISTORY_STORAGE_KEY]: history });
   }
@@ -222,7 +222,9 @@ export class ConfigurationManager {
 
   async markAllBookmarksAsOrganized(): Promise<number> {
     // Get all bookmarks recursively
-    const getAllBookmarks = async (nodes: chrome.bookmarks.BookmarkTreeNode[]): Promise<string[]> => {
+    const getAllBookmarks = async (
+      nodes: chrome.bookmarks.BookmarkTreeNode[]
+    ): Promise<string[]> => {
       const bookmarkIds: string[] = [];
       for (const node of nodes) {
         if (node.url) {
@@ -249,7 +251,7 @@ export class ConfigurationManager {
       history[bookmarkId] = {
         moved: true,
         timestamp,
-        category: undefined  // No category since this is a manual marking
+        category: undefined, // No category since this is a manual marking
       };
     }
     await chrome.storage.local.set({ [ConfigurationManager.HISTORY_STORAGE_KEY]: history });

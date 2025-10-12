@@ -15,10 +15,10 @@ import { ReorganizationService } from '../services/ReorganizationService.js';
 interface ActivityLogEntry {
   type: 'auto-organize' | 'bulk-reorganize';
   timestamp: number;
-  title?: string;        // for auto-organize: bookmark title
-  category?: string;     // for auto-organize: category name
-  bookmarksMoved?: number;   // for bulk-reorganize: total bookmarks moved
-  foldersCreated?: number;   // for bulk-reorganize: total folders created
+  title?: string; // for auto-organize: bookmark title
+  category?: string; // for auto-organize: category name
+  bookmarksMoved?: number; // for bulk-reorganize: total bookmarks moved
+  foldersCreated?: number; // for bulk-reorganize: total folders created
 }
 
 class BackgroundService {
@@ -67,7 +67,7 @@ class BackgroundService {
         type: 'basic',
         iconUrl: chrome.runtime.getURL('icons/icon48.png'),
         title: title,
-        message: message
+        message: message,
       });
       logger.info('BackgroundService', `Notification created: ${notificationId}`);
     } catch (error) {
@@ -92,7 +92,10 @@ class BackgroundService {
       }
 
       await chrome.storage.local.set({ activityLog });
-      logger.debug('BackgroundService', `Added activity log entry, total entries: ${activityLog.length}`);
+      logger.debug(
+        'BackgroundService',
+        `Added activity log entry, total entries: ${activityLog.length}`
+      );
     } catch (error) {
       logger.warn('BackgroundService', 'Failed to add activity log entry', error);
     }
@@ -111,7 +114,7 @@ class BackgroundService {
 
     // Set up bookmark creation listener for auto-organization
     chrome.bookmarks.onCreated.addListener((id, bookmark) => {
-      this.handleBookmarkCreated(id, bookmark).catch(error => {
+      this.handleBookmarkCreated(id, bookmark).catch((error) => {
         logger.error('BackgroundService', 'Failed to auto-organize bookmark', error);
       });
     });
@@ -119,10 +122,16 @@ class BackgroundService {
     // Open settings on first install
     chrome.runtime.onInstalled.addListener((details) => {
       if (details.reason === 'install') {
-        logger.info('BackgroundService', 'Extension installed for the first time, opening settings');
+        logger.info(
+          'BackgroundService',
+          'Extension installed for the first time, opening settings'
+        );
         chrome.runtime.openOptionsPage();
       } else if (details.reason === 'update') {
-        logger.info('BackgroundService', `Extension updated to version ${chrome.runtime.getManifest().version}`);
+        logger.info(
+          'BackgroundService',
+          `Extension updated to version ${chrome.runtime.getManifest().version}`
+        );
       }
     });
 
@@ -152,7 +161,7 @@ class BackgroundService {
         case 'GET_REORGANIZATION_STATUS':
           return {
             isReorganizing: this.isReorganizing,
-            progress: this.reorganizationProgress
+            progress: this.reorganizationProgress,
           };
 
         case 'CHECK_CONFIG':
@@ -214,7 +223,10 @@ class BackgroundService {
 
     logger.debug('BackgroundService', 'Getting configuration');
     const config = await this.configManager.getConfig();
-    logger.trace('BackgroundService', 'Config loaded', { provider: config.api.provider, hasApiKey: !!config.api.apiKey });
+    logger.trace('BackgroundService', 'Config loaded', {
+      provider: config.api.provider,
+      hasApiKey: !!config.api.apiKey,
+    });
 
     if (!config.api.apiKey) {
       logger.error('BackgroundService', 'API key not configured!');
@@ -225,7 +237,14 @@ class BackgroundService {
     const maxTokens = config.performance?.maxTokens || DEFAULT_PERFORMANCE.maxTokens;
     const batchSize = config.performance?.batchSize || DEFAULT_PERFORMANCE.batchSize;
     const categories = config.organization?.categories || [];
-    logger.info('BackgroundService', 'Creating LLM service', { provider: config.api.provider, model: config.api.model, timeout: apiTimeout, maxTokens, batchSize, categoriesCount: categories.length });
+    logger.info('BackgroundService', 'Creating LLM service', {
+      provider: config.api.provider,
+      model: config.api.model,
+      timeout: apiTimeout,
+      maxTokens,
+      batchSize,
+      categoriesCount: categories.length,
+    });
     const llmService = new LLMService(
       config.api.apiKey,
       config.api.provider,
@@ -266,33 +285,52 @@ class BackgroundService {
       const allFolders = await this.bookmarkManager.getAllFolders();
 
       // Log root-level folders for debugging
-      const rootFolders = allFolders.filter(f => !f.parentId || f.parentId === '0');
-      logger.info('BackgroundService', `Preview - Root folders found:`, rootFolders.map(f => `${f.title} (ID: ${f.id})`).join(', '));
-      logger.info('BackgroundService', `Preview - Default excluded IDs: ${excludedFolderIds.join(', ')}`);
+      const rootFolders = allFolders.filter((f) => !f.parentId || f.parentId === '0');
+      logger.info(
+        'BackgroundService',
+        `Preview - Root folders found:`,
+        rootFolders.map((f) => `${f.title} (ID: ${f.id})`).join(', ')
+      );
+      logger.info(
+        'BackgroundService',
+        `Preview - Default excluded IDs: ${excludedFolderIds.join(', ')}`
+      );
 
       // Always exclude Trash folder - find its ID dynamically
-      const trashFolder = allFolders.find(f => f.title.toLowerCase().trim() === 'trash');
+      const trashFolder = allFolders.find((f) => f.title.toLowerCase().trim() === 'trash');
       if (trashFolder && !excludedFolderIds.includes(trashFolder.id)) {
         excludedFolderIds = [...excludedFolderIds, trashFolder.id];
-        logger.info('BackgroundService', `Added Trash folder (ID: ${trashFolder.id}) to preview exclusions`);
+        logger.info(
+          'BackgroundService',
+          `Added Trash folder (ID: ${trashFolder.id}) to preview exclusions`
+        );
       }
 
       // Add folders from ignoreFolders config by name (supports wildcards)
       const ignoreFolderPatterns = config.organization?.ignoreFolders || [];
       if (ignoreFolderPatterns.length > 0) {
-        logger.info('BackgroundService', `Preview looking for folders matching patterns: ${ignoreFolderPatterns.join(', ')}`);
-        ignoreFolderPatterns.forEach(pattern => {
-          const matchingFolders = allFolders.filter(f => this.matchGlobPattern(f.title, pattern));
-          matchingFolders.forEach(folder => {
+        logger.info(
+          'BackgroundService',
+          `Preview looking for folders matching patterns: ${ignoreFolderPatterns.join(', ')}`
+        );
+        ignoreFolderPatterns.forEach((pattern) => {
+          const matchingFolders = allFolders.filter((f) => this.matchGlobPattern(f.title, pattern));
+          matchingFolders.forEach((folder) => {
             if (!excludedFolderIds.includes(folder.id)) {
               excludedFolderIds.push(folder.id);
-              logger.info('BackgroundService', `Preview added '${folder.title}' (matched pattern '${pattern}', ID: ${folder.id}) to exclusions`);
+              logger.info(
+                'BackgroundService',
+                `Preview added '${folder.title}' (matched pattern '${pattern}', ID: ${folder.id}) to exclusions`
+              );
             }
           });
         });
       }
 
-      logger.info('BackgroundService', `Preview using excluded folder IDs: ${excludedFolderIds.join(', ')}`);
+      logger.info(
+        'BackgroundService',
+        `Preview using excluded folder IDs: ${excludedFolderIds.join(', ')}`
+      );
 
       logger.info('BackgroundService', 'Calling reorganizationService.generatePreview');
       const preview = await this.reorganizationService.generatePreview(excludedFolderIds);
@@ -300,13 +338,13 @@ class BackgroundService {
 
       return {
         success: true,
-        preview
+        preview,
       };
     } catch (error) {
       logger.error('BackgroundService', 'Preview generation failed', error);
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -325,7 +363,7 @@ class BackgroundService {
     this.reorganizationProgress = { current: 0, total: 100, message: 'Starting...' };
     await chrome.storage.local.set({
       isReorganizing: true,
-      reorganizationProgress: this.reorganizationProgress
+      reorganizationProgress: this.reorganizationProgress,
     });
 
     // Show badge to indicate organizing in progress
@@ -364,12 +402,16 @@ class BackgroundService {
     const allFolders = await this.bookmarkManager.getAllFolders();
 
     // Log root-level folders for debugging
-    const rootFolders = allFolders.filter(f => !f.parentId || f.parentId === '0');
-    logger.info('BackgroundService', `Root folders found:`, rootFolders.map(f => `${f.title} (ID: ${f.id})`).join(', '));
+    const rootFolders = allFolders.filter((f) => !f.parentId || f.parentId === '0');
+    logger.info(
+      'BackgroundService',
+      `Root folders found:`,
+      rootFolders.map((f) => `${f.title} (ID: ${f.id})`).join(', ')
+    );
     logger.info('BackgroundService', `Default excluded IDs: ${excludedFolderIds.join(', ')}`);
 
     // Always exclude Trash folder - find its ID dynamically
-    const trashFolder = allFolders.find(f => f.title.toLowerCase().trim() === 'trash');
+    const trashFolder = allFolders.find((f) => f.title.toLowerCase().trim() === 'trash');
     if (trashFolder && !excludedFolderIds.includes(trashFolder.id)) {
       excludedFolderIds = [...excludedFolderIds, trashFolder.id];
       logger.info('BackgroundService', `Added Trash folder (ID: ${trashFolder.id}) to exclusions`);
@@ -378,13 +420,19 @@ class BackgroundService {
     // Add folders from ignoreFolders config by name (supports wildcards)
     const ignoreFolderPatterns = config.organization?.ignoreFolders || [];
     if (ignoreFolderPatterns.length > 0) {
-      logger.info('BackgroundService', `Looking for folders matching patterns: ${ignoreFolderPatterns.join(', ')}`);
-      ignoreFolderPatterns.forEach(pattern => {
-        const matchingFolders = allFolders.filter(f => this.matchGlobPattern(f.title, pattern));
-        matchingFolders.forEach(folder => {
+      logger.info(
+        'BackgroundService',
+        `Looking for folders matching patterns: ${ignoreFolderPatterns.join(', ')}`
+      );
+      ignoreFolderPatterns.forEach((pattern) => {
+        const matchingFolders = allFolders.filter((f) => this.matchGlobPattern(f.title, pattern));
+        matchingFolders.forEach((folder) => {
           if (!excludedFolderIds.includes(folder.id)) {
             excludedFolderIds.push(folder.id);
-            logger.info('BackgroundService', `Added '${folder.title}' (matched pattern '${pattern}', ID: ${folder.id}) to exclusions`);
+            logger.info(
+              'BackgroundService',
+              `Added '${folder.title}' (matched pattern '${pattern}', ID: ${folder.id}) to exclusions`
+            );
           }
         });
       });
@@ -392,23 +440,37 @@ class BackgroundService {
 
     // Exclude "Saved Tabs" folders if configured (disabled by default)
     if (!config.organization.organizeSavedTabs) {
-      const savedTabsFolders = allFolders.filter(f => f.title.toLowerCase().trim().startsWith('saved tabs'));
+      const savedTabsFolders = allFolders.filter((f) =>
+        f.title.toLowerCase().trim().startsWith('saved tabs')
+      );
       if (savedTabsFolders.length > 0) {
-        logger.info('BackgroundService', `Found ${savedTabsFolders.length} "Saved Tabs" folders to exclude (organizeSavedTabs=false)`);
-        savedTabsFolders.forEach(folder => {
+        logger.info(
+          'BackgroundService',
+          `Found ${savedTabsFolders.length} "Saved Tabs" folders to exclude (organizeSavedTabs=false)`
+        );
+        savedTabsFolders.forEach((folder) => {
           if (!excludedFolderIds.includes(folder.id)) {
             excludedFolderIds.push(folder.id);
-            logger.info('BackgroundService', `Added "Saved Tabs" folder (ID: ${folder.id}, title: "${folder.title}") to exclusions`);
+            logger.info(
+              'BackgroundService',
+              `Added "Saved Tabs" folder (ID: ${folder.id}, title: "${folder.title}") to exclusions`
+            );
           }
         });
       }
     } else {
-      logger.info('BackgroundService', 'Saved Tabs folders will be organized (organizeSavedTabs=true)');
+      logger.info(
+        'BackgroundService',
+        'Saved Tabs folders will be organized (organizeSavedTabs=true)'
+      );
     }
 
     logger.info('BackgroundService', `Using excluded folder IDs: ${excludedFolderIds.join(', ')}`);
 
-    logger.info('BackgroundService', '>>> About to call reorganizationService.executeReorganization <<<');
+    logger.info(
+      'BackgroundService',
+      '>>> About to call reorganizationService.executeReorganization <<<'
+    );
     try {
       let lastNotificationTime = 0;
       const NOTIFICATION_THROTTLE = 5000; // Only show notification every 5 seconds
@@ -425,17 +487,21 @@ class BackgroundService {
           // Update badge with percentage
           const percent = Math.round((current / total) * 100);
           await chrome.action.setBadgeText({ text: `${percent}%` });
-          await chrome.action.setTitle({ title: `AI Bookmark Organizer - ${message} (${percent}%)` });
+          await chrome.action.setTitle({
+            title: `AI Bookmark Organizer - ${message} (${percent}%)`,
+          });
 
           // Send progress updates to popup
-          chrome.runtime.sendMessage({
-            type: 'PROGRESS_UPDATE',
-            current,
-            total,
-            message
-          }).catch(() => {
-            // Popup might be closed, that's okay
-          });
+          chrome.runtime
+            .sendMessage({
+              type: 'PROGRESS_UPDATE',
+              current,
+              total,
+              message,
+            })
+            .catch(() => {
+              // Popup might be closed, that's okay
+            });
 
           // Show periodic progress notifications
           const now = Date.now();
@@ -447,7 +513,7 @@ class BackgroundService {
                 type: 'basic',
                 iconUrl: chrome.runtime.getURL('icons/icon48.png'),
                 title: 'AI Bookmark Organizer',
-                message: `${message} (${percent}%)`
+                message: `${message} (${percent}%)`,
               });
             } catch (err) {
               console.log('Notification failed (non-critical):', err);
@@ -475,7 +541,7 @@ class BackgroundService {
         type: 'bulk-reorganize',
         timestamp: Date.now(),
         bookmarksMoved: result.bookmarksMoved,
-        foldersCreated: result.foldersCreated
+        foldersCreated: result.foldersCreated,
       });
 
       // Show completion notification
@@ -491,7 +557,7 @@ class BackgroundService {
       logger.info('BackgroundService', 'Returning success result to caller');
       return {
         success: result.success,
-        result
+        result,
       };
     } catch (error) {
       logger.error('BackgroundService', '!!! Reorganization FAILED !!!', error);
@@ -517,15 +583,12 @@ class BackgroundService {
           moves: [],
           duplicates: [],
           folders: [],
-          emptyFolders: []
-        }
+          emptyFolders: [],
+        },
       });
 
       // Show error notification
-      await this.showNotification(
-        'Organization Failed',
-        String(error)
-      );
+      await this.showNotification('Organization Failed', String(error));
 
       // Open results page to show error
       const resultsUrl = chrome.runtime.getURL('results.html');
@@ -533,7 +596,7 @@ class BackgroundService {
 
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -546,12 +609,12 @@ class BackgroundService {
       return {
         success: true,
         isConfigured,
-        provider: config.api.provider
+        provider: config.api.provider,
       };
     } catch (error) {
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -562,12 +625,12 @@ class BackgroundService {
 
       return {
         success: true,
-        config
+        config,
       };
     } catch (error) {
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -583,7 +646,7 @@ class BackgroundService {
     } catch (error) {
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -593,13 +656,18 @@ class BackgroundService {
       // Load config from storage if not provided (for popup calls)
       const config = configParam || (await this.configManager.getConfig()).api;
 
-      logger.info('BackgroundService', 'Testing API connection', { provider: config.provider, model: config.model });
+      logger.info('BackgroundService', 'Testing API connection', {
+        provider: config.provider,
+        model: config.model,
+      });
 
       // Validate format first
       logger.debug('BackgroundService', 'Validating API key format');
       const formatCheck = LLMService.validateApiKeyFormat(config.apiKey, config.provider);
       if (!formatCheck.valid) {
-        logger.warn('BackgroundService', 'API key format validation failed', { error: formatCheck.error });
+        logger.warn('BackgroundService', 'API key format validation failed', {
+          error: formatCheck.error,
+        });
         return { success: false, error: formatCheck.error };
       }
       logger.debug('BackgroundService', 'API key format valid');
@@ -625,7 +693,7 @@ class BackgroundService {
       logger.error('BackgroundService', 'Connection test failed with exception', error);
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -640,13 +708,15 @@ class BackgroundService {
       logger.error('BackgroundService', 'Failed to update logger config', error);
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
 
   private async executeSelectiveReorganization(folderIds: string[]): Promise<any> {
-    logger.info('BackgroundService', 'executeSelectiveReorganization STARTED', { folderCount: folderIds.length });
+    logger.info('BackgroundService', 'executeSelectiveReorganization STARTED', {
+      folderCount: folderIds.length,
+    });
 
     // Check if already reorganizing
     if (this.isReorganizing) {
@@ -656,16 +726,22 @@ class BackgroundService {
 
     // Set reorganizing state
     this.isReorganizing = true;
-    this.reorganizationProgress = { current: 0, total: 100, message: 'Starting selective organization...' };
+    this.reorganizationProgress = {
+      current: 0,
+      total: 100,
+      message: 'Starting selective organization...',
+    };
     await chrome.storage.local.set({
       isReorganizing: true,
-      reorganizationProgress: this.reorganizationProgress
+      reorganizationProgress: this.reorganizationProgress,
     });
 
     // Show badge
     await chrome.action.setBadgeText({ text: '...' });
     await chrome.action.setBadgeBackgroundColor({ color: '#4facfe' });
-    await chrome.action.setTitle({ title: 'AI Bookmark Organizer - Organizing selected folders...' });
+    await chrome.action.setTitle({
+      title: 'AI Bookmark Organizer - Organizing selected folders...',
+    });
 
     try {
       logger.info('BackgroundService', 'Initializing services');
@@ -699,12 +775,17 @@ class BackgroundService {
         chrome.action.setBadgeText({ text: `${percentage}%` }).catch(() => {});
 
         // Store progress state
-        chrome.storage.local.set({
-          reorganizationProgress: this.reorganizationProgress
-        }).catch(() => {});
+        chrome.storage.local
+          .set({
+            reorganizationProgress: this.reorganizationProgress,
+          })
+          .catch(() => {});
       };
 
-      logger.info('BackgroundService', `Calling reorganizationService.reorganizeSpecificFolders with ${folderIds.length} folders`);
+      logger.info(
+        'BackgroundService',
+        `Calling reorganizationService.reorganizeSpecificFolders with ${folderIds.length} folders`
+      );
       const result = await this.reorganizationService.reorganizeSpecificFolders(
         folderIds,
         progressCallback
@@ -731,7 +812,7 @@ class BackgroundService {
       logger.info('BackgroundService', 'Returning success result to caller');
       return {
         success: result.success,
-        result
+        result,
       };
     } catch (error) {
       logger.error('BackgroundService', 'Selective reorganization FAILED', error);
@@ -757,8 +838,8 @@ class BackgroundService {
           moves: [],
           duplicates: [],
           folders: [],
-          emptyFolders: []
-        }
+          emptyFolders: [],
+        },
       });
 
       return { success: false, error: String(error) };
@@ -770,13 +851,13 @@ class BackgroundService {
       const tree = await this.bookmarkManager.getBookmarkTreeWithCounts();
       return {
         success: true,
-        tree
+        tree,
       };
     } catch (error) {
       logger.error('BackgroundService', 'Failed to get folder tree', error);
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -787,13 +868,13 @@ class BackgroundService {
       logger.info('BackgroundService', `Retrieved ${folders.length} system folders`);
       return {
         success: true,
-        folders
+        folders,
       };
     } catch (error) {
       logger.error('BackgroundService', 'Failed to get system folders', error);
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -807,7 +888,7 @@ class BackgroundService {
       logger.error('BackgroundService', 'Failed to clear organization history', error);
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -821,7 +902,7 @@ class BackgroundService {
       logger.error('BackgroundService', 'Failed to mark all bookmarks as organized', error);
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -829,7 +910,10 @@ class BackgroundService {
   /**
    * Handle new bookmark creation for auto-organization
    */
-  private async handleBookmarkCreated(id: string, bookmark: chrome.bookmarks.BookmarkTreeNode): Promise<void> {
+  private async handleBookmarkCreated(
+    id: string,
+    bookmark: chrome.bookmarks.BookmarkTreeNode
+  ): Promise<void> {
     // Only process actual bookmarks (not folders)
     if (!bookmark.url) {
       logger.trace('BackgroundService', `Ignoring folder creation: ${bookmark.title}`);
@@ -866,9 +950,8 @@ class BackgroundService {
       );
 
       // Get categories
-      const categories = config.organization.categories?.length > 0
-        ? config.organization.categories
-        : [];
+      const categories =
+        config.organization.categories?.length > 0 ? config.organization.categories : [];
 
       if (categories.length === 0) {
         logger.warn('BackgroundService', 'No categories configured, cannot auto-organize');
@@ -914,7 +997,7 @@ class BackgroundService {
           type: 'auto-organize',
           timestamp: Date.now(),
           title: bookmark.title,
-          category: category
+          category: category,
         });
 
         // Show notification (use system notification since we can't inject into arbitrary pages)
@@ -922,7 +1005,6 @@ class BackgroundService {
       } else {
         logger.debug('BackgroundService', 'Bookmark already in correct folder');
       }
-
     } catch (error) {
       logger.error('BackgroundService', 'Auto-organization failed', error);
       // Don't throw - we don't want to break bookmark creation

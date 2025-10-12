@@ -6,7 +6,12 @@
  * Options page controller
  */
 
-import { AppConfig, DEFAULT_CATEGORIES, DEFAULT_MODELS, DEFAULT_PERFORMANCE } from '../services/ConfigurationManager.js';
+import {
+  AppConfig,
+  DEFAULT_CATEGORIES,
+  DEFAULT_MODELS,
+  DEFAULT_PERFORMANCE,
+} from '../services/ConfigurationManager.js';
 import { OpenRouterAuthService } from '../services/OpenRouterAuthService.js';
 
 class OptionsController {
@@ -58,13 +63,21 @@ class OptionsController {
     this.batchSizeInput = document.getElementById('batchSize') as HTMLInputElement;
     this.maxTokensInput = document.getElementById('maxTokens') as HTMLInputElement;
     this.removeDuplicatesCheckbox = document.getElementById('removeDuplicates') as HTMLInputElement;
-    this.removeEmptyFoldersCheckbox = document.getElementById('removeEmptyFolders') as HTMLInputElement;
+    this.removeEmptyFoldersCheckbox = document.getElementById(
+      'removeEmptyFolders'
+    ) as HTMLInputElement;
     this.categoriesTextarea = document.getElementById('categories') as HTMLTextAreaElement;
     this.ignoreFoldersInput = document.getElementById('ignoreFolders') as HTMLInputElement;
-    this.organizeSavedTabsCheckbox = document.getElementById('organizeSavedTabs') as HTMLInputElement;
+    this.organizeSavedTabsCheckbox = document.getElementById(
+      'organizeSavedTabs'
+    ) as HTMLInputElement;
     this.autoOrganizeCheckbox = document.getElementById('autoOrganize') as HTMLInputElement;
-    this.folderModeRadios = document.querySelectorAll('input[name="folderMode"]') as NodeListOf<HTMLInputElement>;
-    this.respectOrganizationHistoryRadios = document.querySelectorAll('input[name="respectOrganizationHistory"]') as NodeListOf<HTMLInputElement>;
+    this.folderModeRadios = document.querySelectorAll(
+      'input[name="folderMode"]'
+    ) as NodeListOf<HTMLInputElement>;
+    this.respectOrganizationHistoryRadios = document.querySelectorAll(
+      'input[name="respectOrganizationHistory"]'
+    ) as NodeListOf<HTMLInputElement>;
     this.clearHistoryBtn = document.getElementById('clearHistoryBtn') as HTMLButtonElement;
     this.markAllOrganizedBtn = document.getElementById('markAllOrganizedBtn') as HTMLButtonElement;
     this.logLevelSelect = document.getElementById('logLevel') as HTMLSelectElement;
@@ -75,9 +88,13 @@ class OptionsController {
     this.statusDiv = document.getElementById('status') as HTMLElement;
     this.testStatusDiv = document.getElementById('test-status') as HTMLElement;
     this.systemFoldersList = document.getElementById('system-folders-list') as HTMLElement;
-    this.openrouterOAuthSection = document.getElementById('openrouter-oauth-section') as HTMLElement;
+    this.openrouterOAuthSection = document.getElementById(
+      'openrouter-oauth-section'
+    ) as HTMLElement;
     this.openrouterLoginBtn = document.getElementById('openrouter-login-btn') as HTMLButtonElement;
-    this.openrouterLogoutBtn = document.getElementById('openrouter-logout-btn') as HTMLButtonElement;
+    this.openrouterLogoutBtn = document.getElementById(
+      'openrouter-logout-btn'
+    ) as HTMLButtonElement;
     this.oauthStatusDiv = document.getElementById('oauth-status') as HTMLElement;
     this.openrouterModelsHelp = document.getElementById('openrouter-models-help') as HTMLElement;
     this.apiKeySection = document.getElementById('api-key-section') as HTMLElement;
@@ -150,14 +167,14 @@ class OptionsController {
     this.removeEmptyFoldersCheckbox.addEventListener('change', () => this.markUnsavedChanges());
     this.organizeSavedTabsCheckbox.addEventListener('change', () => this.markUnsavedChanges());
     this.autoOrganizeCheckbox.addEventListener('change', () => this.markUnsavedChanges());
-    this.folderModeRadios.forEach(radio => {
+    this.folderModeRadios.forEach((radio) => {
       radio.addEventListener('change', () => {
         this.markUnsavedChanges();
         this.updateFolderModeUI();
         this.updateRadioCardStates();
       });
     });
-    this.respectOrganizationHistoryRadios.forEach(radio => {
+    this.respectOrganizationHistoryRadios.forEach((radio) => {
       radio.addEventListener('change', () => {
         this.markUnsavedChanges();
         this.updateRadioCardStates();
@@ -186,7 +203,7 @@ class OptionsController {
    */
   private updateRadioCardStates() {
     const radioCards = document.querySelectorAll('.radio-option-card');
-    radioCards.forEach(card => {
+    radioCards.forEach((card) => {
       const radio = card.querySelector('input[type="radio"]') as HTMLInputElement;
       if (radio && radio.checked) {
         card.classList.add('selected');
@@ -201,7 +218,7 @@ class OptionsController {
    */
   private updateFolderModeUI() {
     let useExisting = false;
-    this.folderModeRadios.forEach(radio => {
+    this.folderModeRadios.forEach((radio) => {
       if (radio.checked && radio.value === 'existing') {
         useExisting = true;
       }
@@ -216,11 +233,13 @@ class OptionsController {
     const helpText = document.getElementById('categories-help');
     if (helpText) {
       if (useExisting) {
-        helpText.textContent = 'Categories are not used when "Use Existing Folders Only" mode is selected. Your existing folder structure will be used instead.';
+        helpText.textContent =
+          'Categories are not used when "Use Existing Folders Only" mode is selected. Your existing folder structure will be used instead.';
         helpText.style.fontStyle = 'italic';
         helpText.style.color = '#999';
       } else {
-        helpText.textContent = 'One category per line. These categories will be used to organize your bookmarks. Add, remove, or rename categories to match your preferences.';
+        helpText.textContent =
+          'One category per line. These categories will be used to organize your bookmarks. Add, remove, or rename categories to match your preferences.';
         helpText.style.fontStyle = 'normal';
         helpText.style.color = '';
       }
@@ -234,39 +253,44 @@ class OptionsController {
         this.systemFolders = response.folders;
         this.renderSystemFolders();
       } else {
-        this.systemFoldersList.innerHTML = '<div style="text-align: center; color: #c62828;">Failed to load system folders</div>';
+        this.systemFoldersList.innerHTML =
+          '<div style="text-align: center; color: #c62828;">Failed to load system folders</div>';
       }
     } catch (error) {
       console.error('Failed to load system folders:', error);
-      this.systemFoldersList.innerHTML = '<div style="text-align: center; color: #c62828;">Error loading system folders</div>';
+      this.systemFoldersList.innerHTML =
+        '<div style="text-align: center; color: #c62828;">Error loading system folders</div>';
     }
   }
 
   private renderSystemFolders() {
     if (this.systemFolders.length === 0) {
-      this.systemFoldersList.innerHTML = '<div style="text-align: center; color: #999;">No system folders found</div>';
+      this.systemFoldersList.innerHTML =
+        '<div style="text-align: center; color: #999;">No system folders found</div>';
       return;
     }
 
     // Filter out Trash - should never be organized (always excluded)
-    const visibleFolders = this.systemFolders.filter(f =>
-      f.title.toLowerCase().trim() !== 'trash'
+    const visibleFolders = this.systemFolders.filter(
+      (f) => f.title.toLowerCase().trim() !== 'trash'
     );
 
     // Set Speed Dial and Home unchecked by default
     const defaultUnchecked = new Set(['speed dial', 'home']);
 
-    this.systemFoldersList.innerHTML = visibleFolders.map(folder => {
-      const isUncheckedByDefault = defaultUnchecked.has(folder.title.toLowerCase().trim());
-      const checkedAttr = isUncheckedByDefault ? '' : 'checked';
+    this.systemFoldersList.innerHTML = visibleFolders
+      .map((folder) => {
+        const isUncheckedByDefault = defaultUnchecked.has(folder.title.toLowerCase().trim());
+        const checkedAttr = isUncheckedByDefault ? '' : 'checked';
 
-      return `
+        return `
         <div class="checkbox-group">
           <input type="checkbox" id="folder-${folder.id}" data-folder-id="${folder.id}" ${checkedAttr}>
           <label for="folder-${folder.id}">${this.escapeHtml(folder.title)}${folder.isRoot ? ' <span style="color: #999; font-size: 0.85em;">(Root)</span>' : ''}</label>
         </div>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
   private escapeHtml(text: string): string {
@@ -290,20 +314,28 @@ class OptionsController {
 
         // Performance Config
         if (config.performance) {
-          this.apiTimeoutInput.value = String(config.performance.apiTimeout || DEFAULT_PERFORMANCE.apiTimeout);
-          this.batchSizeInput.value = String(config.performance.batchSize || DEFAULT_PERFORMANCE.batchSize);
-          this.maxTokensInput.value = String(config.performance.maxTokens || DEFAULT_PERFORMANCE.maxTokens);
+          this.apiTimeoutInput.value = String(
+            config.performance.apiTimeout || DEFAULT_PERFORMANCE.apiTimeout
+          );
+          this.batchSizeInput.value = String(
+            config.performance.batchSize || DEFAULT_PERFORMANCE.batchSize
+          );
+          this.maxTokensInput.value = String(
+            config.performance.maxTokens || DEFAULT_PERFORMANCE.maxTokens
+          );
         }
 
         // Organization Config
         if (config.organization) {
           this.removeDuplicatesCheckbox.checked = config.organization.removeDuplicates !== false;
-          this.removeEmptyFoldersCheckbox.checked = config.organization.removeEmptyFolders !== false;
+          this.removeEmptyFoldersCheckbox.checked =
+            config.organization.removeEmptyFolders !== false;
 
           // Use default categories if none are configured
-          const categories = (config.organization.categories?.length > 0)
-            ? config.organization.categories
-            : DEFAULT_CATEGORIES;
+          const categories =
+            config.organization.categories?.length > 0
+              ? config.organization.categories
+              : DEFAULT_CATEGORIES;
           this.categoriesTextarea.value = categories.join('\n');
 
           this.ignoreFoldersInput.value = (config.organization.ignoreFolders || []).join(', ');
@@ -312,7 +344,7 @@ class OptionsController {
 
           // Set folder mode radio button
           const folderMode = config.organization.useExistingFolders ? 'existing' : 'create';
-          this.folderModeRadios.forEach(radio => {
+          this.folderModeRadios.forEach((radio) => {
             radio.checked = radio.value === folderMode;
           });
 
@@ -325,7 +357,7 @@ class OptionsController {
           } else {
             selectedValue = historyValue || 'organizeAllOnly';
           }
-          this.respectOrganizationHistoryRadios.forEach(radio => {
+          this.respectOrganizationHistoryRadios.forEach((radio) => {
             radio.checked = radio.value === selectedValue;
           });
 
@@ -337,7 +369,7 @@ class OptionsController {
 
           // Apply excluded system folder IDs
           const excludedIds = new Set(config.organization.excludedSystemFolderIds || []);
-          this.systemFolders.forEach(folder => {
+          this.systemFolders.forEach((folder) => {
             const checkbox = document.getElementById(`folder-${folder.id}`) as HTMLInputElement;
             if (checkbox) {
               checkbox.checked = !excludedIds.has(folder.id);
@@ -347,7 +379,9 @@ class OptionsController {
 
         // Debug Config
         if (config.debug) {
-          this.logLevelSelect.value = String(config.debug.logLevel !== undefined ? config.debug.logLevel : 0);
+          this.logLevelSelect.value = String(
+            config.debug.logLevel !== undefined ? config.debug.logLevel : 0
+          );
           this.consoleLoggingCheckbox.checked = config.debug.consoleLogging !== false;
         }
 
@@ -379,7 +413,12 @@ class OptionsController {
   }
 
   private async handleTest() {
-    const provider = this.providerSelect.value as 'openai' | 'claude' | 'grok' | 'openrouter' | 'custom';
+    const provider = this.providerSelect.value as
+      | 'openai'
+      | 'claude'
+      | 'grok'
+      | 'openrouter'
+      | 'custom';
     const apiKey = this.apiKeyInput.value.trim();
     const model = this.modelInput.value.trim();
     const customEndpoint = this.customEndpointInput.value.trim();
@@ -400,12 +439,12 @@ class OptionsController {
         apiKey,
         model: model || undefined,
         customEndpoint: customEndpoint || undefined,
-        customModelName: customModelName || undefined
+        customModelName: customModelName || undefined,
       };
 
       const response = await chrome.runtime.sendMessage({
         type: 'TEST_CONNECTION',
-        config
+        config,
       });
 
       if (response.success) {
@@ -423,7 +462,7 @@ class OptionsController {
             // Show warnings
             if (credits === 0 && response.rateLimit.remaining === 0) {
               statusMessage += ' ⚠️ NO CAPACITY';
-            } else if (response.rateLimit.remaining <= 5 && credits < 0.10) {
+            } else if (response.rateLimit.remaining <= 5 && credits < 0.1) {
               statusMessage += ' ⚠️ LOW';
             }
           } else if (credits < 1) {
@@ -447,7 +486,12 @@ class OptionsController {
     const result = await chrome.storage.sync.get('app_config');
     const currentConfig: AppConfig = result.app_config;
 
-    const provider = this.providerSelect.value as 'openai' | 'claude' | 'grok' | 'openrouter' | 'custom';
+    const provider = this.providerSelect.value as
+      | 'openai'
+      | 'claude'
+      | 'grok'
+      | 'openrouter'
+      | 'custom';
     const apiKey = this.apiKeyInput.value.trim();
     const model = this.modelInput.value.trim();
     const customEndpoint = this.customEndpointInput.value.trim();
@@ -464,7 +508,7 @@ class OptionsController {
 
     // Get folder mode from radio buttons
     let useExistingFolders = false;
-    this.folderModeRadios.forEach(radio => {
+    this.folderModeRadios.forEach((radio) => {
       if (radio.checked && radio.value === 'existing') {
         useExistingFolders = true;
       }
@@ -472,7 +516,7 @@ class OptionsController {
 
     // Get selected radio button value
     let respectOrganizationHistory: 'always' | 'never' | 'organizeAllOnly' = 'organizeAllOnly';
-    this.respectOrganizationHistoryRadios.forEach(radio => {
+    this.respectOrganizationHistoryRadios.forEach((radio) => {
       if (radio.checked) {
         respectOrganizationHistory = radio.value as 'always' | 'never' | 'organizeAllOnly';
       }
@@ -502,16 +546,22 @@ class OptionsController {
 
     try {
       const categories = categoriesText
-        ? categoriesText.split('\n').map(c => c.trim()).filter(c => c.length > 0)
+        ? categoriesText
+            .split('\n')
+            .map((c) => c.trim())
+            .filter((c) => c.length > 0)
         : [];
 
       const ignoreFolders = ignoreFoldersText
-        ? ignoreFoldersText.split(',').map(f => f.trim()).filter(f => f.length > 0)
+        ? ignoreFoldersText
+            .split(',')
+            .map((f) => f.trim())
+            .filter((f) => f.length > 0)
         : [];
 
       // Collect excluded system folder IDs (unchecked = excluded)
       const excludedSystemFolderIds: string[] = [];
-      this.systemFolders.forEach(folder => {
+      this.systemFolders.forEach((folder) => {
         const checkbox = document.getElementById(`folder-${folder.id}`) as HTMLInputElement;
         if (checkbox && !checkbox.checked) {
           excludedSystemFolderIds.push(folder.id);
@@ -524,12 +574,12 @@ class OptionsController {
           apiKey,
           model: model || undefined,
           customEndpoint: customEndpoint || undefined,
-          customModelName: customModelName || undefined
+          customModelName: customModelName || undefined,
         },
         performance: {
           apiTimeout,
           batchSize,
-          maxTokens
+          maxTokens,
         },
         organization: {
           removeDuplicates,
@@ -541,18 +591,18 @@ class OptionsController {
           organizeSavedTabs,
           autoOrganize,
           respectOrganizationHistory,
-          useExistingFolders
+          useExistingFolders,
         },
         debug: {
           logLevel,
-          consoleLogging
+          consoleLogging,
         },
-        ignorePatterns: []
+        ignorePatterns: [],
       };
 
       const response = await chrome.runtime.sendMessage({
         type: 'SAVE_CONFIG',
-        config
+        config,
       });
 
       if (response.success) {
@@ -562,7 +612,7 @@ class OptionsController {
         // Update logger settings immediately
         await chrome.runtime.sendMessage({
           type: 'UPDATE_LOGGER_CONFIG',
-          config: config.debug
+          config: config.debug,
         });
       } else {
         throw new Error(response.error);
@@ -582,7 +632,11 @@ class OptionsController {
   }
 
   private async handleReset() {
-    if (!confirm('Are you sure you want to reset all settings to defaults? Your API key will be cleared and you will be signed out of OpenRouter.')) {
+    if (
+      !confirm(
+        'Are you sure you want to reset all settings to defaults? Your API key will be cleared and you will be signed out of OpenRouter.'
+      )
+    ) {
       return;
     }
 
@@ -615,12 +669,12 @@ class OptionsController {
       this.autoOrganizeCheckbox.checked = false;
 
       // Set default folder mode (create)
-      this.folderModeRadios.forEach(radio => {
+      this.folderModeRadios.forEach((radio) => {
         radio.checked = radio.value === 'create';
       });
 
       // Set default radio button
-      this.respectOrganizationHistoryRadios.forEach(radio => {
+      this.respectOrganizationHistoryRadios.forEach((radio) => {
         radio.checked = radio.value === 'organizeAllOnly';
       });
 
@@ -632,7 +686,10 @@ class OptionsController {
       this.updateRadioCardStates();
       this.updateFolderModeUI();
       this.markUnsavedChanges();
-      this.showStatus('✓ Reset to defaults! (API key preserved) Click Save to apply changes.', 'success');
+      this.showStatus(
+        '✓ Reset to defaults! (API key preserved) Click Save to apply changes.',
+        'success'
+      );
     } catch (error) {
       this.showStatus(`Error: ${error}`, 'error');
       console.error('Failed to reset:', error);
@@ -703,14 +760,15 @@ class OptionsController {
       this.openrouterLoginBtn.style.display = 'none';
       this.openrouterLogoutBtn.style.display = 'block';
       this.oauthStatusDiv.style.display = 'block';
-      this.oauthStatusDiv.innerHTML = '<span style="color: #2e7d32;">✓ Signed in with OpenRouter</span>';
-      this.apiKeySection.style.display = 'none';  // Hide API key field when using OAuth
+      this.oauthStatusDiv.innerHTML =
+        '<span style="color: #2e7d32;">✓ Signed in with OpenRouter</span>';
+      this.apiKeySection.style.display = 'none'; // Hide API key field when using OAuth
       this.apiKeyInput.disabled = true;
     } else {
       this.openrouterLoginBtn.style.display = 'block';
       this.openrouterLogoutBtn.style.display = 'none';
       this.oauthStatusDiv.style.display = 'none';
-      this.apiKeySection.style.display = 'block';  // Show API key field when not using OAuth
+      this.apiKeySection.style.display = 'block'; // Show API key field when not using OAuth
       this.apiKeyInput.disabled = false;
       this.apiKeyInput.placeholder = 'sk-or-...';
     }
@@ -720,7 +778,8 @@ class OptionsController {
     this.openrouterLoginBtn.disabled = true;
     this.openrouterLoginBtn.textContent = '⏳ Opening OpenRouter...';
     this.oauthStatusDiv.style.display = 'block';
-    this.oauthStatusDiv.innerHTML = '<span style="color: #1976d2;">Opening authorization page...</span>';
+    this.oauthStatusDiv.innerHTML =
+      '<span style="color: #1976d2;">Opening authorization page...</span>';
 
     try {
       const result = await this.authService.login();
@@ -731,7 +790,8 @@ class OptionsController {
         this.providerSelect.value = 'openrouter';
 
         // Show success status
-        this.oauthStatusDiv.innerHTML = '<span style="color: #2e7d32;">✓ Successfully signed in! Saving configuration...</span>';
+        this.oauthStatusDiv.innerHTML =
+          '<span style="color: #2e7d32;">✓ Successfully signed in! Saving configuration...</span>';
 
         // Auto-save the configuration
         await this.handleSave();
@@ -751,7 +811,8 @@ class OptionsController {
       }
     } catch (error) {
       console.error('OAuth login error:', error);
-      this.oauthStatusDiv.innerHTML = '<span style="color: #c62828;">✗ An error occurred during login</span>';
+      this.oauthStatusDiv.innerHTML =
+        '<span style="color: #c62828;">✗ An error occurred during login</span>';
       this.showStatus(`Error: ${error}`, 'error');
     } finally {
       this.openrouterLoginBtn.disabled = false;
@@ -760,7 +821,9 @@ class OptionsController {
   }
 
   private async handleOpenRouterLogout() {
-    if (!confirm('Are you sure you want to sign out of OpenRouter? Your API key will be removed.')) {
+    if (
+      !confirm('Are you sure you want to sign out of OpenRouter? Your API key will be removed.')
+    ) {
       return;
     }
 
@@ -780,7 +843,11 @@ class OptionsController {
   }
 
   private async handleClearHistory() {
-    if (!confirm('Are you sure you want to clear the organization history? This will allow all bookmarks to be reorganized in future runs.')) {
+    if (
+      !confirm(
+        'Are you sure you want to clear the organization history? This will allow all bookmarks to be reorganized in future runs.'
+      )
+    ) {
       return;
     }
 
@@ -803,7 +870,11 @@ class OptionsController {
   }
 
   private async handleMarkAllOrganized() {
-    if (!confirm('Mark all bookmarks as organized? This will prevent the AI from reorganizing any of your existing bookmarks until you clear the history.')) {
+    if (
+      !confirm(
+        'Mark all bookmarks as organized? This will prevent the AI from reorganizing any of your existing bookmarks until you clear the history.'
+      )
+    ) {
       return;
     }
 
@@ -813,7 +884,10 @@ class OptionsController {
       const response = await chrome.runtime.sendMessage({ type: 'MARK_ALL_ORGANIZED' });
 
       if (response && response.success) {
-        this.showStatus(`✓ Successfully marked ${response.count} bookmarks as organized`, 'success');
+        this.showStatus(
+          `✓ Successfully marked ${response.count} bookmarks as organized`,
+          'success'
+        );
       } else {
         throw new Error(response?.error || 'Failed to mark bookmarks as organized');
       }

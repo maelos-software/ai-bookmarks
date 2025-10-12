@@ -26,26 +26,36 @@ describe('LLMService', () => {
     });
 
     it('should validate OpenAI API key format', () => {
-      expect(LLMService.validateApiKeyFormat('sk-1234567890123456789012', 'openai').valid).toBe(true);
-      expect(LLMService.validateApiKeyFormat('sk-proj-1234567890123456789012', 'openai').valid).toBe(true);
+      expect(LLMService.validateApiKeyFormat('sk-1234567890123456789012', 'openai').valid).toBe(
+        true
+      );
+      expect(
+        LLMService.validateApiKeyFormat('sk-proj-1234567890123456789012', 'openai').valid
+      ).toBe(true);
       expect(LLMService.validateApiKeyFormat('invalid-key', 'openai').valid).toBe(false);
       expect(LLMService.validateApiKeyFormat('sk-short', 'openai').valid).toBe(false);
     });
 
     it('should validate Claude API key format', () => {
-      expect(LLMService.validateApiKeyFormat('sk-ant-1234567890123456789012', 'claude').valid).toBe(true);
+      expect(LLMService.validateApiKeyFormat('sk-ant-1234567890123456789012', 'claude').valid).toBe(
+        true
+      );
       expect(LLMService.validateApiKeyFormat('invalid-key', 'claude').valid).toBe(false);
       expect(LLMService.validateApiKeyFormat('sk-ant-short', 'claude').valid).toBe(false);
     });
 
     it('should validate Grok API key format', () => {
-      expect(LLMService.validateApiKeyFormat('xai-1234567890123456789012', 'grok').valid).toBe(true);
+      expect(LLMService.validateApiKeyFormat('xai-1234567890123456789012', 'grok').valid).toBe(
+        true
+      );
       expect(LLMService.validateApiKeyFormat('invalid-key', 'grok').valid).toBe(false);
       expect(LLMService.validateApiKeyFormat('xai-short', 'grok').valid).toBe(false);
     });
 
     it('should validate OpenRouter API key format', () => {
-      expect(LLMService.validateApiKeyFormat('sk-or-1234567890123456789012', 'openrouter').valid).toBe(true);
+      expect(
+        LLMService.validateApiKeyFormat('sk-or-1234567890123456789012', 'openrouter').valid
+      ).toBe(true);
       expect(LLMService.validateApiKeyFormat('invalid-key', 'openrouter').valid).toBe(false);
       expect(LLMService.validateApiKeyFormat('sk-or-short', 'openrouter').valid).toBe(false);
     });
@@ -115,7 +125,13 @@ describe('LLMService', () => {
     });
 
     it('should set custom maxTokens', () => {
-      const service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, 8192);
+      const service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        8192
+      );
       expect(service).toBeDefined();
     });
   });
@@ -134,8 +150,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: 'Tech' } }]
-        })
+          choices: [{ message: { content: 'Tech' } }],
+        }),
       });
 
       const result = await service.categorizeSingleBookmark(bookmark, categories);
@@ -149,8 +165,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: '{"category": "News"}' } }]
-        })
+          choices: [{ message: { content: '{"category": "News"}' } }],
+        }),
       });
 
       const result = await service.categorizeSingleBookmark(bookmark, categories);
@@ -164,8 +180,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: 'InvalidCategory' } }]
-        })
+          choices: [{ message: { content: 'InvalidCategory' } }],
+        }),
       });
 
       const result = await service.categorizeSingleBookmark(bookmark, categories);
@@ -179,8 +195,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: 'TECH' } }]
-        })
+          choices: [{ message: { content: 'TECH' } }],
+        }),
       });
 
       const result = await service.categorizeSingleBookmark(bookmark, categories);
@@ -198,25 +214,29 @@ describe('LLMService', () => {
     it('should handle API response with valid folder assignments', async () => {
       const bookmarks: Bookmark[] = [
         { id: '1', title: 'GitHub', url: 'https://github.com' },
-        { id: '2', title: 'BBC News', url: 'https://bbc.com' }
+        { id: '2', title: 'BBC News', url: 'https://bbc.com' },
       ];
 
       const mockResponse = {
         suggestions: [
           { bookmarkId: '1', folderName: 'Technology & Software' },
-          { bookmarkId: '2', folderName: 'News & Media' }
-        ]
+          { bookmarkId: '2', folderName: 'News & Media' },
+        ],
       };
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
           choices: [{ message: { content: JSON.stringify(mockResponse) } }],
-          usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 }
-        })
+          usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
+        }),
       });
 
-      const result = await service.organizeBookmarks(bookmarks, ['Technology & Software', 'News & Media', 'Other']);
+      const result = await service.organizeBookmarks(bookmarks, [
+        'Technology & Software',
+        'News & Media',
+        'Other',
+      ]);
 
       expect(result.suggestions).toHaveLength(2);
       expect(result.suggestions[0].folderName).toBe('Technology & Software');
@@ -225,52 +245,43 @@ describe('LLMService', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-      const bookmarks: Bookmark[] = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks: Bookmark[] = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
-        text: async () => 'Server error'
+        text: async () => 'Server error',
       });
 
-      await expect(
-        service.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
 
     // Skip this test as it involves retry logic with long delays (5s + 10s + 20s + 40s + 60s = 135s)
     it.skip('should handle rate limit errors', async () => {
-      const bookmarks: Bookmark[] = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks: Bookmark[] = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockResolvedValue({
         ok: false,
         status: 429,
         statusText: 'Too Many Requests',
-        text: async () => 'Rate limit exceeded'
+        text: async () => 'Rate limit exceeded',
       });
 
-      await expect(
-        service.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
 
     it('should handle JSON with code blocks', async () => {
-      const bookmarks: Bookmark[] = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks: Bookmark[] = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
-      const mockResponse = '```json\n{"suggestions": [{"bookmarkId": "1", "folderName": "Tech"}]}\n```';
+      const mockResponse =
+        '```json\n{"suggestions": [{"bookmarkId": "1", "folderName": "Tech"}]}\n```';
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: mockResponse } }]
-        })
+          choices: [{ message: { content: mockResponse } }],
+        }),
       });
 
       const result = await service.organizeBookmarks(bookmarks, ['Tech']);
@@ -286,24 +297,20 @@ describe('LLMService', () => {
     });
 
     it('should assign bookmarks to existing folders', async () => {
-      const bookmarks: Bookmark[] = [
-        { id: '1', title: 'GitHub', url: 'https://github.com' }
-      ];
+      const bookmarks: Bookmark[] = [{ id: '1', title: 'GitHub', url: 'https://github.com' }];
 
       const existingFolders = ['Development', 'News', 'Shopping'];
 
       const mockResponse = {
-        suggestions: [
-          { bookmarkId: '1', folderName: 'Development' }
-        ]
+        suggestions: [{ bookmarkId: '1', folderName: 'Development' }],
       };
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
           choices: [{ message: { content: JSON.stringify(mockResponse) } }],
-          usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 }
-        })
+          usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
+        }),
       });
 
       const result = await service.assignToFolders(bookmarks, existingFolders);
@@ -313,21 +320,17 @@ describe('LLMService', () => {
     });
 
     it('should handle KEEP_CURRENT when allowKeepCurrent is true', async () => {
-      const bookmarks: Bookmark[] = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks: Bookmark[] = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       const mockResponse = {
-        suggestions: [
-          { bookmarkId: '1', folderName: 'KEEP_CURRENT' }
-        ]
+        suggestions: [{ bookmarkId: '1', folderName: 'KEEP_CURRENT' }],
       };
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: JSON.stringify(mockResponse) } }]
-        })
+          choices: [{ message: { content: JSON.stringify(mockResponse) } }],
+        }),
       });
 
       const result = await service.assignToFolders(bookmarks, ['Dev', 'News'], true);
@@ -336,21 +339,17 @@ describe('LLMService', () => {
     });
 
     it('should not allow KEEP_CURRENT when flag is false', async () => {
-      const bookmarks: Bookmark[] = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks: Bookmark[] = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       const mockResponse = {
-        suggestions: [
-          { bookmarkId: '1', folderName: 'Dev' }
-        ]
+        suggestions: [{ bookmarkId: '1', folderName: 'Dev' }],
       };
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: JSON.stringify(mockResponse) } }]
-        })
+          choices: [{ message: { content: JSON.stringify(mockResponse) } }],
+        }),
       });
 
       const result = await service.assignToFolders(bookmarks, ['Dev', 'News'], false);
@@ -369,18 +368,18 @@ describe('LLMService', () => {
     it('should discover folder names from bookmarks', async () => {
       const bookmarks: Bookmark[] = [
         { id: '1', title: 'GitHub', url: 'https://github.com' },
-        { id: '2', title: 'BBC News', url: 'https://bbc.com' }
+        { id: '2', title: 'BBC News', url: 'https://bbc.com' },
       ];
 
       const mockResponse = {
-        folders: ['Development', 'News', 'Technology']
+        folders: ['Development', 'News', 'Technology'],
       };
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: JSON.stringify(mockResponse) } }]
-        })
+          choices: [{ message: { content: JSON.stringify(mockResponse) } }],
+        }),
       });
 
       const result = await service.discoverFolders(bookmarks, []);
@@ -395,8 +394,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: '{"folders": []}' } }]
-        })
+          choices: [{ message: { content: '{"folders": []}' } }],
+        }),
       });
 
       const result = await service.discoverFolders([], []);
@@ -416,19 +415,19 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         headers: {
-          get: jest.fn().mockReturnValue(null)
+          get: jest.fn().mockReturnValue(null),
         },
         json: async () => ({
           data: {
-            limit_remaining: 8950  // In cents, should convert to $89.50
-          }
-        })
+            limit_remaining: 8950, // In cents, should convert to $89.50
+          },
+        }),
       });
 
       const result = await service.checkOpenRouterCredits();
 
       expect(result.success).toBe(true);
-      expect(result.credits).toBe(89.50);
+      expect(result.credits).toBe(89.5);
     });
 
     it('should handle API errors', async () => {
@@ -436,7 +435,7 @@ describe('LLMService', () => {
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
-        text: async () => 'Invalid API key'
+        text: async () => 'Invalid API key',
       });
 
       const result = await service.checkOpenRouterCredits();
@@ -466,8 +465,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: '{"status": "ok"}' } }]
-        })
+          choices: [{ message: { content: '{"status": "ok"}' } }],
+        }),
       });
 
       const result = await service.validateConnection();
@@ -481,7 +480,7 @@ describe('LLMService', () => {
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
-        text: async () => 'Invalid API key'
+        text: async () => 'Invalid API key',
       });
 
       const result = await service.validateConnection();
@@ -501,11 +500,19 @@ describe('LLMService', () => {
 
     // Skip this test as it involves a 10-second delay that can cause timeouts
     it.skip('should handle timeout errors', async () => {
-      mockFetch.mockImplementation(() => new Promise((resolve) => {
-        setTimeout(() => resolve({ ok: true }), 10000);
-      }));
+      mockFetch.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => resolve({ ok: true }), 10000);
+          })
+      );
 
-      const shortTimeoutService = new LLMService('sk-test123456789012345678', 'openai', undefined, 1);
+      const shortTimeoutService = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        1
+      );
 
       const result = await shortTimeoutService.validateConnection();
 
@@ -523,24 +530,29 @@ describe('LLMService', () => {
     it('should review and suggest optimizations', async () => {
       const assignments = [
         { bookmarkId: '1', title: 'GitHub', url: 'https://github.com', folderName: 'Tech' },
-        { bookmarkId: '2', title: 'Stack Overflow', url: 'https://stackoverflow.com', folderName: 'Tech' }
+        {
+          bookmarkId: '2',
+          title: 'Stack Overflow',
+          url: 'https://stackoverflow.com',
+          folderName: 'Tech',
+        },
       ];
 
-      const folderSizes = { 'Tech': 2 };
+      const folderSizes = { Tech: 2 };
 
       const mockResponse = {
         suggestions: [
           { bookmarkId: '1', folderName: 'Development' },
-          { bookmarkId: '2', folderName: 'Development' }
+          { bookmarkId: '2', folderName: 'Development' },
         ],
-        foldersToCreate: ['Development']
+        foldersToCreate: ['Development'],
       };
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: JSON.stringify(mockResponse) } }]
-        })
+          choices: [{ message: { content: JSON.stringify(mockResponse) } }],
+        }),
       });
 
       const result = await service.reviewAndOptimize(assignments, folderSizes);
@@ -558,50 +570,38 @@ describe('LLMService', () => {
     });
 
     it('should handle malformed JSON responses', async () => {
-      const bookmarks: Bookmark[] = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks: Bookmark[] = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: 'not valid json{' } }]
-        })
+          choices: [{ message: { content: 'not valid json{' } }],
+        }),
       });
 
-      await expect(
-        service.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
 
     it('should handle missing choices in response', async () => {
-      const bookmarks: Bookmark[] = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks: Bookmark[] = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({})
+        json: async () => ({}),
       });
 
-      await expect(
-        service.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
 
     // Skip this test as it involves a promise that never resolves, causing very long waits
     it.skip('should handle network timeout', async () => {
-      const bookmarks: Bookmark[] = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks: Bookmark[] = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockImplementation(() => new Promise(() => {})); // Never resolves
 
       const shortService = new LLMService('sk-test123456789012345678', 'openai', undefined, 1);
 
-      await expect(
-        shortService.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(shortService.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
   });
 
@@ -617,8 +617,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: '{"suggestions": []}' } }]
-        })
+          choices: [{ message: { content: '{"suggestions": []}' } }],
+        }),
       });
 
       const result = await service.assignToFolders([], ['Tech', 'News'], false);
@@ -627,20 +627,16 @@ describe('LLMService', () => {
     });
 
     it('should handle API errors in assignToFolders', async () => {
-      const bookmarks = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
         statusText: 'Server Error',
-        text: async () => 'Error'
+        text: async () => 'Error',
       });
 
-      await expect(
-        service.assignToFolders(bookmarks, ['Tech'], false)
-      ).rejects.toThrow();
+      await expect(service.assignToFolders(bookmarks, ['Tech'], false)).rejects.toThrow();
     });
   });
 
@@ -655,8 +651,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: '{"suggestions": [], "foldersToCreate": []}' } }]
-        })
+          choices: [{ message: { content: '{"suggestions": [], "foldersToCreate": []}' } }],
+        }),
       });
 
       const result = await service.reviewAndOptimize([], {});
@@ -666,19 +662,17 @@ describe('LLMService', () => {
 
     it('should handle API errors in reviewAndOptimize', async () => {
       const assignments = [
-        { bookmarkId: '1', title: 'Test', url: 'https://test.com', folderName: 'Tech' }
+        { bookmarkId: '1', title: 'Test', url: 'https://test.com', folderName: 'Tech' },
       ];
 
       mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
         statusText: 'Server Error',
-        text: async () => 'Error'
+        text: async () => 'Error',
       });
 
-      await expect(
-        service.reviewAndOptimize(assignments, { Tech: 1 })
-      ).rejects.toThrow();
+      await expect(service.reviewAndOptimize(assignments, { Tech: 1 })).rejects.toThrow();
     });
   });
 
@@ -690,20 +684,18 @@ describe('LLMService', () => {
     });
 
     it('should handle response with code blocks', async () => {
-      const bookmarks = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       const jsonResponse = {
         suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-        foldersToCreate: ['Tech']
+        foldersToCreate: ['Tech'],
       };
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: '```json\n' + JSON.stringify(jsonResponse) + '\n```' } }]
-        })
+          choices: [{ message: { content: '```json\n' + JSON.stringify(jsonResponse) + '\n```' } }],
+        }),
       });
 
       const result = await service.organizeBookmarks(bookmarks, ['Tech']);
@@ -713,20 +705,18 @@ describe('LLMService', () => {
     });
 
     it('should handle response without json markers', async () => {
-      const bookmarks = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       const jsonResponse = {
         suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-        foldersToCreate: ['Tech']
+        foldersToCreate: ['Tech'],
       };
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: JSON.stringify(jsonResponse) } }]
-        })
+          choices: [{ message: { content: JSON.stringify(jsonResponse) } }],
+        }),
       });
 
       const result = await service.organizeBookmarks(bookmarks, ['Tech']);
@@ -749,8 +739,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: 'InvalidCategory' } }]
-        })
+          choices: [{ message: { content: 'InvalidCategory' } }],
+        }),
       });
 
       const result = await service.categorizeSingleBookmark(bookmark, categories);
@@ -766,8 +756,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: '' } }]
-        })
+          choices: [{ message: { content: '' } }],
+        }),
       });
 
       const result = await service.categorizeSingleBookmark(bookmark, categories);
@@ -783,13 +773,11 @@ describe('LLMService', () => {
         ok: false,
         status: 500,
         statusText: 'Server Error',
-        text: async () => 'Error'
+        text: async () => 'Error',
       });
 
       // Should throw on API error
-      await expect(
-        service.categorizeSingleBookmark(bookmark, categories)
-      ).rejects.toThrow();
+      await expect(service.categorizeSingleBookmark(bookmark, categories)).rejects.toThrow();
     });
   });
 
@@ -804,11 +792,13 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ 
-            message: { content: '{"status": "ok"}' },
-            finish_reason: 'length'
-          }]
-        })
+          choices: [
+            {
+              message: { content: '{"status": "ok"}' },
+              finish_reason: 'length',
+            },
+          ],
+        }),
       });
 
       const result = await service.validateConnection();
@@ -822,8 +812,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: 'not json at all' } }]
-        })
+          choices: [{ message: { content: 'not json at all' } }],
+        }),
       });
 
       const result = await service.validateConnection();
@@ -840,21 +830,21 @@ describe('LLMService', () => {
     });
 
     it('should handle Claude response format', async () => {
-      const bookmarks = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          content: [{ 
-            text: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-              foldersToCreate: ['Tech']
-            })
-          }],
-          stop_reason: 'end_turn'
-        })
+          content: [
+            {
+              text: JSON.stringify({
+                suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
+                foldersToCreate: ['Tech'],
+              }),
+            },
+          ],
+          stop_reason: 'end_turn',
+        }),
       });
 
       const result = await service.organizeBookmarks(bookmarks, ['Tech']);
@@ -868,8 +858,8 @@ describe('LLMService', () => {
         ok: true,
         json: async () => ({
           content: [{ text: '{"status": "ok"}' }],
-          stop_reason: 'end_turn'
-        })
+          stop_reason: 'end_turn',
+        }),
       });
 
       const result = await service.validateConnection();
@@ -892,12 +882,10 @@ describe('LLMService', () => {
         ok: false,
         status: 400,
         statusText: 'Bad Request',
-        text: async () => 'Invalid request'
+        text: async () => 'Invalid request',
       });
 
-      await expect(
-        service.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
 
     it('should handle 403 forbidden errors', async () => {
@@ -907,12 +895,10 @@ describe('LLMService', () => {
         ok: false,
         status: 403,
         statusText: 'Forbidden',
-        text: async () => 'Access denied'
+        text: async () => 'Access denied',
       });
 
-      await expect(
-        service.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
 
     it('should handle 500 server errors', async () => {
@@ -922,12 +908,10 @@ describe('LLMService', () => {
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
-        text: async () => 'Server error'
+        text: async () => 'Server error',
       });
 
-      await expect(
-        service.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
 
     it('should handle 502 bad gateway errors', async () => {
@@ -937,12 +921,10 @@ describe('LLMService', () => {
         ok: false,
         status: 502,
         statusText: 'Bad Gateway',
-        text: async () => 'Gateway error'
+        text: async () => 'Gateway error',
       });
 
-      await expect(
-        service.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
 
     it('should handle 503 service unavailable errors', async () => {
@@ -952,12 +934,10 @@ describe('LLMService', () => {
         ok: false,
         status: 503,
         statusText: 'Service Unavailable',
-        text: async () => 'Service unavailable'
+        text: async () => 'Service unavailable',
       });
 
-      await expect(
-        service.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
   });
 
@@ -975,13 +955,17 @@ describe('LLMService', () => {
         ok: true,
         headers: new Map(),
         json: async () => ({
-          choices: [{ 
-            message: { content: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-              foldersToCreate: ['Tech']
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
+                  foldersToCreate: ['Tech'],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       await service.organizeBookmarks(bookmarks, ['Tech']);
@@ -998,13 +982,17 @@ describe('LLMService', () => {
         ok: true,
         headers: new Map(),
         json: async () => ({
-          choices: [{ 
-            message: { content: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-              foldersToCreate: ['Tech']
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
+                  foldersToCreate: ['Tech'],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       await service.organizeBookmarks(bookmarks, ['Tech']);
@@ -1028,13 +1016,17 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ 
-            message: { content: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-              foldersToCreate: ['Tech']
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
+                  foldersToCreate: ['Tech'],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       await service.organizeBookmarks(bookmarks, ['Tech']);
@@ -1055,25 +1047,29 @@ describe('LLMService', () => {
       const bookmarks = Array.from({ length: 5 }, (_, i) => ({
         id: `${i + 1}`,
         title: `Bookmark ${i + 1}`,
-        url: `https://test${i + 1}.com`
+        url: `https://test${i + 1}.com`,
       }));
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ 
-            message: { content: JSON.stringify({
-              suggestions: bookmarks.map(b => ({ bookmarkId: b.id, folderName: 'Tech' })),
-              foldersToCreate: ['Tech']
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: bookmarks.map((b) => ({ bookmarkId: b.id, folderName: 'Tech' })),
+                  foldersToCreate: ['Tech'],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       const result = await service.organizeBookmarks(bookmarks, ['Tech'], {
         current: 1,
         total: 2,
-        totalBookmarks: 10
+        totalBookmarks: 10,
       });
 
       expect(result.suggestions).toBeDefined();
@@ -1081,19 +1077,21 @@ describe('LLMService', () => {
     });
 
     it('should handle assignToFolders with useExistingFolders true', async () => {
-      const bookmarks = [
-        { id: '1', title: 'Test', url: 'https://test.com' }
-      ];
+      const bookmarks = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ 
-            message: { content: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'KEEP_CURRENT' }]
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [{ bookmarkId: '1', folderName: 'KEEP_CURRENT' }],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       const result = await service.assignToFolders(bookmarks, ['Tech'], true);
@@ -1105,8 +1103,8 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: '{"suggestions": [], "foldersToCreate": []}' } }]
-        })
+          choices: [{ message: { content: '{"suggestions": [], "foldersToCreate": []}' } }],
+        }),
       });
 
       const result = await service.reviewAndOptimize([], {});
@@ -1119,16 +1117,18 @@ describe('LLMService', () => {
       const bookmarks = Array.from({ length: 150 }, (_, i) => ({
         id: `${i + 1}`,
         title: `Bookmark ${i + 1}`,
-        url: `https://test${i + 1}.com`
+        url: `https://test${i + 1}.com`,
       }));
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ 
-            message: { content: '{"folders": ["Tech", "News", "Shopping"]}' }
-          }]
-        })
+          choices: [
+            {
+              message: { content: '{"folders": ["Tech", "News", "Shopping"]}' },
+            },
+          ],
+        }),
       });
 
       const result = await service.discoverFolders(bookmarks, []);
@@ -1143,10 +1143,15 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ 
-            message: { content: '```\n{"suggestions": [{"bookmarkId": "1", "folderName": "Tech"}], "foldersToCreate": ["Tech"]}\n```' }
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content:
+                  '```\n{"suggestions": [{"bookmarkId": "1", "folderName": "Tech"}], "foldersToCreate": ["Tech"]}\n```',
+              },
+            },
+          ],
+        }),
       });
 
       const result = await service.organizeBookmarks(bookmarks, ['Tech']);
@@ -1161,13 +1166,17 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ 
-            message: { content: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-              foldersToCreate: ['Tech']
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
+                  foldersToCreate: ['Tech'],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       const result = await customService.organizeBookmarks(bookmarks, ['Tech']);
@@ -1178,19 +1187,31 @@ describe('LLMService', () => {
 
   describe('Custom endpoint support', () => {
     it('should use custom endpoint with chat completions path', async () => {
-      const customService = new LLMService('sk-test123', 'custom', undefined, 60, 4096, 'https://custom.api.com/v1/chat/completions', 'custom-model');
+      const customService = new LLMService(
+        'sk-test123',
+        'custom',
+        undefined,
+        60,
+        4096,
+        'https://custom.api.com/v1/chat/completions',
+        'custom-model'
+      );
       const bookmarks = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-              foldersToCreate: ['Tech']
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
+                  foldersToCreate: ['Tech'],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       await customService.organizeBookmarks(bookmarks, ['Tech']);
@@ -1200,19 +1221,31 @@ describe('LLMService', () => {
     });
 
     it('should append chat completions path to custom endpoint without it', async () => {
-      const customService = new LLMService('sk-test123', 'custom', undefined, 60, 4096, 'https://custom.api.com/v1', 'custom-model');
+      const customService = new LLMService(
+        'sk-test123',
+        'custom',
+        undefined,
+        60,
+        4096,
+        'https://custom.api.com/v1',
+        'custom-model'
+      );
       const bookmarks = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-              foldersToCreate: ['Tech']
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
+                  foldersToCreate: ['Tech'],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       await customService.organizeBookmarks(bookmarks, ['Tech']);
@@ -1222,19 +1255,31 @@ describe('LLMService', () => {
     });
 
     it('should remove trailing slash from custom endpoint', async () => {
-      const customService = new LLMService('sk-test123', 'custom', undefined, 60, 4096, 'https://custom.api.com/v1/', 'custom-model');
+      const customService = new LLMService(
+        'sk-test123',
+        'custom',
+        undefined,
+        60,
+        4096,
+        'https://custom.api.com/v1/',
+        'custom-model'
+      );
       const bookmarks = [{ id: '1', title: 'Test', url: 'https://test.com' }];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-              foldersToCreate: ['Tech']
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
+                  foldersToCreate: ['Tech'],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       await customService.organizeBookmarks(bookmarks, ['Tech']);
@@ -1259,21 +1304,25 @@ describe('LLMService', () => {
           return {
             ok: true,
             json: async () => ({
-              choices: [{ 
-                message: { content: '{"status": "ok"}' },
-                finish_reason: 'length'
-              }]
-            })
+              choices: [
+                {
+                  message: { content: '{"status": "ok"}' },
+                  finish_reason: 'length',
+                },
+              ],
+            }),
           };
         } else {
           return {
             ok: true,
             json: async () => ({
-              choices: [{ 
-                message: { content: '{"status": "ok"}' },
-                finish_reason: 'stop'
-              }]
-            })
+              choices: [
+                {
+                  message: { content: '{"status": "ok"}' },
+                  finish_reason: 'stop',
+                },
+              ],
+            }),
           };
         }
       });
@@ -1286,19 +1335,21 @@ describe('LLMService', () => {
 
     it('should handle validateConnection with 0 credits on OpenRouter', async () => {
       const orService = new LLMService('sk-or-test123', 'openrouter');
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         headers: new Map([
           ['x-ratelimit-remaining', '10'],
-          ['x-ratelimit-limit', '100']
+          ['x-ratelimit-limit', '100'],
         ]),
         json: async () => ({
-          choices: [{ 
-            message: { content: '{"status": "ok"}' },
-            finish_reason: 'length'
-          }]
-        })
+          choices: [
+            {
+              message: { content: '{"status": "ok"}' },
+              finish_reason: 'length',
+            },
+          ],
+        }),
       });
 
       const result = await orService.validateConnection();
@@ -1320,15 +1371,15 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ 
-            message: { content: '{"foldersToCreate": ["Tech"]}' }
-          }]
-        })
+          choices: [
+            {
+              message: { content: '{"foldersToCreate": ["Tech"]}' },
+            },
+          ],
+        }),
       });
 
-      await expect(
-        service.organizeBookmarks(bookmarks, ['Tech'])
-      ).rejects.toThrow();
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow();
     });
 
     it('should handle missing foldersToCreate in response', async () => {
@@ -1337,10 +1388,12 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: '{"suggestions": [{"bookmarkId": "1", "folderName": "Tech"}]}' }
-          }]
-        })
+          choices: [
+            {
+              message: { content: '{"suggestions": [{"bookmarkId": "1", "folderName": "Tech"}]}' },
+            },
+          ],
+        }),
       });
 
       const result = await service.organizeBookmarks(bookmarks, ['Tech']);
@@ -1349,7 +1402,6 @@ describe('LLMService', () => {
       expect(result).toBeDefined();
       expect(result.foldersToCreate).toEqual([]);
     });
-
   });
 
   describe('discoverFolders edge cases', () => {
@@ -1365,13 +1417,11 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: '{}' } }]
-        })
+          choices: [{ message: { content: '{}' } }],
+        }),
       });
 
-      await expect(
-        service.discoverFolders(bookmarks, [])
-      ).rejects.toThrow();
+      await expect(service.discoverFolders(bookmarks, [])).rejects.toThrow();
     });
 
     it('should handle discoverFolders with folders not an array', async () => {
@@ -1380,13 +1430,11 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: '{"folders": "not an array"}' } }]
-        })
+          choices: [{ message: { content: '{"folders": "not an array"}' } }],
+        }),
       });
 
-      await expect(
-        service.discoverFolders(bookmarks, [])
-      ).rejects.toThrow();
+      await expect(service.discoverFolders(bookmarks, [])).rejects.toThrow();
     });
   });
 
@@ -1398,20 +1446,24 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-              foldersToCreate: []
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
+                  foldersToCreate: [],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       await service.organizeBookmarks(bookmarks, ['Tech', 'News'], {
         current: 2,
         total: 3,
         totalBookmarks: 100,
-        folderSizes: { 'Tech': 25, 'News': 10 }
+        folderSizes: { Tech: 25, News: 10 },
       });
 
       const callArgs = (mockFetch as jest.Mock).mock.calls[0];
@@ -1429,20 +1481,24 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: JSON.stringify({
-              suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
-              foldersToCreate: []
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [{ bookmarkId: '1', folderName: 'Tech' }],
+                  foldersToCreate: [],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       await service.organizeBookmarks(bookmarks, ['Tech', 'News'], {
         current: 3,
         total: 5,
         totalBookmarks: 150,
-        folderSizes: { 'Tech': 30, 'News': 15 }
+        folderSizes: { Tech: 30, News: 15 },
       });
 
       const callArgs = (mockFetch as jest.Mock).mock.calls[0];
@@ -1459,21 +1515,25 @@ describe('LLMService', () => {
       const service = new LLMService('sk-test123', 'openai');
       const bookmarks = [
         { id: '1', title: 'Test 1', url: 'https://test1.com' },
-        { id: '2', title: 'Test 2', url: 'https://test2.com' }
+        { id: '2', title: 'Test 2', url: 'https://test2.com' },
       ];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: JSON.stringify({
-              suggestions: [
-                { bookmarkId: '1', folderName: 'Tech' },
-                { bookmarkId: '2', folderName: 'InvalidFolder' }
-              ]
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [
+                    { bookmarkId: '1', folderName: 'Tech' },
+                    { bookmarkId: '2', folderName: 'InvalidFolder' },
+                  ],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       const result = await service.assignToFolders(bookmarks, ['Tech', 'News'], true);
@@ -1487,21 +1547,25 @@ describe('LLMService', () => {
       const service = new LLMService('sk-test123', 'openai');
       const bookmarks = [
         { id: '1', title: 'Test 1', url: 'https://test1.com' },
-        { id: '2', title: 'Test 2', url: 'https://test2.com' }
+        { id: '2', title: 'Test 2', url: 'https://test2.com' },
       ];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: JSON.stringify({
-              suggestions: [
-                { bookmarkId: '1', folderName: 'Tech' },
-                { bookmarkId: '2', folderName: 'InvalidFolder' }
-              ]
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [
+                    { bookmarkId: '1', folderName: 'Tech' },
+                    { bookmarkId: '2', folderName: 'InvalidFolder' },
+                  ],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
       const result = await service.assignToFolders(bookmarks, ['Tech', 'News'], false);
@@ -1521,11 +1585,12 @@ describe('LLMService', () => {
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
-        text: async () => 'Invalid authentication'
+        text: async () => 'Invalid authentication',
       });
 
-      await expect(service.organizeBookmarks(bookmarks, ['Tech']))
-        .rejects.toThrow('Authentication failed');
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow(
+        'Authentication failed'
+      );
     });
 
     it.skip('should handle 429 rate limit error with user-friendly message (skipped - involves retry delays)', async () => {
@@ -1536,11 +1601,12 @@ describe('LLMService', () => {
         ok: false,
         status: 429,
         statusText: 'Too Many Requests',
-        text: async () => 'Rate limit exceeded'
+        text: async () => 'Rate limit exceeded',
       });
 
-      await expect(service.organizeBookmarks(bookmarks, ['Tech']))
-        .rejects.toThrow('Rate limit exceeded');
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow(
+        'Rate limit exceeded'
+      );
     });
 
     it('should handle 400 with token limit error message', async () => {
@@ -1551,13 +1617,15 @@ describe('LLMService', () => {
         ok: false,
         status: 400,
         statusText: 'Bad Request',
-        text: async () => JSON.stringify({
-          error: { message: 'Maximum context_length exceeded' }
-        })
+        text: async () =>
+          JSON.stringify({
+            error: { message: 'Maximum context_length exceeded' },
+          }),
       });
 
-      await expect(service.organizeBookmarks(bookmarks, ['Tech']))
-        .rejects.toThrow('Token limit exceeded');
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow(
+        'Token limit exceeded'
+      );
     });
 
     it('should handle 400 with other error message', async () => {
@@ -1568,13 +1636,15 @@ describe('LLMService', () => {
         ok: false,
         status: 400,
         statusText: 'Bad Request',
-        text: async () => JSON.stringify({
-          error: { message: 'Invalid model specified' }
-        })
+        text: async () =>
+          JSON.stringify({
+            error: { message: 'Invalid model specified' },
+          }),
       });
 
-      await expect(service.organizeBookmarks(bookmarks, ['Tech']))
-        .rejects.toThrow('Invalid request: Invalid model specified');
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow(
+        'Invalid request: Invalid model specified'
+      );
     });
   });
 
@@ -1586,7 +1656,7 @@ describe('LLMService', () => {
         ok: false,
         status: 404,
         statusText: 'Not Found',
-        text: async () => 'Model not found'
+        text: async () => 'Model not found',
       });
 
       const result = await service.validateConnection();
@@ -1602,7 +1672,7 @@ describe('LLMService', () => {
         ok: false,
         status: 403,
         statusText: 'Forbidden',
-        text: async () => 'Access denied'
+        text: async () => 'Access denied',
       });
 
       const result = await service.validateConnection();
@@ -1618,9 +1688,10 @@ describe('LLMService', () => {
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
-        text: async () => JSON.stringify({
-          error: { message: 'Custom error from API' }
-        })
+        text: async () =>
+          JSON.stringify({
+            error: { message: 'Custom error from API' },
+          }),
       });
 
       const result = await service.validateConnection();
@@ -1636,9 +1707,10 @@ describe('LLMService', () => {
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
-        text: async () => JSON.stringify({
-          message: 'Another custom error format'
-        })
+        text: async () =>
+          JSON.stringify({
+            message: 'Another custom error format',
+          }),
       });
 
       const result = await service.validateConnection();
@@ -1655,21 +1727,21 @@ describe('LLMService', () => {
       const mockHeaders = new Map([
         ['x-ratelimit-remaining', '95'],
         ['x-ratelimit-limit', '100'],
-        ['x-ratelimit-reset', '1609459200']
+        ['x-ratelimit-reset', '1609459200'],
       ]);
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ data: { limit_remaining: 550 } }), // In cents
         headers: {
-          get: (key: string) => mockHeaders.get(key.toLowerCase()) || null
-        }
+          get: (key: string) => mockHeaders.get(key.toLowerCase()) || null,
+        },
       });
 
       const result = await service.checkOpenRouterCredits();
 
       expect(result.success).toBe(true);
-      expect(result.credits).toBe(5.50); // 550 cents = $5.50
+      expect(result.credits).toBe(5.5); // 550 cents = $5.50
       expect(result.rateLimit).toBeDefined();
       expect(result.rateLimit?.remaining).toBe(95);
       expect(result.rateLimit?.limit).toBe(100);
@@ -1694,11 +1766,13 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: 'null' },
-            finish_reason: 'stop'
-          }]
-        })
+          choices: [
+            {
+              message: { content: 'null' },
+              finish_reason: 'stop',
+            },
+          ],
+        }),
       });
 
       const result = await service.validateConnection();
@@ -1713,18 +1787,20 @@ describe('LLMService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: 'not json' },
-            finish_reason: 'stop'
-          }],
-          usage: { credits_used: 0 }
+          choices: [
+            {
+              message: { content: 'not json' },
+              finish_reason: 'stop',
+            },
+          ],
+          usage: { credits_used: 0 },
         }),
         headers: {
           get: (key: string) => {
             if (key === 'X-OpenRouter-Credits-Remaining') return '0.00';
             return null;
-          }
-        }
+          },
+        },
       });
 
       const result = await service.validateConnection();
@@ -1765,48 +1841,56 @@ describe('LLMService', () => {
       const service = new LLMService('sk-test123', 'openai');
       const bookmarks = [
         { id: '1', title: 'Test 1', url: 'https://test1.com' },
-        { id: '2', title: 'Test 2', url: 'https://test2.com' }
+        { id: '2', title: 'Test 2', url: 'https://test2.com' },
       ];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: JSON.stringify({
-              suggestions: [
-                { i: 1, f: 'Tech' },
-                { i: 5, f: 'News' } // Index 5 doesn't exist
-              ]
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [
+                    { i: 1, f: 'Tech' },
+                    { i: 5, f: 'News' }, // Index 5 doesn't exist
+                  ],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
-      await expect(service.organizeBookmarks(bookmarks, ['Tech', 'News']))
-        .rejects.toThrow('Invalid index 5');
+      await expect(service.organizeBookmarks(bookmarks, ['Tech', 'News'])).rejects.toThrow(
+        'Invalid index 5'
+      );
     });
 
     it('should handle invalid suggestion format', async () => {
       const service = new LLMService('sk-test123', 'openai');
-      const bookmarks = [
-        { id: '1', title: 'Test 1', url: 'https://test1.com' }
-      ];
+      const bookmarks = [{ id: '1', title: 'Test 1', url: 'https://test1.com' }];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: JSON.stringify({
-              suggestions: [
-                { invalid: 'format' } // Missing required fields
-              ]
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [
+                    { invalid: 'format' }, // Missing required fields
+                  ],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
-      await expect(service.organizeBookmarks(bookmarks, ['Tech']))
-        .rejects.toThrow('Invalid suggestion format');
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow(
+        'Invalid suggestion format'
+      );
     });
 
     it('should handle missing bookmark suggestions', async () => {
@@ -1814,26 +1898,31 @@ describe('LLMService', () => {
       const bookmarks = [
         { id: '1', title: 'Test 1', url: 'https://test1.com' },
         { id: '2', title: 'Test 2', url: 'https://test2.com' },
-        { id: '3', title: 'Test 3', url: 'https://test3.com' }
+        { id: '3', title: 'Test 3', url: 'https://test3.com' },
       ];
 
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: { content: JSON.stringify({
-              suggestions: [
-                { bookmarkId: '1', folderName: 'Tech' }
-                // Missing suggestions for bookmarks 2 and 3
-              ],
-              foldersToCreate: []
-            })}
-          }]
-        })
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestions: [
+                    { bookmarkId: '1', folderName: 'Tech' },
+                    // Missing suggestions for bookmarks 2 and 3
+                  ],
+                  foldersToCreate: [],
+                }),
+              },
+            },
+          ],
+        }),
       });
 
-      await expect(service.organizeBookmarks(bookmarks, ['Tech']))
-        .rejects.toThrow('failed to categorize 2 of 3 bookmarks');
+      await expect(service.organizeBookmarks(bookmarks, ['Tech'])).rejects.toThrow(
+        'failed to categorize 2 of 3 bookmarks'
+      );
     });
   });
 });

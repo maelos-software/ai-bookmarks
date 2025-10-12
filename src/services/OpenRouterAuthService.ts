@@ -27,7 +27,7 @@ export class OpenRouterAuthService {
     this.config = {
       authUrl: 'https://openrouter.ai/auth',
       tokenUrl: 'https://openrouter.ai/api/v1/auth/keys',
-      callbackUrl: `https://${extensionId}.chromiumapp.org/oauth-callback`
+      callbackUrl: `https://${extensionId}.chromiumapp.org/oauth-callback`,
     };
 
     logger.info('OpenRouterAuthService', 'Initialized with callback URL:', this.config.callbackUrl);
@@ -57,10 +57,7 @@ export class OpenRouterAuthService {
    */
   private base64URLEncode(array: Uint8Array): string {
     const base64 = btoa(String.fromCharCode(...array));
-    return base64
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   }
 
   /**
@@ -81,7 +78,7 @@ export class OpenRouterAuthService {
       const authParams = new URLSearchParams({
         callback_url: this.config.callbackUrl,
         code_challenge: codeChallenge,
-        code_challenge_method: 'S256'
+        code_challenge_method: 'S256',
       });
 
       const authUrl = `${this.config.authUrl}?${authParams.toString()}`;
@@ -92,14 +89,14 @@ export class OpenRouterAuthService {
         chrome.identity.launchWebAuthFlow(
           {
             url: authUrl,
-            interactive: true
+            interactive: true,
           },
           async (responseUrl) => {
             if (chrome.runtime.lastError) {
               logger.error('OpenRouterAuthService', 'OAuth flow error:', chrome.runtime.lastError);
               resolve({
                 success: false,
-                error: chrome.runtime.lastError.message || 'Authentication failed'
+                error: chrome.runtime.lastError.message || 'Authentication failed',
               });
               return;
             }
@@ -108,7 +105,7 @@ export class OpenRouterAuthService {
               logger.error('OpenRouterAuthService', 'No response URL received');
               resolve({
                 success: false,
-                error: 'No response from authentication'
+                error: 'No response from authentication',
               });
               return;
             }
@@ -124,12 +121,15 @@ export class OpenRouterAuthService {
                 logger.error('OpenRouterAuthService', 'No authorization code in callback');
                 resolve({
                   success: false,
-                  error: 'No authorization code received'
+                  error: 'No authorization code received',
                 });
                 return;
               }
 
-              logger.info('OpenRouterAuthService', 'Authorization code received, exchanging for API key');
+              logger.info(
+                'OpenRouterAuthService',
+                'Authorization code received, exchanging for API key'
+              );
 
               // Exchange authorization code for API key
               const apiKey = await this.exchangeCodeForKey(code);
@@ -137,13 +137,13 @@ export class OpenRouterAuthService {
               logger.info('OpenRouterAuthService', 'Successfully obtained API key');
               resolve({
                 success: true,
-                apiKey
+                apiKey,
               });
             } catch (error) {
               logger.error('OpenRouterAuthService', 'Failed to process callback:', error);
               resolve({
                 success: false,
-                error: error instanceof Error ? error.message : 'Failed to complete authentication'
+                error: error instanceof Error ? error.message : 'Failed to complete authentication',
               });
             }
           }
@@ -153,7 +153,7 @@ export class OpenRouterAuthService {
       logger.error('OpenRouterAuthService', 'Login flow failed:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error during login'
+        error: error instanceof Error ? error.message : 'Unknown error during login',
       };
     }
   }
@@ -171,13 +171,13 @@ export class OpenRouterAuthService {
     const response = await fetch(this.config.tokenUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         code,
         code_verifier: this.codeVerifier,
-        code_challenge_method: 'S256'
-      })
+        code_challenge_method: 'S256',
+      }),
     });
 
     if (!response.ok) {
