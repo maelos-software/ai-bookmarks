@@ -3,8 +3,8 @@
 A Chrome extension that uses AI to intelligently organize your bookmarks into categorized folders.
 
 [![License](https://img.shields.io/badge/License-MPL--2.0-blue.svg)](https://opensource.org/licenses/MPL-2.0)
-[![CI](https://github.com/rmk40/ai-bookmarks/actions/workflows/ci.yml/badge.svg)](https://github.com/rmk40/ai-bookmarks/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/rmk40/ai-bookmarks/branch/main/graph/badge.svg)](https://codecov.io/gh/rmk40/ai-bookmarks)
+[![CI](https://github.com/maelos-software/ai-bookmarks/actions/workflows/ci.yml/badge.svg)](https://github.com/maelos-software/ai-bookmarks/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/maelos-software/ai-bookmarks/branch/main/graph/badge.svg)](https://codecov.io/gh/maelos-software/ai-bookmarks)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue)](https://chrome.google.com/webstore)
 
 ## Features
