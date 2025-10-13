@@ -6,7 +6,7 @@ import { ConfigurationManager, AppConfig, DEFAULT_CATEGORIES } from '../Configur
 
 describe('ConfigurationManager', () => {
   let configManager: ConfigurationManager;
-  let mockStorage: { [key: string]: any };
+  let mockStorage: Record<string, unknown>;
 
   beforeEach(() => {
     mockStorage = {};
@@ -127,7 +127,7 @@ describe('ConfigurationManager', () => {
   });
 
   describe('Organization History', () => {
-    let historyStorage: { [key: string]: any };
+    let historyStorage: Record<string, unknown>;
 
     beforeEach(() => {
       historyStorage = {};

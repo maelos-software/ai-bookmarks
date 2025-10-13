@@ -23,7 +23,7 @@ export class Logger {
     level: string;
     component: string;
     message: string;
-    data?: any;
+    data?: unknown;
   }> = [];
   private maxLogs: number = 1000;
 
@@ -71,7 +71,7 @@ export class Logger {
     await chrome.storage.local.set({ enableConsole: enabled });
   }
 
-  private log(level: LogLevel, levelName: string, component: string, message: string, data?: any) {
+  private log(level: LogLevel, levelName: string, component: string, message: string, data?: unknown) {
     if (level > this.logLevel) {
       return;
     }
@@ -109,23 +109,23 @@ export class Logger {
     }
   }
 
-  error(component: string, message: string, data?: any) {
+  error(component: string, message: string, data?: unknown) {
     this.log(LogLevel.ERROR, 'ERROR', component, message, data);
   }
 
-  warn(component: string, message: string, data?: any) {
+  warn(component: string, message: string, data?: unknown) {
     this.log(LogLevel.WARN, 'WARN', component, message, data);
   }
 
-  info(component: string, message: string, data?: any) {
+  info(component: string, message: string, data?: unknown) {
     this.log(LogLevel.INFO, 'INFO', component, message, data);
   }
 
-  debug(component: string, message: string, data?: any) {
+  debug(component: string, message: string, data?: unknown) {
     this.log(LogLevel.DEBUG, 'DEBUG', component, message, data);
   }
 
-  trace(component: string, message: string, data?: any) {
+  trace(component: string, message: string, data?: unknown) {
     this.log(LogLevel.TRACE, 'TRACE', component, message, data);
   }
 
@@ -134,7 +134,7 @@ export class Logger {
     level: string;
     component: string;
     message: string;
-    data?: any;
+    data?: unknown;
   }> {
     return [...this.logs];
   }

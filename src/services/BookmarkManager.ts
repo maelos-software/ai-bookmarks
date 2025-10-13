@@ -599,7 +599,7 @@ export class BookmarkManager {
               );
               // @ts-expect-error - Vivaldi-specific API not in Chrome types
               const speedDialFolders = await chrome.speedDial.getFolders();
-              const speedDialFolder = speedDialFolders?.find((f: any) => f.id === folder.id);
+              const speedDialFolder = speedDialFolders?.find((f: { id: string }) => f.id === folder.id);
 
               if (speedDialFolder) {
                 logger.info(
@@ -613,10 +613,11 @@ export class BookmarkManager {
                   `Successfully removed from Speed Dial: ${folder.title}`
                 );
               }
-            } catch (speedDialError: any) {
+            } catch (speedDialError: unknown) {
+              const errorMessage = speedDialError instanceof Error ? speedDialError.message : String(speedDialError);
               logger.debug(
                 'BookmarkManager',
-                `Speed Dial check/removal failed (folder may not be in Speed Dial): ${speedDialError?.message || speedDialError}`
+                `Speed Dial check/removal failed (folder may not be in Speed Dial): ${errorMessage}`
               );
             }
           }
@@ -630,9 +631,9 @@ export class BookmarkManager {
             id: folder.id,
           });
           logger.debug('BookmarkManager', `Removed empty folder: ${folder.title} (${folder.id})`);
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Log more detail about what failed
-          const errorMsg = error?.message || String(error);
+          const errorMsg = error instanceof Error ? error.message : String(error);
           logger.warn(
             'BookmarkManager',
             `Failed to remove folder "${folder.title}" (${folder.id}): ${errorMsg}`
@@ -655,8 +656,8 @@ export class BookmarkManager {
               'BookmarkManager',
               `Successfully removed with removeTree: ${folder.title} (${folder.id})`
             );
-          } catch (removeTreeError: any) {
-            const removeTreeMsg = removeTreeError?.message || String(removeTreeError);
+          } catch (removeTreeError: unknown) {
+            const removeTreeMsg = removeTreeError instanceof Error ? removeTreeError.message : String(removeTreeError);
             logger.error(
               'BookmarkManager',
               `removeTree also failed for "${folder.title}" (${folder.id}): ${removeTreeMsg}`

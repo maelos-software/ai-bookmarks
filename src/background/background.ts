@@ -7,10 +7,21 @@
  */
 
 import { logger } from '../services/Logger.js';
-import { ConfigurationManager, DEFAULT_PERFORMANCE } from '../services/ConfigurationManager.js';
+import {
+  ConfigurationManager,
+  DEFAULT_PERFORMANCE,
+  type AppConfig,
+} from '../services/ConfigurationManager.js';
 import { BookmarkManager } from '../services/BookmarkManager.js';
 import { LLMService } from '../services/LLMService.js';
 import { ReorganizationService } from '../services/ReorganizationService.js';
+import type {
+  RuntimeMessage,
+  MessageResponse,
+  ReorganizationProgress,
+  ReorganizationResult,
+  ReorganizationStatusResponse,
+} from '../types/messages.js';
 
 interface ActivityLogEntry {
   type: 'auto-organize' | 'bulk-reorganize';
@@ -26,7 +37,7 @@ class BackgroundService {
   private bookmarkManager: BookmarkManager;
   private reorganizationService: ReorganizationService | null = null;
   private isReorganizing: boolean = false;
-  private reorganizationProgress: { current: number; total: number; message: string } | null = null;
+  private reorganizationProgress: ReorganizationProgress | null = null;
   private static readonly MAX_ACTIVITY_LOG_SIZE = 10;
 
   /**
@@ -138,7 +149,7 @@ class BackgroundService {
     logger.info('BackgroundService', '=== Background service initialized and ready ===');
   }
 
-  private async handleMessage(message: any): Promise<any> {
+  private async handleMessage(message: RuntimeMessage): Promise<MessageResponse> {
     logger.info('BackgroundService', `>>> Received message: ${message.type}`);
     try {
       switch (message.type) {
@@ -160,6 +171,7 @@ class BackgroundService {
 
         case 'GET_REORGANIZATION_STATUS':
           return {
+            success: true,
             isReorganizing: this.isReorganizing,
             progress: this.reorganizationProgress,
           };
@@ -204,7 +216,9 @@ class BackgroundService {
           return { success: true };
 
         default:
-          logger.warn('BackgroundService', `Unknown message type: ${message.type}`);
+          // TypeScript exhaustiveness check - this should never be reached
+          const _exhaustive: never = message;
+          logger.warn('BackgroundService', `Unknown message type: ${(_exhaustive as RuntimeMessage).type}`);
           return { success: false, error: 'Unknown message type' };
       }
     } catch (error) {
@@ -266,7 +280,7 @@ class BackgroundService {
     logger.info('BackgroundService', 'Services initialization complete');
   }
 
-  private async generatePreview(): Promise<any> {
+  private async generatePreview(): Promise<MessageResponse<ReorganizationResult>> {
     logger.info('BackgroundService', 'generatePreview started');
 
     try {
@@ -349,7 +363,7 @@ class BackgroundService {
     }
   }
 
-  private async executeReorganization(): Promise<any> {
+  private async executeReorganization(): Promise<MessageResponse<ReorganizationResult>> {
     logger.info('BackgroundService', '!!! executeReorganization STARTED !!!');
 
     // Check if already reorganizing
@@ -555,9 +569,17 @@ class BackgroundService {
       await chrome.tabs.create({ url: resultsUrl });
 
       logger.info('BackgroundService', 'Returning success result to caller');
+      const resultWithTimestamp: ReorganizationResult = {
+        bookmarksMoved: result.bookmarksMoved,
+        foldersCreated: result.foldersCreated,
+        duplicatesRemoved: result.duplicatesRemoved,
+        bookmarksSkipped: result.bookmarksSkipped,
+        errors: result.errors,
+        timestamp: Date.now(),
+      };
       return {
-        success: result.success,
-        result,
+        success: true,
+        result: resultWithTimestamp,
       };
     } catch (error) {
       logger.error('BackgroundService', '!!! Reorganization FAILED !!!', error);
@@ -601,7 +623,7 @@ class BackgroundService {
     }
   }
 
-  private async checkConfig(): Promise<any> {
+  private async checkConfig(): Promise<MessageResponse<{ isConfigured: boolean }>> {
     try {
       const config = await this.configManager.getConfig();
       const isConfigured = await this.configManager.isConfigured();
@@ -619,7 +641,7 @@ class BackgroundService {
     }
   }
 
-  private async getConfig(): Promise<any> {
+  private async getConfig(): Promise<MessageResponse<AppConfig>> {
     try {
       const config = await this.configManager.getConfig();
 
@@ -635,7 +657,7 @@ class BackgroundService {
     }
   }
 
-  private async saveConfig(config: any): Promise<any> {
+  private async saveConfig(config: AppConfig): Promise<MessageResponse> {
     try {
       await this.configManager.saveConfig(config);
 
@@ -651,10 +673,11 @@ class BackgroundService {
     }
   }
 
-  private async testConnection(configParam?: any): Promise<any> {
+  private async testConnection(configParam?: AppConfig): Promise<MessageResponse> {
     try {
       // Load config from storage if not provided (for popup calls)
-      const config = configParam || (await this.configManager.getConfig()).api;
+      const fullConfig = configParam || (await this.configManager.getConfig());
+      const config = 'api' in fullConfig ? fullConfig.api : fullConfig;
 
       logger.info('BackgroundService', 'Testing API connection', {
         provider: config.provider,
@@ -688,7 +711,7 @@ class BackgroundService {
       const result = await llmService.validateConnection();
       logger.info('BackgroundService', 'Connection test completed', result);
 
-      return result;
+      return result as MessageResponse;
     } catch (error) {
       logger.error('BackgroundService', 'Connection test failed with exception', error);
       return {
@@ -698,7 +721,7 @@ class BackgroundService {
     }
   }
 
-  private async updateLoggerConfig(debugConfig: any): Promise<any> {
+  private async updateLoggerConfig(debugConfig: { logLevel: number; consoleLogging: boolean }): Promise<MessageResponse> {
     try {
       logger.setLogLevel(debugConfig.logLevel);
       logger.setConsoleLogging(debugConfig.consoleLogging);
@@ -713,7 +736,7 @@ class BackgroundService {
     }
   }
 
-  private async executeSelectiveReorganization(folderIds: string[]): Promise<any> {
+  private async executeSelectiveReorganization(folderIds: string[]): Promise<MessageResponse<ReorganizationResult>> {
     logger.info('BackgroundService', 'executeSelectiveReorganization STARTED', {
       folderCount: folderIds.length,
     });
@@ -810,9 +833,17 @@ class BackgroundService {
       await chrome.storage.local.set({ lastOrganizationResult: result });
 
       logger.info('BackgroundService', 'Returning success result to caller');
+      const resultWithTimestamp: ReorganizationResult = {
+        bookmarksMoved: result.bookmarksMoved,
+        foldersCreated: result.foldersCreated,
+        duplicatesRemoved: result.duplicatesRemoved,
+        bookmarksSkipped: result.bookmarksSkipped,
+        errors: result.errors,
+        timestamp: Date.now(),
+      };
       return {
-        success: result.success,
-        result,
+        success: true,
+        result: resultWithTimestamp,
       };
     } catch (error) {
       logger.error('BackgroundService', 'Selective reorganization FAILED', error);
@@ -846,7 +877,7 @@ class BackgroundService {
     }
   }
 
-  private async getFolderTree(): Promise<any> {
+  private async getFolderTree(): Promise<MessageResponse> {
     try {
       const tree = await this.bookmarkManager.getBookmarkTreeWithCounts();
       return {
@@ -862,7 +893,7 @@ class BackgroundService {
     }
   }
 
-  private async getSystemFolders(): Promise<any> {
+  private async getSystemFolders(): Promise<MessageResponse<{ folderIds: string[] }>> {
     try {
       const folders = await this.bookmarkManager.getSystemFolders();
       logger.info('BackgroundService', `Retrieved ${folders.length} system folders`);
@@ -879,7 +910,7 @@ class BackgroundService {
     }
   }
 
-  private async clearOrganizationHistory(): Promise<any> {
+  private async clearOrganizationHistory(): Promise<MessageResponse> {
     try {
       await this.configManager.clearOrganizationHistory();
       logger.info('BackgroundService', 'Organization history cleared');
@@ -893,7 +924,7 @@ class BackgroundService {
     }
   }
 
-  private async markAllBookmarksAsOrganized(): Promise<any> {
+  private async markAllBookmarksAsOrganized(): Promise<MessageResponse> {
     try {
       const count = await this.configManager.markAllBookmarksAsOrganized();
       logger.info('BackgroundService', `Marked ${count} bookmarks as organized`);

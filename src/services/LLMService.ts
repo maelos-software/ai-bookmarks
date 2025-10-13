@@ -314,13 +314,13 @@ Your response (category name only):`;
         logger.trace('LLMService', 'Organization plan', plan);
 
         return plan;
-      } catch (error: any) {
+      } catch (error: unknown) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
         // Check if it's a rate limit error (429)
         const isRateLimit =
-          error.statusCode === 429 ||
-          (error.message && error.message.toLowerCase().includes('rate limit'));
+          (error as { statusCode?: number }).statusCode === 429 ||
+          (error instanceof Error && error.message.toLowerCase().includes('rate limit'));
 
         if (!isRateLimit || attempt === maxRetries) {
           // Not a rate limit error, or we've exhausted retries
@@ -336,9 +336,10 @@ Your response (category name only):`;
         );
 
         // Try to parse rate limit reset time from error
-        if (error.apiResponse) {
+        const errorWithResponse = lastError as Error & { apiResponse?: string };
+        if (errorWithResponse.apiResponse) {
           try {
-            const errorData = JSON.parse(error.apiResponse);
+            const errorData = JSON.parse(errorWithResponse.apiResponse);
             const resetTime = errorData.error?.metadata?.headers?.['X-RateLimit-Reset'];
             if (resetTime) {
               const resetDate = new Date(parseInt(resetTime));
@@ -629,12 +630,12 @@ CRITICAL RULES:
         plan.tokenUsage = usage;
         plan.foldersToCreate = []; // No folders created in assignment phase
         return plan;
-      } catch (error: any) {
+      } catch (error: unknown) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
         const isRateLimit =
-          error.statusCode === 429 ||
-          (error.message && error.message.toLowerCase().includes('rate limit'));
+          (error as { statusCode?: number }).statusCode === 429 ||
+          (error instanceof Error && error.message.toLowerCase().includes('rate limit'));
 
         if (!isRateLimit || attempt === maxRetries) {
           throw lastError;
@@ -733,7 +734,20 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
     const headers = this.getHeaders();
     logger.debug('LLMService', `Calling ${this.provider} API at ${endpoint}`);
 
-    let payload: any;
+    interface Message {
+      role: 'user' | 'system';
+      content: string;
+    }
+
+    interface APIPayload {
+      model: string;
+      max_tokens: number;
+      messages: Message[];
+      temperature?: number;
+      response_format?: { type: string };
+    }
+
+    let payload: APIPayload;
 
     if (this.provider === 'claude') {
       payload = {
@@ -855,9 +869,12 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
             }
           }
 
-          const error = new Error(userMessage);
-          (error as any).statusCode = response.status;
-          (error as any).apiResponse = errorBody;
+          const error = new Error(userMessage) as Error & {
+            statusCode: number;
+            apiResponse: string;
+          };
+          error.statusCode = response.status;
+          error.apiResponse = errorBody;
           throw error;
         }
 
@@ -1002,7 +1019,20 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
       const endpoint = this.getAPIEndpoint();
       const headers = this.getHeaders();
 
-      let payload: any;
+      interface Message {
+        role: 'user' | 'system';
+        content: string;
+      }
+
+      interface TestPayload {
+        model: string;
+        max_tokens: number;
+        messages: Message[];
+        temperature?: number;
+        response_format?: { type: string };
+      }
+
+      let payload: TestPayload;
 
       // Use configured model and max_tokens, but keep the test simple
       // The test just validates API connectivity and basic JSON response capability
@@ -1282,11 +1312,11 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           credits,
           rateLimit,
         };
-      } catch (fetchError: any) {
+      } catch (fetchError: unknown) {
         clearTimeout(timeoutId);
         const responseTime = Date.now() - startTime;
 
-        if (fetchError.name === 'AbortError') {
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
           logger.error('LLMService', 'Test request timeout');
           return {
             success: false,
@@ -1296,18 +1326,20 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
         }
 
         logger.error('LLMService', 'Test request failed', fetchError);
+        const errorMessage = fetchError instanceof Error ? fetchError.message : 'Cannot reach API';
         return {
           success: false,
-          error: `Network error: ${fetchError.message || 'Cannot reach API'}`,
+          error: `Network error: ${errorMessage}`,
           responseTime,
         };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       const responseTime = Date.now() - startTime;
       logger.error('LLMService', 'Connection validation failed', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error during connection test';
       return {
         success: false,
-        error: error.message || 'Unknown error during connection test',
+        error: errorMessage,
         responseTime,
       };
     }
@@ -1337,7 +1369,14 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
 
       // Convert index-based suggestions to bookmarkId-based
       // Support both new format {"i": 1, "f": "folder"} and old format {"bookmarkId": "123", "folderName": "folder"}
-      const normalizedSuggestions = parsed.suggestions.map((s: any) => {
+      interface RawSuggestion {
+        i?: number;
+        f?: string;
+        bookmarkId?: string;
+        folderName?: string;
+      }
+
+      const normalizedSuggestions = parsed.suggestions.map((s: RawSuggestion) => {
         if (s.i !== undefined && s.f !== undefined) {
           // New compact format - map index to bookmark ID
           const bookmark = bookmarks[s.i - 1]; // i is 1-based
@@ -1360,7 +1399,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
       });
 
       // Ensure all bookmarks have suggestions
-      const suggestedIds = new Set(normalizedSuggestions.map((s: any) => s.bookmarkId));
+      const suggestedIds = new Set(normalizedSuggestions.map((s) => s.bookmarkId));
       const missingBookmarks = bookmarks.filter((b) => !suggestedIds.has(b.id));
 
       if (missingBookmarks.length > 0) {
