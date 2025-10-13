@@ -1336,7 +1336,8 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
     } catch (error: unknown) {
       const responseTime = Date.now() - startTime;
       logger.error('LLMService', 'Connection validation failed', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error during connection test';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error during connection test';
       return {
         success: false,
         error: errorMessage,

@@ -71,7 +71,13 @@ export class Logger {
     await chrome.storage.local.set({ enableConsole: enabled });
   }
 
-  private log(level: LogLevel, levelName: string, component: string, message: string, data?: unknown) {
+  private log(
+    level: LogLevel,
+    levelName: string,
+    component: string,
+    message: string,
+    data?: unknown
+  ) {
     if (level > this.logLevel) {
       return;
     }

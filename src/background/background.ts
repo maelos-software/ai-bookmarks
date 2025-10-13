@@ -20,7 +20,6 @@ import type {
   MessageResponse,
   ReorganizationProgress,
   ReorganizationResult,
-  ReorganizationStatusResponse,
 } from '../types/messages.js';
 
 interface ActivityLogEntry {
@@ -215,11 +214,15 @@ class BackgroundService {
         case 'PING':
           return { success: true };
 
-        default:
+        default: {
           // TypeScript exhaustiveness check - this should never be reached
           const _exhaustive: never = message;
-          logger.warn('BackgroundService', `Unknown message type: ${(_exhaustive as RuntimeMessage).type}`);
+          logger.warn(
+            'BackgroundService',
+            `Unknown message type: ${(_exhaustive as RuntimeMessage).type}`
+          );
           return { success: false, error: 'Unknown message type' };
+        }
       }
     } catch (error) {
       logger.error('BackgroundService', 'Message handling error', error);
@@ -721,7 +724,10 @@ class BackgroundService {
     }
   }
 
-  private async updateLoggerConfig(debugConfig: { logLevel: number; consoleLogging: boolean }): Promise<MessageResponse> {
+  private async updateLoggerConfig(debugConfig: {
+    logLevel: number;
+    consoleLogging: boolean;
+  }): Promise<MessageResponse> {
     try {
       logger.setLogLevel(debugConfig.logLevel);
       logger.setConsoleLogging(debugConfig.consoleLogging);
@@ -736,7 +742,9 @@ class BackgroundService {
     }
   }
 
-  private async executeSelectiveReorganization(folderIds: string[]): Promise<MessageResponse<ReorganizationResult>> {
+  private async executeSelectiveReorganization(
+    folderIds: string[]
+  ): Promise<MessageResponse<ReorganizationResult>> {
     logger.info('BackgroundService', 'executeSelectiveReorganization STARTED', {
       folderCount: folderIds.length,
     });

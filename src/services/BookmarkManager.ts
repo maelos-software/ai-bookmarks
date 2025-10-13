@@ -599,7 +599,9 @@ export class BookmarkManager {
               );
               // @ts-expect-error - Vivaldi-specific API not in Chrome types
               const speedDialFolders = await chrome.speedDial.getFolders();
-              const speedDialFolder = speedDialFolders?.find((f: { id: string }) => f.id === folder.id);
+              const speedDialFolder = speedDialFolders?.find(
+                (f: { id: string }) => f.id === folder.id
+              );
 
               if (speedDialFolder) {
                 logger.info(
@@ -614,7 +616,8 @@ export class BookmarkManager {
                 );
               }
             } catch (speedDialError: unknown) {
-              const errorMessage = speedDialError instanceof Error ? speedDialError.message : String(speedDialError);
+              const errorMessage =
+                speedDialError instanceof Error ? speedDialError.message : String(speedDialError);
               logger.debug(
                 'BookmarkManager',
                 `Speed Dial check/removal failed (folder may not be in Speed Dial): ${errorMessage}`
@@ -657,7 +660,8 @@ export class BookmarkManager {
               `Successfully removed with removeTree: ${folder.title} (${folder.id})`
             );
           } catch (removeTreeError: unknown) {
-            const removeTreeMsg = removeTreeError instanceof Error ? removeTreeError.message : String(removeTreeError);
+            const removeTreeMsg =
+              removeTreeError instanceof Error ? removeTreeError.message : String(removeTreeError);
             logger.error(
               'BookmarkManager',
               `removeTree also failed for "${folder.title}" (${folder.id}): ${removeTreeMsg}`
