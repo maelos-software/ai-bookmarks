@@ -141,6 +141,7 @@ export interface ReorganizationResult {
   bookmarksMoved: number;
   foldersCreated: number;
   duplicatesRemoved: number;
+  emptyFoldersRemoved: number;
   bookmarksSkipped: number;
   errors: string[];
   timestamp: number;

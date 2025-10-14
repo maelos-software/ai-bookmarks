@@ -51,6 +51,8 @@ class OptionsController {
   private customEndpointSection: HTMLElement;
   private customEndpointInput: HTMLInputElement;
   private customModelNameInput: HTMLInputElement;
+  private geminiSetupSection: HTMLElement;
+  private geminiGetKeyBtn: HTMLButtonElement;
   private unsavedChangesBanner: HTMLElement;
   private hasUnsavedChanges: boolean = false;
 
@@ -101,6 +103,8 @@ class OptionsController {
     this.customEndpointSection = document.getElementById('custom-endpoint-section') as HTMLElement;
     this.customEndpointInput = document.getElementById('customEndpoint') as HTMLInputElement;
     this.customModelNameInput = document.getElementById('customModelName') as HTMLInputElement;
+    this.geminiSetupSection = document.getElementById('gemini-setup-section') as HTMLElement;
+    this.geminiGetKeyBtn = document.getElementById('gemini-get-key-btn') as HTMLButtonElement;
     this.unsavedChangesBanner = document.getElementById('unsaved-changes-banner') as HTMLElement;
 
     this.authService = new OpenRouterAuthService();
@@ -134,12 +138,17 @@ class OptionsController {
       this.handleOpenRouterLogout();
     });
 
+    this.geminiGetKeyBtn.addEventListener('click', () => {
+      window.open('https://aistudio.google.com/apikey', '_blank');
+    });
+
     // Setup collapsible Advanced Settings
     this.setupCollapsibleSection();
 
     this.providerSelect.addEventListener('change', () => {
       this.updateModelPlaceholder();
       this.toggleOpenRouterOAuthSection();
+      this.toggleGeminiSetupSection();
       this.toggleCustomEndpointSection();
       this.highlightTestButton();
       this.markUnsavedChanges();
@@ -388,12 +397,13 @@ class OptionsController {
         this.updateModelPlaceholder();
       } else {
         // No config yet - set defaults
-        this.providerSelect.value = 'openrouter';
+        this.providerSelect.value = 'gemini';
         this.updateModelPlaceholder();
       }
 
-      // Toggle OAuth and custom endpoint sections after config is loaded
+      // Toggle OAuth, Gemini, and custom endpoint sections after config is loaded
       this.toggleOpenRouterOAuthSection();
+      this.toggleGeminiSetupSection();
       this.toggleCustomEndpointSection();
     } catch (error) {
       this.showStatus('Error loading configuration', 'error');
@@ -657,7 +667,7 @@ class OptionsController {
 
       // Set defaults (preserve existing API key and provider if they exist)
       // User must manually change provider/key if they want to clear it
-      this.providerSelect.value = currentConfig?.api?.provider || 'openrouter';
+      this.providerSelect.value = currentConfig?.api?.provider || 'gemini';
       this.apiKeyInput.value = currentConfig?.api?.apiKey || '';
       this.modelInput.value = '';
       this.apiTimeoutInput.value = String(DEFAULT_PERFORMANCE.apiTimeout);
@@ -737,6 +747,16 @@ class OptionsController {
   private toggleCustomEndpointSection() {
     const isCustom = this.providerSelect.value === 'custom';
     this.customEndpointSection.style.display = isCustom ? 'block' : 'none';
+  }
+
+  private toggleGeminiSetupSection() {
+    const isGemini = this.providerSelect.value === 'gemini';
+    this.geminiSetupSection.style.display = isGemini ? 'block' : 'none';
+
+    // Update API key placeholder for Gemini
+    if (isGemini) {
+      this.apiKeyInput.placeholder = 'AI...';
+    }
   }
 
   private toggleOpenRouterOAuthSection() {

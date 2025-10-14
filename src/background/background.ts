@@ -540,6 +540,7 @@ class BackgroundService {
       );
 
       logger.info('BackgroundService', '!!! Reorganization completed !!!', result);
+      logger.info('BackgroundService', `Result has success field: ${'success' in result}, value: ${result.success}`);
 
       // Clear reorganizing state
       this.isReorganizing = false;
@@ -550,8 +551,24 @@ class BackgroundService {
       await chrome.action.setBadgeText({ text: '' });
       await chrome.action.setTitle({ title: 'AI Bookmark Organizer' });
 
-      // Store results for the results page
-      await chrome.storage.local.set({ lastOrganizationResult: result });
+      // Store results for the results page (explicitly preserve success field)
+      const storedResult = {
+        success: result.success !== false ? true : false, // Preserve false, default to true
+        bookmarksMoved: result.bookmarksMoved,
+        foldersCreated: result.foldersCreated,
+        duplicatesRemoved: result.duplicatesRemoved,
+        emptyFoldersRemoved: result.emptyFoldersRemoved,
+        bookmarksSkipped: result.bookmarksSkipped,
+        errors: result.errors,
+        moves: result.moves,
+        duplicates: result.duplicates,
+        folders: result.folders,
+        emptyFolders: result.emptyFolders,
+        tokenUsage: result.tokenUsage,
+      };
+      logger.info('BackgroundService', 'Storing result with success:', storedResult.success);
+      logger.info('BackgroundService', 'Full stored result:', storedResult);
+      await chrome.storage.local.set({ lastOrganizationResult: storedResult });
 
       // Log to activity history
       await this.addActivityLogEntry({
@@ -576,6 +593,7 @@ class BackgroundService {
         bookmarksMoved: result.bookmarksMoved,
         foldersCreated: result.foldersCreated,
         duplicatesRemoved: result.duplicatesRemoved,
+        emptyFoldersRemoved: result.emptyFoldersRemoved,
         bookmarksSkipped: result.bookmarksSkipped,
         errors: result.errors,
         timestamp: Date.now(),
@@ -837,14 +855,30 @@ class BackgroundService {
         await chrome.action.setTitle({ title: 'AI Bookmark Organizer' });
       }, 3000);
 
-      // Store result
-      await chrome.storage.local.set({ lastOrganizationResult: result });
+      // Store result (explicitly preserve success field)
+      await chrome.storage.local.set({
+        lastOrganizationResult: {
+          success: result.success !== false ? true : false,
+          bookmarksMoved: result.bookmarksMoved,
+          foldersCreated: result.foldersCreated,
+          duplicatesRemoved: result.duplicatesRemoved,
+          emptyFoldersRemoved: result.emptyFoldersRemoved,
+          bookmarksSkipped: result.bookmarksSkipped,
+          errors: result.errors,
+          moves: result.moves,
+          duplicates: result.duplicates,
+          folders: result.folders,
+          emptyFolders: result.emptyFolders,
+          tokenUsage: result.tokenUsage,
+        }
+      });
 
       logger.info('BackgroundService', 'Returning success result to caller');
       const resultWithTimestamp: ReorganizationResult = {
         bookmarksMoved: result.bookmarksMoved,
         foldersCreated: result.foldersCreated,
         duplicatesRemoved: result.duplicatesRemoved,
+        emptyFoldersRemoved: result.emptyFoldersRemoved,
         bookmarksSkipped: result.bookmarksSkipped,
         errors: result.errors,
         timestamp: Date.now(),

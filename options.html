@@ -475,14 +475,14 @@
                     <div class="form-group">
                         <label for="provider">AI Provider</label>
                         <select id="provider" name="provider">
-                            <option value="openrouter">OpenRouter (Multi-Provider)</option>
+                            <option value="gemini">Google Gemini - Best Free Option (Requires API key setup)</option>
+                            <option value="openrouter">OpenRouter - Easiest Free Option (One-click sign in)</option>
                             <option value="openai">OpenAI</option>
                             <option value="claude">Claude (Anthropic)</option>
                             <option value="grok">Grok (xAI)</option>
-                            <option value="gemini">Google Gemini</option>
                             <option value="custom">Custom (OpenAI-compatible)</option>
                         </select>
-                        <small>Choose which AI service to use for organizing your bookmarks. OpenRouter provides unified access to multiple AI providers. Gemini offers a free tier with no credit card required.</small>
+                        <small>Choose which AI service to use for organizing your bookmarks. <strong>OpenRouter</strong> is the easiest to set up with one-click sign-in. <strong>Gemini</strong> offers the best free tier with generous limits and no credit card required.</small>
                     </div>
 
                     <!-- Custom Endpoint Configuration -->
@@ -518,6 +518,37 @@
                         <div id="oauth-status" style="margin-top: 12px; font-size: 13px; display: none;"></div>
                     </div>
 
+                    <!-- Gemini Setup Instructions -->
+                    <div id="gemini-setup-section" style="display: none; margin-top: 20px; margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, #e8f5e9 0%, #fff3e0 100%); border-radius: 12px; border: 2px solid #4caf50;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 24px;">🔑</span>
+                            <div>
+                                <strong style="color: #2e7d32; font-size: 16px;">Get Your Free Gemini API Key</strong>
+                                <p style="margin: 4px 0 0 0; font-size: 13px; color: #555;">Google Gemini offers a generous free tier with no credit card required. Follow these steps to get started:</p>
+                            </div>
+                        </div>
+                        <ol style="margin: 12px 0; padding-left: 24px; font-size: 13px; line-height: 1.8; color: #333;">
+                            <li>Visit <a href="https://aistudio.google.com/apikey" target="_blank" style="color: #1976d2; text-decoration: underline;">Google AI Studio</a> (opens in new tab)</li>
+                            <li>Sign in with your Google account (or create one if needed)</li>
+                            <li>Click <strong>"Create API key"</strong></li>
+                            <li>Select <strong>"Create API key in new project"</strong> or choose an existing project</li>
+                            <li>Copy your API key (starts with "AI...")</li>
+                            <li>Paste it in the API Key field below</li>
+                        </ol>
+                        <div style="margin-top: 12px; padding: 12px; background: #fff; border-radius: 8px; border-left: 4px solid #4caf50;">
+                            <p style="margin: 0; font-size: 12px; color: #555; line-height: 1.6;">
+                                <strong style="color: #2e7d32;">✨ Free Tier Benefits:</strong><br>
+                                • 1,500 requests per day<br>
+                                • 1 million tokens per minute<br>
+                                • No credit card required<br>
+                                • Fast and reliable performance
+                            </p>
+                        </div>
+                        <button type="button" id="gemini-get-key-btn" class="btn btn-primary" style="width: 100%; margin-top: 12px;">
+                            🚀 Get Gemini API Key
+                        </button>
+                    </div>
+
                     <div class="form-group" id="api-key-section">
                         <label for="apiKey">API Key</label>
                         <input type="password" id="apiKey" name="apiKey" placeholder="sk-..." required>
@@ -529,11 +560,11 @@
                         <input type="text" id="model" name="model" placeholder="Leave empty for default">
                         <small>
                             <strong>Defaults:</strong><br>
+                            • Gemini: gemini-flash-latest (FREE - Recommended)<br>
+                            • OpenRouter: meta-llama/llama-3.3-70b-instruct:free (FREE - Easiest but more limited)<br>
                             • OpenAI: gpt-4o-mini<br>
                             • Claude: claude-3-haiku-20240307<br>
-                            • Grok: grok-beta<br>
-                            • Gemini: gemini-flash-latest (FREE - no credit card required!)<br>
-                            • OpenRouter: meta-llama/llama-3.3-70b-instruct:free (FREE - no credits required!)
+                            • Grok: grok-beta
                         </small>
                     </div>
 
