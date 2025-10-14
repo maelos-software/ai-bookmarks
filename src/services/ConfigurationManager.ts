@@ -17,7 +17,7 @@ export interface OrganizationHistory {
 }
 
 export interface APIConfig {
-  provider: 'openai' | 'claude' | 'grok' | 'openrouter' | 'custom';
+  provider: 'openai' | 'claude' | 'grok' | 'openrouter' | 'gemini' | 'custom';
   apiKey: string;
   model?: string;
   customEndpoint?: string; // For custom OpenAI-compatible endpoints
@@ -90,6 +90,7 @@ export const DEFAULT_MODELS = {
   claude: 'claude-3-haiku-20240307',
   grok: 'grok-beta',
   openrouter: 'meta-llama/llama-3.3-70b-instruct:free',
+  gemini: 'gemini-flash-latest', // Free model, always points to latest Flash version
 } as const;
 
 // Default performance settings

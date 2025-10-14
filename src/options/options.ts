@@ -418,6 +418,7 @@ class OptionsController {
       | 'claude'
       | 'grok'
       | 'openrouter'
+      | 'gemini'
       | 'custom';
     const apiKey = this.apiKeyInput.value.trim();
     const model = this.modelInput.value.trim();
@@ -491,6 +492,7 @@ class OptionsController {
       | 'claude'
       | 'grok'
       | 'openrouter'
+      | 'gemini'
       | 'custom';
     const apiKey = this.apiKeyInput.value.trim();
     const model = this.modelInput.value.trim();

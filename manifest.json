@@ -15,7 +15,8 @@
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",
     "https://api.x.ai/*",
-    "https://openrouter.ai/*"
+    "https://openrouter.ai/*",
+    "https://generativelanguage.googleapis.com/*"
   ],
   
   "background": {

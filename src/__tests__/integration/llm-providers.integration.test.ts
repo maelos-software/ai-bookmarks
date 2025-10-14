@@ -31,7 +31,8 @@ const hasAnyApiKey =
   process.env.OPENAI_API_KEY ||
   process.env.ANTHROPIC_API_KEY ||
   process.env.GROK_API_KEY ||
-  process.env.OPENROUTER_API_KEY;
+  process.env.OPENROUTER_API_KEY ||
+  process.env.GEMINI_API_KEY;
 
 const describeIfConfigured = hasAnyApiKey ? describe : describe.skip;
 
@@ -256,6 +257,62 @@ describeIfConfigured('LLM Provider Integration Tests', () => {
       )).toBe(true);
 
       console.log('OpenRouter - Good categories result:', {
+        suggestions: result.suggestions.length,
+        tokens: result.tokenUsage,
+        distribution: goodCategories.map(cat => ({
+          category: cat,
+          count: result.suggestions.filter(s => s.folderName === cat).length
+        }))
+      });
+    });
+  });
+
+  describe('Gemini', () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    const testIf = apiKey ? test : test.skip;
+
+    testIf('should handle empty categories gracefully', async () => {
+      const llm = new LLMService(apiKey!, 'gemini');
+
+      await expect(
+        llm.assignToFolders(sampleBookmarks.slice(0, 5), emptyCategories)
+      ).rejects.toThrow(/No approved folders provided/);
+    });
+
+    testIf('should work with minimal categories', async () => {
+      const llm = new LLMService(apiKey!, 'gemini');
+
+      const result = await llm.assignToFolders(
+        sampleBookmarks.slice(0, 5),
+        minimalCategories
+      );
+
+      expect(result.suggestions).toHaveLength(5);
+      expect(result.suggestions.every(s =>
+        minimalCategories.includes(s.folderName)
+      )).toBe(true);
+
+      console.log('Gemini - Minimal categories result:', {
+        suggestions: result.suggestions.length,
+        tokens: result.tokenUsage,
+        assignments: result.suggestions.map(s => `${s.bookmarkId} → ${s.folderName}`)
+      });
+    });
+
+    testIf('should work with good categories', async () => {
+      const llm = new LLMService(apiKey!, 'gemini');
+
+      const result = await llm.assignToFolders(
+        sampleBookmarks,
+        goodCategories
+      );
+
+      expect(result.suggestions).toHaveLength(sampleBookmarks.length);
+      expect(result.suggestions.every(s =>
+        goodCategories.includes(s.folderName)
+      )).toBe(true);
+
+      console.log('Gemini - Good categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
         distribution: goodCategories.map(cat => ({

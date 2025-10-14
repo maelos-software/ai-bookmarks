@@ -32,7 +32,7 @@ export interface OrganizationPlan {
 
 export class LLMService {
   private apiKey: string;
-  private provider: 'openai' | 'claude' | 'grok' | 'openrouter' | 'custom';
+  private provider: 'openai' | 'claude' | 'grok' | 'openrouter' | 'gemini' | 'custom';
   private model: string;
   private timeout: number; // milliseconds
   private maxTokens: number;
@@ -41,7 +41,7 @@ export class LLMService {
 
   constructor(
     apiKey: string,
-    provider: 'openai' | 'claude' | 'grok' | 'openrouter' | 'custom' = 'openai',
+    provider: 'openai' | 'claude' | 'grok' | 'openrouter' | 'gemini' | 'custom' = 'openai',
     model?: string,
     timeoutSeconds?: number,
     maxTokens?: number,
@@ -146,6 +146,22 @@ export class LLMService {
         }
         break;
 
+      case 'gemini':
+        // Gemini API keys start with "AI" followed by random characters
+        if (!trimmedKey.startsWith('AI')) {
+          return {
+            valid: false,
+            error: 'Gemini API keys must start with "AI"',
+          };
+        }
+        if (trimmedKey.length < 20) {
+          return {
+            valid: false,
+            error: 'Gemini API key appears too short (minimum 20 characters)',
+          };
+        }
+        break;
+
       default:
         return {
           valid: false,
@@ -171,6 +187,9 @@ export class LLMService {
         return 'https://api.x.ai/v1/chat/completions';
       case 'openrouter':
         return 'https://openrouter.ai/api/v1/chat/completions';
+      case 'gemini':
+        // Gemini uses a different URL structure with the model and API key in the URL
+        return `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
       case 'custom':
         // For custom endpoints, ensure it ends with the chat completions path
         if (this.customEndpoint) {
@@ -203,6 +222,9 @@ export class LLMService {
       case 'claude':
         headers['x-api-key'] = this.apiKey;
         headers['anthropic-version'] = '2023-06-01';
+        break;
+      case 'gemini':
+        // Gemini uses API key in URL, no auth header needed
         break;
     }
 
@@ -766,9 +788,27 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
       response_format?: { type: string };
     }
 
-    let payload: APIPayload;
+    let payload: any;
 
-    if (this.provider === 'claude') {
+    if (this.provider === 'gemini') {
+      // Gemini uses a different request format
+      payload = {
+        contents: [
+          {
+            parts: [
+              {
+                text: `You are a helpful assistant that organizes bookmarks. Always respond with valid JSON only.\n\n${prompt}`,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: this.maxTokens,
+          responseMimeType: 'application/json',
+        },
+      };
+    } else if (this.provider === 'claude') {
       payload = {
         model: this.model,
         max_tokens: this.maxTokens,
@@ -819,8 +859,8 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
     }
 
     logger.trace('LLMService', 'Request payload', {
-      model: payload.model,
-      messageCount: payload.messages.length,
+      model: payload.model || this.model,
+      messageCount: payload.messages?.length || payload.contents?.length || 0,
     });
 
     try {
@@ -903,7 +943,15 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
         let content: string;
         let usage: { prompt: number; completion: number; total: number };
 
-        if (this.provider === 'claude') {
+        if (this.provider === 'gemini') {
+          // Gemini uses a different response format
+          content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          usage = {
+            prompt: data.usageMetadata?.promptTokenCount || 0,
+            completion: data.usageMetadata?.candidatesTokenCount || 0,
+            total: data.usageMetadata?.totalTokenCount || 0,
+          };
+        } else if (this.provider === 'claude') {
           content = data.content[0].text;
           // Claude uses different field names
           usage = {
@@ -1044,9 +1092,11 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
       }
 
       interface TestPayload {
-        model: string;
-        max_tokens: number;
-        messages: Message[];
+        model?: string;
+        max_tokens?: number;
+        messages?: Message[];
+        contents?: any;
+        generationConfig?: any;
         temperature?: number;
         response_format?: { type: string };
       }
@@ -1059,7 +1109,25 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
       // Use configured max_tokens for the test to match actual usage
       const testMaxTokens = this.maxTokens;
 
-      if (this.provider === 'claude') {
+      if (this.provider === 'gemini') {
+        // Gemini uses a different request format
+        payload = {
+          contents: [
+            {
+              parts: [
+                {
+                  text: testPrompt,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: testMaxTokens,
+            responseMimeType: 'application/json',
+          },
+        };
+      } else if (this.provider === 'claude') {
         payload = {
           model: this.model,
           max_tokens: testMaxTokens,
@@ -1145,7 +1213,11 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
         let responseValid = false;
         let finishReason: string | undefined;
 
-        if (this.provider === 'claude') {
+        if (this.provider === 'gemini') {
+          responseValid = data.candidates && data.candidates.length > 0;
+          content = data.candidates[0]?.content?.parts?.[0]?.text || '';
+          finishReason = data.candidates[0]?.finishReason;
+        } else if (this.provider === 'claude') {
           responseValid = data.content && data.content.length > 0;
           content = data.content[0]?.text || '';
           finishReason = data.stop_reason;
