@@ -97,10 +97,12 @@ jobs:
       run: |
         VERSION=$(grep '"version"' manifest.json | sed 's/.*"version": "\(.*\)".*/\1/')
         GIT_HASH=$(git rev-parse --short=8 HEAD)
-        FILENAME="ai-bookmarks-${VERSION}-${GIT_HASH}.zip"
+        TIMESTAMP=$(date -u +%Y%m%d%H%M)
+        FILENAME="ai-bookmarks-${TIMESTAMP}-${GIT_HASH}.zip"
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
         echo "filename=${FILENAME}" >> $GITHUB_OUTPUT
         echo "git_hash=${GIT_HASH}" >> $GITHUB_OUTPUT
+        echo "timestamp=${TIMESTAMP}" >> $GITHUB_OUTPUT
 
     - name: Update latest snapshot release
       uses: softprops/action-gh-release@v2
@@ -114,12 +116,13 @@ jobs:
 
           - **Version**: ${{ steps.version.outputs.version }}
           - **Commit**: ${{ steps.version.outputs.git_hash }} (${{ github.sha }})
+          - **Timestamp**: ${{ steps.version.outputs.timestamp }}
           - **Built**: ${{ github.event.head_commit.timestamp }}
           - **Commit Message**: ${{ github.event.head_commit.message }}
 
           ⚠️ **This is a development build** - For stable releases, see the versioned releases below.
 
-          The zip file name includes the git commit hash for traceability.
+          The zip file name format is: `ai-bookmarks-YYYYMMDDHHMM-<commit-hash>.zip`
         files: ${{ steps.version.outputs.filename }}
         prerelease: true
         draft: false
