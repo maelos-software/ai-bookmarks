@@ -1,6 +1,6 @@
 {
   "name": "ai-bookmark-organizer",
-  "version": "1.2.0",
+  "version": "1.2.3",
   "description": "Chrome extension for AI-powered bookmark organization",
   "author": "Rafi Khardalian <rafi@roobix.net>",
   "license": "MPL-2.0",

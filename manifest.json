@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI Bookmark Organizer",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Intelligently organize your bookmarks using AI-powered categorization",
   
   "permissions": [
