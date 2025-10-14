@@ -104,7 +104,14 @@ jobs:
         chmod +x build-release-zip.sh
         ./build-release-zip.sh "${{ steps.version.outputs.filename }}"
 
-    - name: Update latest snapshot release
+    - name: Delete previous latest release
+      run: |
+        gh release delete latest --yes || true
+        git push origin :refs/tags/latest || true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create latest snapshot release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: latest
