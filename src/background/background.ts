@@ -540,7 +540,10 @@ class BackgroundService {
       );
 
       logger.info('BackgroundService', '!!! Reorganization completed !!!', result);
-      logger.info('BackgroundService', `Result has success field: ${'success' in result}, value: ${result.success}`);
+      logger.info(
+        'BackgroundService',
+        `Result has success field: ${'success' in result}, value: ${result.success}`
+      );
 
       // Clear reorganizing state
       this.isReorganizing = false;
@@ -870,7 +873,7 @@ class BackgroundService {
           folders: result.folders,
           emptyFolders: result.emptyFolders,
           tokenUsage: result.tokenUsage,
-        }
+        },
       });
 
       logger.info('BackgroundService', 'Returning success result to caller');

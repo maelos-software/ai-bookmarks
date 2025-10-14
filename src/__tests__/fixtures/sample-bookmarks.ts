@@ -7,129 +7,126 @@ export const sampleBookmarks = [
   // Technology & Development
   {
     id: '1',
-    title: 'GitHub - The world\'s leading software development platform',
-    url: 'https://github.com'
+    title: "GitHub - The world's leading software development platform",
+    url: 'https://github.com',
   },
   {
     id: '2',
     title: 'Stack Overflow - Where Developers Learn, Share, & Build Careers',
-    url: 'https://stackoverflow.com'
+    url: 'https://stackoverflow.com',
   },
   {
     id: '3',
     title: 'MDN Web Docs',
-    url: 'https://developer.mozilla.org'
+    url: 'https://developer.mozilla.org',
   },
   {
     id: '4',
     title: 'TypeScript: JavaScript With Syntax For Types',
-    url: 'https://www.typescriptlang.org'
+    url: 'https://www.typescriptlang.org',
   },
   {
     id: '5',
     title: 'React – A JavaScript library for building user interfaces',
-    url: 'https://react.dev'
+    url: 'https://react.dev',
   },
 
   // News & Media
   {
     id: '6',
     title: 'BBC News - Home',
-    url: 'https://www.bbc.com/news'
+    url: 'https://www.bbc.com/news',
   },
   {
     id: '7',
     title: 'The New York Times',
-    url: 'https://www.nytimes.com'
+    url: 'https://www.nytimes.com',
   },
   {
     id: '8',
     title: 'TechCrunch – Startup and Technology News',
-    url: 'https://techcrunch.com'
+    url: 'https://techcrunch.com',
   },
 
   // Shopping
   {
     id: '9',
     title: 'Amazon.com: Online Shopping',
-    url: 'https://www.amazon.com'
+    url: 'https://www.amazon.com',
   },
   {
     id: '10',
     title: 'eBay: Electronics, Cars, Fashion & More',
-    url: 'https://www.ebay.com'
+    url: 'https://www.ebay.com',
   },
   {
     id: '11',
     title: 'Etsy - Shop for handmade, vintage, custom',
-    url: 'https://www.etsy.com'
+    url: 'https://www.etsy.com',
   },
 
   // Entertainment
   {
     id: '12',
     title: 'YouTube',
-    url: 'https://www.youtube.com'
+    url: 'https://www.youtube.com',
   },
   {
     id: '13',
     title: 'Netflix',
-    url: 'https://www.netflix.com'
+    url: 'https://www.netflix.com',
   },
   {
     id: '14',
     title: 'Spotify - Web Player',
-    url: 'https://open.spotify.com'
+    url: 'https://open.spotify.com',
   },
   {
     id: '15',
     title: 'Reddit - Dive into anything',
-    url: 'https://www.reddit.com'
+    url: 'https://www.reddit.com',
   },
 
   // Social Media
   {
     id: '16',
     title: 'Twitter / X',
-    url: 'https://twitter.com'
+    url: 'https://twitter.com',
   },
   {
     id: '17',
     title: 'LinkedIn: Log In or Sign Up',
-    url: 'https://www.linkedin.com'
+    url: 'https://www.linkedin.com',
   },
   {
     id: '18',
     title: 'Instagram',
-    url: 'https://www.instagram.com'
+    url: 'https://www.instagram.com',
   },
 
   // Education & Learning
   {
     id: '19',
     title: 'Coursera | Online Courses',
-    url: 'https://www.coursera.org'
+    url: 'https://www.coursera.org',
   },
   {
     id: '20',
     title: 'Khan Academy | Free Online Courses',
-    url: 'https://www.khanacademy.org'
+    url: 'https://www.khanacademy.org',
   },
   {
     id: '21',
     title: 'edX | Free Online Courses',
-    url: 'https://www.edx.org'
-  }
+    url: 'https://www.edx.org',
+  },
 ];
 
 // Empty categories configuration that would trigger the bug
 export const emptyCategories: string[] = [];
 
 // Minimal categories configuration (1-2 categories)
-export const minimalCategories = [
-  'Technology',
-  'Other'
-];
+export const minimalCategories = ['Technology', 'Other'];
 
 // Good categories configuration
 export const goodCategories = [
@@ -138,7 +135,7 @@ export const goodCategories = [
   'Shopping & E-commerce',
   'Entertainment & Streaming',
   'Social Media',
-  'Education & Learning'
+  'Education & Learning',
 ];
 
 // Excessive categories (too many, would cause issues)
@@ -162,5 +159,5 @@ export const excessiveCategories = [
   'DevOps',
   'Cloud',
   'AI/ML',
-  'Security'
+  'Security',
 ];

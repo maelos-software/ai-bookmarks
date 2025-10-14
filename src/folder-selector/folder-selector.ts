@@ -585,8 +585,8 @@ class FolderSelectorController {
       await chrome.storage.local.set({
         lastOrganizationResult: {
           success: response.success, // Use the success from the response wrapper
-          ...response.result
-        }
+          ...response.result,
+        },
       });
 
       const resultsUrl = chrome.runtime.getURL('results.html');

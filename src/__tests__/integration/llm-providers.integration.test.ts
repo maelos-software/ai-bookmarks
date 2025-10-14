@@ -20,7 +20,7 @@ import {
   sampleBookmarks,
   emptyCategories,
   minimalCategories,
-  goodCategories
+  goodCategories,
 } from '../fixtures/sample-bookmarks';
 
 // Load .env.local from project root
@@ -56,45 +56,35 @@ describeIfConfigured('LLM Provider Integration Tests', () => {
     testIf('should work with minimal categories', async () => {
       const llm = new LLMService(apiKey!, 'openai');
 
-      const result = await llm.assignToFolders(
-        sampleBookmarks.slice(0, 5),
-        minimalCategories
-      );
+      const result = await llm.assignToFolders(sampleBookmarks.slice(0, 5), minimalCategories);
 
       expect(result.suggestions).toHaveLength(5);
-      expect(result.suggestions.every(s =>
-        minimalCategories.includes(s.folderName)
-      )).toBe(true);
+      expect(result.suggestions.every((s) => minimalCategories.includes(s.folderName))).toBe(true);
       expect(result.tokenUsage).toBeDefined();
 
       console.log('OpenAI - Minimal categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
-        assignments: result.suggestions.map(s => `${s.bookmarkId} → ${s.folderName}`)
+        assignments: result.suggestions.map((s) => `${s.bookmarkId} → ${s.folderName}`),
       });
     });
 
     testIf('should work with good categories', async () => {
       const llm = new LLMService(apiKey!, 'openai');
 
-      const result = await llm.assignToFolders(
-        sampleBookmarks,
-        goodCategories
-      );
+      const result = await llm.assignToFolders(sampleBookmarks, goodCategories);
 
       expect(result.suggestions).toHaveLength(sampleBookmarks.length);
-      expect(result.suggestions.every(s =>
-        goodCategories.includes(s.folderName)
-      )).toBe(true);
+      expect(result.suggestions.every((s) => goodCategories.includes(s.folderName))).toBe(true);
       expect(result.tokenUsage).toBeDefined();
 
       console.log('OpenAI - Good categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
-        distribution: goodCategories.map(cat => ({
+        distribution: goodCategories.map((cat) => ({
           category: cat,
-          count: result.suggestions.filter(s => s.folderName === cat).length
-        }))
+          count: result.suggestions.filter((s) => s.folderName === cat).length,
+        })),
       });
     });
   });
@@ -114,43 +104,33 @@ describeIfConfigured('LLM Provider Integration Tests', () => {
     testIf('should work with minimal categories', async () => {
       const llm = new LLMService(apiKey!, 'claude');
 
-      const result = await llm.assignToFolders(
-        sampleBookmarks.slice(0, 5),
-        minimalCategories
-      );
+      const result = await llm.assignToFolders(sampleBookmarks.slice(0, 5), minimalCategories);
 
       expect(result.suggestions).toHaveLength(5);
-      expect(result.suggestions.every(s =>
-        minimalCategories.includes(s.folderName)
-      )).toBe(true);
+      expect(result.suggestions.every((s) => minimalCategories.includes(s.folderName))).toBe(true);
 
       console.log('Claude - Minimal categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
-        assignments: result.suggestions.map(s => `${s.bookmarkId} → ${s.folderName}`)
+        assignments: result.suggestions.map((s) => `${s.bookmarkId} → ${s.folderName}`),
       });
     });
 
     testIf('should work with good categories', async () => {
       const llm = new LLMService(apiKey!, 'claude');
 
-      const result = await llm.assignToFolders(
-        sampleBookmarks,
-        goodCategories
-      );
+      const result = await llm.assignToFolders(sampleBookmarks, goodCategories);
 
       expect(result.suggestions).toHaveLength(sampleBookmarks.length);
-      expect(result.suggestions.every(s =>
-        goodCategories.includes(s.folderName)
-      )).toBe(true);
+      expect(result.suggestions.every((s) => goodCategories.includes(s.folderName))).toBe(true);
 
       console.log('Claude - Good categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
-        distribution: goodCategories.map(cat => ({
+        distribution: goodCategories.map((cat) => ({
           category: cat,
-          count: result.suggestions.filter(s => s.folderName === cat).length
-        }))
+          count: result.suggestions.filter((s) => s.folderName === cat).length,
+        })),
       });
     });
   });
@@ -170,43 +150,33 @@ describeIfConfigured('LLM Provider Integration Tests', () => {
     testIf('should work with minimal categories', async () => {
       const llm = new LLMService(apiKey!, 'grok');
 
-      const result = await llm.assignToFolders(
-        sampleBookmarks.slice(0, 5),
-        minimalCategories
-      );
+      const result = await llm.assignToFolders(sampleBookmarks.slice(0, 5), minimalCategories);
 
       expect(result.suggestions).toHaveLength(5);
-      expect(result.suggestions.every(s =>
-        minimalCategories.includes(s.folderName)
-      )).toBe(true);
+      expect(result.suggestions.every((s) => minimalCategories.includes(s.folderName))).toBe(true);
 
       console.log('Grok - Minimal categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
-        assignments: result.suggestions.map(s => `${s.bookmarkId} → ${s.folderName}`)
+        assignments: result.suggestions.map((s) => `${s.bookmarkId} → ${s.folderName}`),
       });
     });
 
     testIf('should work with good categories', async () => {
       const llm = new LLMService(apiKey!, 'grok');
 
-      const result = await llm.assignToFolders(
-        sampleBookmarks,
-        goodCategories
-      );
+      const result = await llm.assignToFolders(sampleBookmarks, goodCategories);
 
       expect(result.suggestions).toHaveLength(sampleBookmarks.length);
-      expect(result.suggestions.every(s =>
-        goodCategories.includes(s.folderName)
-      )).toBe(true);
+      expect(result.suggestions.every((s) => goodCategories.includes(s.folderName))).toBe(true);
 
       console.log('Grok - Good categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
-        distribution: goodCategories.map(cat => ({
+        distribution: goodCategories.map((cat) => ({
           category: cat,
-          count: result.suggestions.filter(s => s.folderName === cat).length
-        }))
+          count: result.suggestions.filter((s) => s.folderName === cat).length,
+        })),
       });
     });
   });
@@ -226,43 +196,33 @@ describeIfConfigured('LLM Provider Integration Tests', () => {
     testIf('should work with minimal categories', async () => {
       const llm = new LLMService(apiKey!, 'openrouter');
 
-      const result = await llm.assignToFolders(
-        sampleBookmarks.slice(0, 5),
-        minimalCategories
-      );
+      const result = await llm.assignToFolders(sampleBookmarks.slice(0, 5), minimalCategories);
 
       expect(result.suggestions).toHaveLength(5);
-      expect(result.suggestions.every(s =>
-        minimalCategories.includes(s.folderName)
-      )).toBe(true);
+      expect(result.suggestions.every((s) => minimalCategories.includes(s.folderName))).toBe(true);
 
       console.log('OpenRouter - Minimal categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
-        assignments: result.suggestions.map(s => `${s.bookmarkId} → ${s.folderName}`)
+        assignments: result.suggestions.map((s) => `${s.bookmarkId} → ${s.folderName}`),
       });
     });
 
     testIf('should work with good categories', async () => {
       const llm = new LLMService(apiKey!, 'openrouter');
 
-      const result = await llm.assignToFolders(
-        sampleBookmarks,
-        goodCategories
-      );
+      const result = await llm.assignToFolders(sampleBookmarks, goodCategories);
 
       expect(result.suggestions).toHaveLength(sampleBookmarks.length);
-      expect(result.suggestions.every(s =>
-        goodCategories.includes(s.folderName)
-      )).toBe(true);
+      expect(result.suggestions.every((s) => goodCategories.includes(s.folderName))).toBe(true);
 
       console.log('OpenRouter - Good categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
-        distribution: goodCategories.map(cat => ({
+        distribution: goodCategories.map((cat) => ({
           category: cat,
-          count: result.suggestions.filter(s => s.folderName === cat).length
-        }))
+          count: result.suggestions.filter((s) => s.folderName === cat).length,
+        })),
       });
     });
   });
@@ -282,43 +242,33 @@ describeIfConfigured('LLM Provider Integration Tests', () => {
     testIf('should work with minimal categories', async () => {
       const llm = new LLMService(apiKey!, 'gemini');
 
-      const result = await llm.assignToFolders(
-        sampleBookmarks.slice(0, 5),
-        minimalCategories
-      );
+      const result = await llm.assignToFolders(sampleBookmarks.slice(0, 5), minimalCategories);
 
       expect(result.suggestions).toHaveLength(5);
-      expect(result.suggestions.every(s =>
-        minimalCategories.includes(s.folderName)
-      )).toBe(true);
+      expect(result.suggestions.every((s) => minimalCategories.includes(s.folderName))).toBe(true);
 
       console.log('Gemini - Minimal categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
-        assignments: result.suggestions.map(s => `${s.bookmarkId} → ${s.folderName}`)
+        assignments: result.suggestions.map((s) => `${s.bookmarkId} → ${s.folderName}`),
       });
     });
 
     testIf('should work with good categories', async () => {
       const llm = new LLMService(apiKey!, 'gemini');
 
-      const result = await llm.assignToFolders(
-        sampleBookmarks,
-        goodCategories
-      );
+      const result = await llm.assignToFolders(sampleBookmarks, goodCategories);
 
       expect(result.suggestions).toHaveLength(sampleBookmarks.length);
-      expect(result.suggestions.every(s =>
-        goodCategories.includes(s.folderName)
-      )).toBe(true);
+      expect(result.suggestions.every((s) => goodCategories.includes(s.folderName))).toBe(true);
 
       console.log('Gemini - Good categories result:', {
         suggestions: result.suggestions.length,
         tokens: result.tokenUsage,
-        distribution: goodCategories.map(cat => ({
+        distribution: goodCategories.map((cat) => ({
           category: cat,
-          count: result.suggestions.filter(s => s.folderName === cat).length
-        }))
+          count: result.suggestions.filter((s) => s.folderName === cat).length,
+        })),
       });
     });
   });
@@ -331,10 +281,7 @@ describeIfConfigured('LLM Provider Integration Tests', () => {
     testIf('should handle single bookmark with single category', async () => {
       const llm = new LLMService(apiKey!, provider);
 
-      const result = await llm.assignToFolders(
-        [sampleBookmarks[0]],
-        ['Technology']
-      );
+      const result = await llm.assignToFolders([sampleBookmarks[0]], ['Technology']);
 
       expect(result.suggestions).toHaveLength(1);
       expect(result.suggestions[0].folderName).toBe('Technology');
@@ -344,14 +291,11 @@ describeIfConfigured('LLM Provider Integration Tests', () => {
       const llm = new LLMService(apiKey!, provider);
       const techBookmarks = sampleBookmarks.slice(0, 5); // All tech-related
 
-      const result = await llm.assignToFolders(
-        techBookmarks,
-        ['Technology', 'Other']
-      );
+      const result = await llm.assignToFolders(techBookmarks, ['Technology', 'Other']);
 
       expect(result.suggestions).toHaveLength(5);
       // Most/all should go to Technology
-      const techCount = result.suggestions.filter(s => s.folderName === 'Technology').length;
+      const techCount = result.suggestions.filter((s) => s.folderName === 'Technology').length;
       expect(techCount).toBeGreaterThanOrEqual(4); // At least 4 out of 5
     });
   });
@@ -360,5 +304,7 @@ describeIfConfigured('LLM Provider Integration Tests', () => {
 // Helper to check if tests can run
 if (!hasAnyApiKey && process.env.npm_lifecycle_event === 'test:integration') {
   console.warn('\n⚠️  No API keys found in .env.local');
-  console.warn('Copy .env.local.example to .env.local and add your API keys to run integration tests.\n');
+  console.warn(
+    'Copy .env.local.example to .env.local and add your API keys to run integration tests.\n'
+  );
 }
