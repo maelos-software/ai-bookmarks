@@ -487,6 +487,13 @@ Think: "Can I use an existing folder?" FIRST, then "How can I create the FEWEST 
   ): Promise<OrganizationPlan> {
     logger.info('LLMService', `Assigning ${bookmarks.length} bookmarks to ${approvedFolders.length} approved folders`);
 
+    // Validate we have folders to work with
+    if (approvedFolders.length === 0) {
+      const error = 'No approved folders provided. Please configure categories in settings.';
+      logger.error('LLMService', error);
+      throw new Error(error);
+    }
+
     const bookmarkList = bookmarks.map((b, i) => {
       const domain = b.url ? new URL(b.url).hostname.replace('www.', '') : '';
       return `${i + 1}. ${b.title} [${domain}]`;
@@ -529,6 +536,14 @@ CRITICAL RULES:
 
         if (invalidFolders.length > 0) {
           logger.warn('LLMService', `LLM used unapproved folders:`, invalidFolders);
+
+          // Validate we have folders to fallback to
+          if (approvedFolders.length === 0) {
+            throw new Error(
+              'No approved folders available and LLM returned invalid folder names. Cannot organize bookmarks without valid categories.'
+            );
+          }
+
           // Map to closest approved folder or first one
           plan.suggestions.forEach(s => {
             if (!approvedFolders.includes(s.folderName)) {
