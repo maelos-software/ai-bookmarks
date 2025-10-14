@@ -3,9 +3,11 @@
 # Build and package Chrome extension for Web Store submission
 #
 # Usage:
-#   ./build-release-zip.sh [output-directory]
+#   ./build-release-zip.sh [output-path]
 #
-# If output-directory is not provided, uses current directory (pwd)
+# If output-path is not provided, generates filename automatically in current directory
+# If output-path is a directory, generates filename automatically in that directory
+# If output-path includes a filename, uses that exact filename
 #
 
 set -e  # Exit on error
@@ -36,16 +38,29 @@ echo -e "Version: ${YELLOW}${VERSION}${NC}"
 GIT_HASH=$(git rev-parse --short=8 HEAD 2>/dev/null || echo "00000000")
 echo -e "Git Hash: ${YELLOW}${GIT_HASH}${NC}"
 
-# Determine output directory
-OUTPUT_DIR="${1:-.}"
-if [ ! -d "$OUTPUT_DIR" ]; then
-    echo -e "${RED}Error: Output directory does not exist: ${OUTPUT_DIR}${NC}"
-    exit 1
-fi
+# Determine output path
+OUTPUT_ARG="${1:-.}"
 
-# Create filename
-ZIP_FILENAME="ai-bookmarks-${VERSION}-${GIT_HASH}.zip"
-ZIP_PATH="${OUTPUT_DIR}/${ZIP_FILENAME}"
+# Check if the argument is a directory or a file path
+if [ -d "$OUTPUT_ARG" ]; then
+    # It's a directory, generate filename
+    ZIP_FILENAME="ai-bookmarks-${VERSION}-${GIT_HASH}.zip"
+    ZIP_PATH="${OUTPUT_ARG}/${ZIP_FILENAME}"
+elif [ -z "$OUTPUT_ARG" ] || [ "$OUTPUT_ARG" = "." ]; then
+    # No argument or current directory
+    ZIP_FILENAME="ai-bookmarks-${VERSION}-${GIT_HASH}.zip"
+    ZIP_PATH="./${ZIP_FILENAME}"
+else
+    # It's a file path, use it directly
+    ZIP_PATH="$OUTPUT_ARG"
+    ZIP_FILENAME=$(basename "$ZIP_PATH")
+    OUTPUT_DIR=$(dirname "$ZIP_PATH")
+
+    # Create directory if it doesn't exist
+    if [ ! -d "$OUTPUT_DIR" ]; then
+        mkdir -p "$OUTPUT_DIR"
+    fi
+fi
 
 echo -e "Output: ${YELLOW}${ZIP_PATH}${NC}"
 echo ""

@@ -87,11 +87,6 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Build release package
-      run: |
-        chmod +x build-release-zip.sh
-        ./build-release-zip.sh .
-
     - name: Get version and filename
       id: version
       run: |
@@ -103,6 +98,11 @@ jobs:
         echo "filename=${FILENAME}" >> $GITHUB_OUTPUT
         echo "git_hash=${GIT_HASH}" >> $GITHUB_OUTPUT
         echo "timestamp=${TIMESTAMP}" >> $GITHUB_OUTPUT
+
+    - name: Build release package
+      run: |
+        chmod +x build-release-zip.sh
+        ./build-release-zip.sh "${{ steps.version.outputs.filename }}"
 
     - name: Update latest snapshot release
       uses: softprops/action-gh-release@v2
