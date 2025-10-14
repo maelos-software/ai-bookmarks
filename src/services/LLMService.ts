@@ -533,6 +533,14 @@ Think: "Can I use an existing folder?" FIRST, then "How can I create the FEWEST 
       `Assigning ${bookmarks.length} bookmarks to ${approvedFolders.length} approved folders (allowKeepCurrent: ${allowKeepCurrent})`
     );
 
+    // Validate we have folders to work with (unless we're allowing KEEP_CURRENT)
+    if (!allowKeepCurrent && approvedFolders.length === 0) {
+      const error =
+        'No approved folders provided. Please configure categories in settings or enable "Use Existing Folders" mode.';
+      logger.error('LLMService', error);
+      throw new Error(error);
+    }
+
     const bookmarkList = bookmarks
       .map((b, i) => {
         const domain = b.url ? new URL(b.url).hostname.replace('www.', '') : '';
@@ -611,6 +619,14 @@ CRITICAL RULES:
 
         if (invalidFolders.length > 0) {
           logger.warn('LLMService', `LLM used unapproved folders:`, invalidFolders);
+
+          // Validate we have folders to fallback to
+          if (!allowKeepCurrent && approvedFolders.length === 0) {
+            throw new Error(
+              'No approved folders available and LLM returned invalid folder names. Cannot organize bookmarks without valid categories.'
+            );
+          }
+
           // Map to closest approved folder or KEEP_CURRENT/first folder depending on mode
           plan.suggestions.forEach((s) => {
             const isValid = allowKeepCurrent
@@ -620,8 +636,11 @@ CRITICAL RULES:
             if (!isValid) {
               if (allowKeepCurrent) {
                 s.folderName = 'KEEP_CURRENT'; // Fallback to keeping current in lenient mode
-              } else {
+              } else if (approvedFolders.length > 0) {
                 s.folderName = approvedFolders[0]; // Fallback to first approved folder in strict mode
+              } else {
+                // This should never happen due to check above, but guard against it
+                throw new Error('No approved folders available for fallback');
               }
             }
           });

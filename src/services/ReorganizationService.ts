@@ -309,6 +309,17 @@ export class ReorganizationService {
         );
         progressCallback?.(0, bookmarks.length, 'Using configured categories...');
         approvedFolders = this.categories;
+
+        if (approvedFolders.length === 0) {
+          logger.error(
+            'ReorganizationService',
+            'No categories configured. Cannot organize bookmarks.'
+          );
+          throw new Error(
+            'No categories configured. Please configure bookmark categories in settings.'
+          );
+        }
+
         logger.info(
           'ReorganizationService',
           `Using ${approvedFolders.length} configured categories:`,
@@ -856,6 +867,20 @@ export class ReorganizationService {
         // Use configured categories
         logger.info('ReorganizationService', 'Step 2: Using configured categories');
         approvedFolders = this.categories;
+
+        if (approvedFolders.length === 0) {
+          logger.error(
+            'ReorganizationService',
+            'No categories configured. Cannot organize bookmarks.'
+          );
+          errors.push(
+            'No categories configured. Please add categories in the extension settings before organizing bookmarks.'
+          );
+          throw new Error(
+            'No categories configured. Please configure bookmark categories in settings.'
+          );
+        }
+
         logger.info(
           'ReorganizationService',
           `Using ${approvedFolders.length} configured categories`
