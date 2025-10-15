@@ -599,6 +599,11 @@ class BackgroundService {
         emptyFoldersRemoved: result.emptyFoldersRemoved,
         bookmarksSkipped: result.bookmarksSkipped,
         errors: result.errors,
+        moves: result.moves,
+        duplicates: result.duplicates,
+        folders: result.folders,
+        emptyFolders: result.emptyFolders,
+        tokenUsage: result.tokenUsage,
         timestamp: Date.now(),
       };
       return {
@@ -884,6 +889,11 @@ class BackgroundService {
         emptyFoldersRemoved: result.emptyFoldersRemoved,
         bookmarksSkipped: result.bookmarksSkipped,
         errors: result.errors,
+        moves: result.moves,
+        duplicates: result.duplicates,
+        folders: result.folders,
+        emptyFolders: result.emptyFolders,
+        tokenUsage: result.tokenUsage,
         timestamp: Date.now(),
       };
       return {

@@ -581,18 +581,8 @@ class FolderSelectorController {
         throw new Error(response?.error || 'Organization failed');
       }
 
-      // Store results and open results page (preserve success field from response)
-      await chrome.storage.local.set({
-        lastOrganizationResult: {
-          success: response.success, // Use the success from the response wrapper
-          ...response.result,
-        },
-      });
-
-      const resultsUrl = chrome.runtime.getURL('results.html');
-      await chrome.tabs.create({ url: resultsUrl });
-
-      // Close this window
+      // Background service has already stored results and opened results page
+      // Just close this window
       window.close();
     } catch (error) {
       console.error('Organization failed:', error);

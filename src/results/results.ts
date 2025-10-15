@@ -46,6 +46,7 @@ interface OrganizationResult {
     prompt: number;
     completion: number;
     total: number;
+    other?: number;
   };
 }
 
@@ -120,7 +121,7 @@ class ResultsController {
           this.showError();
         }
       } catch (error) {
-        console.error('Failed to load results:', error);
+        console.error('Failed to parse results:', error);
         this.showError();
       }
     }
@@ -254,7 +255,9 @@ class ResultsController {
     const container = document.getElementById('token-usage');
     if (!container) return;
 
-    const { prompt, completion, total } = this.result.tokenUsage;
+    const { prompt, completion, total, other } = this.result.tokenUsage;
+    const hasOther = other && other > 0;
+    const columns = hasOther ? 4 : 3;
 
     container.innerHTML = `
       <div style="padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white; margin-bottom: 24px;">
@@ -262,7 +265,7 @@ class ResultsController {
           <span style="font-size: 20px;">🎯</span>
           <h3 style="margin: 0; font-size: 16px;">Token Usage</h3>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(${columns}, 1fr); gap: 16px;">
           <div style="text-align: center;">
             <div style="font-size: 24px; font-weight: bold;">${prompt.toLocaleString()}</div>
             <div style="font-size: 12px; opacity: 0.9;">Input Tokens</div>
@@ -271,6 +274,18 @@ class ResultsController {
             <div style="font-size: 24px; font-weight: bold;">${completion.toLocaleString()}</div>
             <div style="font-size: 12px; opacity: 0.9;">Output Tokens</div>
           </div>
+          ${
+            hasOther
+              ? `
+          <div style="text-align: center;">
+            <div style="font-size: 24px; font-weight: bold;">${other.toLocaleString()}</div>
+            <div style="font-size: 12px; opacity: 0.9;">
+              <span style="cursor: help;" title="Internal reasoning and processing tokens used by the AI model (e.g., Gemini's thinking process)">Other Tokens</span>
+            </div>
+          </div>
+          `
+              : ''
+          }
           <div style="text-align: center;">
             <div style="font-size: 24px; font-weight: bold;">${total.toLocaleString()}</div>
             <div style="font-size: 12px; opacity: 0.9;">Total Tokens</div>

@@ -418,10 +418,12 @@ export class ReorganizationService {
       }
 
       // Aggregate token usage across all batches
+      const otherTokens = allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.other || 0), 0);
       const totalTokens = {
         prompt: allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.prompt || 0), 0),
         completion: allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.completion || 0), 0),
         total: allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.total || 0), 0),
+        other: otherTokens > 0 ? otherTokens : undefined,
       };
       logger.info(
         'ReorganizationService',
@@ -1100,10 +1102,12 @@ export class ReorganizationService {
       }
 
       // Aggregate token usage
+      const otherTokens = allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.other || 0), 0);
       const totalTokens = {
         prompt: allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.prompt || 0), 0),
         completion: allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.completion || 0), 0),
         total: allPlans.reduce((sum, plan) => sum + (plan.tokenUsage?.total || 0), 0),
+        other: otherTokens > 0 ? otherTokens : undefined,
       };
 
       const result: OrganizationResult = {

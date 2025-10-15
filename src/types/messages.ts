@@ -144,6 +144,32 @@ export interface ReorganizationResult {
   emptyFoldersRemoved: number;
   bookmarksSkipped: number;
   errors: string[];
+  moves?: Array<{
+    bookmarkId: string;
+    title: string;
+    url: string;
+    fromFolder: string;
+    toFolder: string;
+  }>;
+  duplicates?: Array<{
+    title: string;
+    url: string;
+    bookmarkId: string;
+  }>;
+  folders?: Array<{
+    name: string;
+    id: string;
+  }>;
+  emptyFolders?: Array<{
+    name: string;
+    id: string;
+  }>;
+  tokenUsage?: {
+    prompt: number;
+    completion: number;
+    total: number;
+    other?: number;
+  };
   timestamp: number;
   organizationMode?: 'create' | 'existing';
 }

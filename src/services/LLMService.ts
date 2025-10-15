@@ -27,6 +27,7 @@ export interface OrganizationPlan {
     prompt: number;
     completion: number;
     total: number;
+    other?: number; // For reasoning/thoughts tokens (Gemini) or other provider-specific tokens
   };
 }
 
@@ -941,15 +942,23 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
         logger.trace('LLMService', 'Response data', data);
 
         let content: string;
-        let usage: { prompt: number; completion: number; total: number };
+        let usage: { prompt: number; completion: number; total: number; other?: number };
 
         if (this.provider === 'gemini') {
           // Gemini uses a different response format
           content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+          // Log raw usage object to see all fields
+          if (data.usageMetadata) {
+            logger.debug('LLMService', 'Raw token usage from Gemini API:', data.usageMetadata);
+          }
+
+          const thoughtsTokens = data.usageMetadata?.thoughtsTokenCount || 0;
           usage = {
             prompt: data.usageMetadata?.promptTokenCount || 0,
             completion: data.usageMetadata?.candidatesTokenCount || 0,
             total: data.usageMetadata?.totalTokenCount || 0,
+            other: thoughtsTokens > 0 ? thoughtsTokens : undefined,
           };
         } else if (this.provider === 'claude') {
           content = data.content[0].text;
@@ -962,6 +971,12 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
         } else {
           // OpenAI, Grok, OpenRouter use same format
           content = data.choices[0].message.content;
+
+          // Log raw usage object to see all fields
+          if (data.usage) {
+            logger.debug('LLMService', 'Raw token usage from API:', data.usage);
+          }
+
           usage = {
             prompt: data.usage?.prompt_tokens || 0,
             completion: data.usage?.completion_tokens || 0,
