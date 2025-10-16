@@ -517,6 +517,69 @@
                 width: 100%;
             }
         }
+
+        /* Progress Modal */
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .progress-overlay.active {
+            display: flex;
+        }
+
+        .progress-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .progress-spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 30px;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .progress-message {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 10px;
+            min-height: 24px;
+        }
+
+        .progress-count {
+            font-size: 0.9em;
+            color: #999;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -609,6 +672,16 @@
                 <button id="confirm-cancel-btn" class="btn btn-secondary">Cancel</button>
                 <button id="confirm-proceed-btn" class="btn btn-danger">Proceed</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Progress Modal -->
+    <div id="progress-overlay" class="progress-overlay">
+        <div class="progress-modal">
+            <div class="progress-spinner"></div>
+            <div class="progress-title">Organizing Bookmarks</div>
+            <div id="progress-message" class="progress-message">Initializing...</div>
+            <div id="progress-count" class="progress-count">0 of 0 items</div>
         </div>
     </div>
 

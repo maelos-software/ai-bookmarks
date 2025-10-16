@@ -7,6 +7,7 @@
  */
 
 import type { BookmarkTreeNode } from '../services/BookmarkManager.js';
+import { ProgressMonitor } from '../shared/ProgressMonitor.js';
 
 interface FolderSelectionState {
   selectedFolderIds: Set<string>;
@@ -37,8 +38,10 @@ class FolderSelectorController {
   private confirmBookmarkCount: HTMLElement;
   private settingsBtn: HTMLButtonElement;
   private quickSettingsBtns: NodeListOf<HTMLButtonElement>;
+  private progressOverlay: HTMLElement;
 
   private isOrganizeAll: boolean = false;
+  private progressMonitor: ProgressMonitor;
 
   private state: FolderSelectionState = {
     selectedFolderIds: new Set(),
@@ -74,6 +77,19 @@ class FolderSelectorController {
     this.quickSettingsBtns = document.querySelectorAll(
       '.toggle-btn'
     ) as NodeListOf<HTMLButtonElement>;
+    this.progressOverlay = document.getElementById('progress-overlay') as HTMLElement;
+
+    // Initialize progress monitor
+    this.progressMonitor = new ProgressMonitor({
+      activityIndicatorSelector: '#progress-overlay',
+      activityMessageSelector: '#progress-message',
+      activityCountSelector: '#progress-count',
+      onReorganizationComplete: () => {
+        // Results page will be opened by background service
+        // Just close this window after a short delay
+        setTimeout(() => window.close(), 500);
+      },
+    });
 
     this.setupEventListeners();
     this.loadQuickSettings();
@@ -558,7 +574,9 @@ class FolderSelectorController {
 
     this.organizeBtn.disabled = true;
     this.organizeAllBtn.disabled = true;
-    this.showStatus('Starting organization...', 'info');
+
+    // Start progress monitoring
+    await this.progressMonitor.startMonitoring();
 
     try {
       let response;
@@ -581,11 +599,10 @@ class FolderSelectorController {
         throw new Error(response?.error || 'Organization failed');
       }
 
-      // Background service has already stored results and opened results page
-      // Just close this window
-      window.close();
+      // Progress monitor will handle closing the window when complete
     } catch (error) {
       console.error('Organization failed:', error);
+      this.progressMonitor.stopMonitoring();
       this.showStatus(`Error: ${error}`, 'error');
       this.organizeBtn.disabled = false;
       this.organizeAllBtn.disabled = false;

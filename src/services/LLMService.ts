@@ -681,18 +681,31 @@ CRITICAL RULES:
       } catch (error: unknown) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
+        // Check if this is a retryable error
         const isRateLimit =
           (error as { statusCode?: number }).statusCode === 429 ||
           (error instanceof Error && error.message.toLowerCase().includes('rate limit'));
 
-        if (!isRateLimit || attempt === maxRetries) {
+        // JSON parse errors are often transient (incomplete response, timeout, etc.)
+        const isParseError =
+          error instanceof Error &&
+          (error.message.includes('Failed to parse LLM response') ||
+            error.message.includes('Unexpected end of JSON input') ||
+            error.message.includes('Unexpected token') ||
+            error.message.includes('JSON'));
+
+        const isRetryable = isRateLimit || isParseError;
+
+        // Don't retry if we've exhausted attempts or it's a non-retryable error
+        if (!isRetryable || attempt === maxRetries) {
           throw lastError;
         }
 
-        const backoffSeconds = Math.min(Math.pow(2, attempt) * 5, 60);
+        const backoffSeconds = Math.min(Math.pow(2, attempt) * 2, 30); // Faster backoff for parse errors
         logger.warn(
           'LLMService',
-          `Rate limit hit (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${backoffSeconds}s...`
+          `${isRateLimit ? 'Rate limit' : 'Transient error'} detected (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${backoffSeconds}s...`,
+          { error: lastError.message }
         );
         await new Promise((resolve) => setTimeout(resolve, backoffSeconds * 1000));
       }

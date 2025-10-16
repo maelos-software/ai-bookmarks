@@ -7,6 +7,7 @@
  */
 
 import { logger } from '../services/Logger.js';
+import { ProgressMonitor } from '../shared/ProgressMonitor.js';
 
 interface ActivityLogEntry {
   type: 'auto-organize' | 'bulk-reorganize';
@@ -41,6 +42,7 @@ class PopupController {
   private clearActivityBtn: HTMLButtonElement;
   private autoOrganizeToggle: HTMLButtonElement;
   private toggleStatus: HTMLElement;
+  private progressMonitor: ProgressMonitor;
 
   constructor() {
     logger.info('PopupController', 'Initializing popup');
@@ -66,41 +68,30 @@ class PopupController {
       chrome.runtime.openOptionsPage();
     });
 
-    // Listen for progress updates
-    chrome.runtime.onMessage.addListener((message) => {
-      if (message.type === 'PROGRESS_UPDATE') {
-        logger.debug('PopupController', 'Progress update', message);
-        this.updateProgress(message.current, message.total, message.message);
-      }
+    // Initialize progress monitor
+    this.progressMonitor = new ProgressMonitor({
+      activityIndicatorSelector: '#activity-indicator',
+      activityMessageSelector: '#activity-message',
+      activityCountSelector: '#activity-count',
+      onReorganizationStart: () => {
+        this.showStatus('🔄 Organizing...', 'active');
+        this.organizeBtn.disabled = true;
+      },
+      onReorganizationComplete: () => {
+        this.clearStatusCache();
+        this.checkConfiguration();
+      },
     });
 
     logger.info('PopupController', 'Popup initialized, checking configuration');
     this.checkConfiguration();
     this.loadRecentActivity();
     this.loadAutoOrganizeState();
+
+    // Restore monitoring state if reorganization is in progress
+    this.progressMonitor.restoreMonitoringState();
   }
 
-  private async checkReorganizationStatus(): Promise<boolean> {
-    try {
-      const response = await chrome.runtime.sendMessage({ type: 'GET_REORGANIZATION_STATUS' });
-      if (response && response.isReorganizing && response.progress) {
-        logger.info('PopupController', 'Reorganization in progress, restoring state');
-        this.showStatus('🔄 Organizing...', 'active');
-        this.showActivity(true);
-        this.updateProgress(
-          response.progress.current,
-          response.progress.total,
-          response.progress.message
-        );
-        this.organizeBtn.disabled = true;
-        return true;
-      }
-      return false;
-    } catch (error) {
-      logger.warn('PopupController', 'Failed to check reorganization status', error);
-      return false;
-    }
-  }
 
   private async getStatusCache(): Promise<StatusCache | null> {
     try {
@@ -144,9 +135,8 @@ class PopupController {
 
   private async checkConfiguration() {
     try {
-      // Check if already reorganizing
-      const isReorganizing = await this.checkReorganizationStatus();
-      if (isReorganizing) {
+      // Check if already reorganizing (handled by progress monitor)
+      if (this.progressMonitor.isActive()) {
         logger.info('PopupController', 'Reorganization in progress, skipping connection check');
         return;
       }
@@ -252,19 +242,6 @@ class PopupController {
     const selectorUrl = chrome.runtime.getURL('folder-selector.html');
     await chrome.tabs.create({ url: selectorUrl });
     window.close();
-  }
-
-  private updateProgress(current: number, total: number, message: string) {
-    this.activityMessage.textContent = message;
-    this.activityCount.textContent = `${current} of ${total} items`;
-  }
-
-  private showActivity(show: boolean) {
-    if (show) {
-      this.activityIndicator.classList.add('active');
-    } else {
-      this.activityIndicator.classList.remove('active');
-    }
   }
 
   private showStatus(message: string, type: 'ready' | 'active' | 'warning' | 'error') {
