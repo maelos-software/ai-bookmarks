@@ -79,10 +79,16 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 20px;
             padding: 40px;
             background: #f8f9fa;
+        }
+
+        @media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         @media (max-width: 1200px) {
@@ -421,7 +427,11 @@
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="stat-moved">0</div>
-                <div class="stat-label">Bookmarks Organized</div>
+                <div class="stat-label">Bookmarks Moved</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-already-organized">0</div>
+                <div class="stat-label">Already Organized</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="stat-folders">0</div>
@@ -457,7 +467,7 @@
 
         <div class="content-section" id="moves-section" style="display: none;">
             <h2 class="section-title section-toggle" data-target="moves-content">
-                <span>Bookmarks Organized <span class="count-badge" id="moves-count">0</span></span>
+                <span>Bookmarks Moved <span class="count-badge" id="moves-count">0</span></span>
             </h2>
             <div class="details-content" id="moves-content">
                 <!-- Moves table will be inserted here -->

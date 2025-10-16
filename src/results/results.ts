@@ -37,6 +37,7 @@ interface OrganizationResult {
   duplicatesRemoved: number;
   emptyFoldersRemoved: number;
   bookmarksSkipped: number;
+  bookmarksAlreadyOrganized: number;
   errors: string[];
   moves: BookmarkMove[];
   duplicates: DuplicateRemoved[];
@@ -183,6 +184,7 @@ class ResultsController {
     // Update stats
     this.updateStat('stat-duplicates', this.result.duplicatesRemoved);
     this.updateStat('stat-moved', this.result.bookmarksMoved);
+    this.updateStat('stat-already-organized', this.result.bookmarksAlreadyOrganized || 0);
     this.updateStat('stat-folders', this.result.foldersCreated);
     this.updateStat('stat-empty', this.result.emptyFoldersRemoved);
     this.updateStat('stat-skipped', this.result.bookmarksSkipped);
@@ -355,7 +357,7 @@ class ResultsController {
 
     if (this.result.bookmarksMoved > 0) {
       steps.push({
-        title: 'Organized Bookmarks',
+        title: 'Moved Bookmarks',
         description: `Moved ${this.result.bookmarksMoved} bookmark${this.result.bookmarksMoved === 1 ? '' : 's'} into appropriate folders based on their content.`,
       });
     }
@@ -379,14 +381,24 @@ class ResultsController {
       this.result.bookmarksMoved === 0 &&
       this.result.foldersCreated === 0 &&
       this.result.duplicatesRemoved === 0 &&
-      this.result.emptyFoldersRemoved === 0 &&
-      this.result.bookmarksSkipped > 0;
+      this.result.emptyFoldersRemoved === 0;
+
+    let completionMessage: string;
+    if (nothingDone) {
+      if (this.result.bookmarksSkipped > 0) {
+        completionMessage =
+          'Your bookmarks are already well organized! To reorganize them, visit settings and disable "Remember previous organization", or click "Clear Organization History".';
+      } else {
+        completionMessage =
+          'All bookmarks are already in appropriate folders - no changes needed! Your bookmarks are well organized.';
+      }
+    } else {
+      completionMessage = 'Your bookmarks are now organized and ready to use.';
+    }
 
     steps.push({
       title: 'Complete!',
-      description: nothingDone
-        ? 'Your bookmarks are already well organized! To reorganize them, visit settings and disable "Remember previous organization", or click "Clear Organization History".'
-        : 'Your bookmarks are now organized and ready to use.',
+      description: completionMessage,
     });
 
     timeline.innerHTML = steps

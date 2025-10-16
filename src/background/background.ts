@@ -598,6 +598,7 @@ class BackgroundService {
         duplicatesRemoved: result.duplicatesRemoved,
         emptyFoldersRemoved: result.emptyFoldersRemoved,
         bookmarksSkipped: result.bookmarksSkipped,
+        bookmarksAlreadyOrganized: result.bookmarksAlreadyOrganized,
         errors: result.errors,
         moves: result.moves,
         duplicates: result.duplicates,
@@ -872,6 +873,7 @@ class BackgroundService {
           duplicatesRemoved: result.duplicatesRemoved,
           emptyFoldersRemoved: result.emptyFoldersRemoved,
           bookmarksSkipped: result.bookmarksSkipped,
+          bookmarksAlreadyOrganized: result.bookmarksAlreadyOrganized,
           errors: result.errors,
           moves: result.moves,
           duplicates: result.duplicates,
@@ -881,6 +883,10 @@ class BackgroundService {
         },
       });
 
+      // Open results page automatically
+      const resultsUrl = chrome.runtime.getURL('results.html');
+      await chrome.tabs.create({ url: resultsUrl });
+
       logger.info('BackgroundService', 'Returning success result to caller');
       const resultWithTimestamp: ReorganizationResult = {
         bookmarksMoved: result.bookmarksMoved,
@@ -888,6 +894,7 @@ class BackgroundService {
         duplicatesRemoved: result.duplicatesRemoved,
         emptyFoldersRemoved: result.emptyFoldersRemoved,
         bookmarksSkipped: result.bookmarksSkipped,
+        bookmarksAlreadyOrganized: result.bookmarksAlreadyOrganized,
         errors: result.errors,
         moves: result.moves,
         duplicates: result.duplicates,
@@ -927,6 +934,10 @@ class BackgroundService {
           emptyFolders: [],
         },
       });
+
+      // Open results page to show error
+      const resultsUrl = chrome.runtime.getURL('results.html');
+      await chrome.tabs.create({ url: resultsUrl });
 
       return { success: false, error: String(error) };
     }

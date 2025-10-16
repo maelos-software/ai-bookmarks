@@ -54,6 +54,7 @@ class OptionsController {
   private geminiSetupSection: HTMLElement;
   private geminiGetKeyBtn: HTMLButtonElement;
   private unsavedChangesBanner: HTMLElement;
+  private bannerSaveBtn: HTMLButtonElement;
   private hasUnsavedChanges: boolean = false;
 
   constructor() {
@@ -106,6 +107,7 @@ class OptionsController {
     this.geminiSetupSection = document.getElementById('gemini-setup-section') as HTMLElement;
     this.geminiGetKeyBtn = document.getElementById('gemini-get-key-btn') as HTMLButtonElement;
     this.unsavedChangesBanner = document.getElementById('unsaved-changes-banner') as HTMLElement;
+    this.bannerSaveBtn = document.getElementById('banner-save-btn') as HTMLButtonElement;
 
     this.authService = new OpenRouterAuthService();
 
@@ -140,6 +142,10 @@ class OptionsController {
 
     this.geminiGetKeyBtn.addEventListener('click', () => {
       window.open('https://aistudio.google.com/apikey', '_blank');
+    });
+
+    this.bannerSaveBtn.addEventListener('click', () => {
+      this.handleSave();
     });
 
     // Setup collapsible Advanced Settings

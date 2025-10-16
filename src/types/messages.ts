@@ -143,6 +143,7 @@ export interface ReorganizationResult {
   duplicatesRemoved: number;
   emptyFoldersRemoved: number;
   bookmarksSkipped: number;
+  bookmarksAlreadyOrganized: number;
   errors: string[];
   moves?: Array<{
     bookmarkId: string;

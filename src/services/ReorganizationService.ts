@@ -48,6 +48,7 @@ export interface OrganizationResult {
   duplicatesRemoved: number;
   emptyFoldersRemoved: number;
   bookmarksSkipped: number; // bookmarks skipped due to organization history
+  bookmarksAlreadyOrganized: number; // bookmarks that were analyzed and found to be in the right place
   errors: string[];
   // Detailed tracking
   moves: BookmarkMove[];
@@ -148,6 +149,7 @@ export class ReorganizationService {
     let duplicatesRemoved = 0;
     let emptyFoldersRemoved = 0;
     let bookmarksSkipped = 0;
+    let bookmarksAlreadyOrganized = 0; // Bookmarks that were analyzed and found to be in the right place
     const createdFolders = new Set<string>();
 
     // Detailed tracking arrays
@@ -195,6 +197,7 @@ export class ReorganizationService {
           duplicatesRemoved,
           emptyFoldersRemoved: 0,
           bookmarksSkipped,
+          bookmarksAlreadyOrganized: 0,
           errors: [],
           moves: [],
           duplicates,
@@ -409,6 +412,7 @@ export class ReorganizationService {
           duplicatesRemoved,
           emptyFoldersRemoved: 0,
           bookmarksSkipped,
+          bookmarksAlreadyOrganized: 0,
           errors,
           moves: [],
           duplicates,
@@ -529,6 +533,12 @@ export class ReorganizationService {
                 'ReorganizationService',
                 `Keeping bookmark "${bookmark.title}" in current location`
               );
+              // Still mark as organized so we don't re-analyze it next time
+              const currentFolderName = bookmark.parentId
+                ? folderNamesMap.get(bookmark.parentId) || 'Unknown'
+                : 'Root';
+              await this.configManager.markBookmarkAsOrganized(bookmark.id, currentFolderName);
+              bookmarksAlreadyOrganized++;
               continue;
             }
 
@@ -541,6 +551,21 @@ export class ReorganizationService {
               folderIdMap.get(suggestion.folderName) ||
               (await this.bookmarkManager.findFolderByName(suggestion.folderName)) ||
               (await this.bookmarkManager.ensureFolder(suggestion.folderName));
+
+            // Check if bookmark is already in the target folder
+            if (bookmark.parentId === folderId) {
+              logger.debug(
+                'ReorganizationService',
+                `Bookmark "${bookmark.title}" already in folder ${suggestion.folderName}, marking as organized`
+              );
+              // Don't move, just mark as organized
+              await this.configManager.markBookmarkAsOrganized(
+                suggestion.bookmarkId,
+                suggestion.folderName
+              );
+              bookmarksAlreadyOrganized++;
+              continue;
+            }
 
             logger.trace(
               'ReorganizationService',
@@ -615,6 +640,7 @@ export class ReorganizationService {
         duplicatesRemoved,
         emptyFoldersRemoved,
         bookmarksSkipped,
+        bookmarksAlreadyOrganized,
         errors,
         moves,
         duplicates,
@@ -632,6 +658,7 @@ export class ReorganizationService {
         success: false,
         bookmarksMoved,
         bookmarksSkipped,
+        bookmarksAlreadyOrganized,
         foldersCreated: createdFolders.size,
         duplicatesRemoved,
         emptyFoldersRemoved,
@@ -728,6 +755,7 @@ export class ReorganizationService {
     const duplicatesRemoved = 0; // Duplicates not removed in specific folder mode
     let emptyFoldersRemoved = 0;
     let bookmarksSkipped = 0;
+    let bookmarksAlreadyOrganized = 0; // Bookmarks that were analyzed and found to be in the right place
     const createdFolders = new Set<string>();
 
     // Detailed tracking arrays
@@ -756,6 +784,7 @@ export class ReorganizationService {
           duplicatesRemoved: 0,
           emptyFoldersRemoved: 0,
           bookmarksSkipped: 0,
+          bookmarksAlreadyOrganized: 0,
           errors: [],
           moves: [],
           duplicates: [],
@@ -808,6 +837,7 @@ export class ReorganizationService {
           duplicatesRemoved: 0,
           emptyFoldersRemoved: 0,
           bookmarksSkipped,
+          bookmarksAlreadyOrganized: 0,
           errors: [],
           moves: [],
           duplicates: [],
@@ -946,6 +976,7 @@ export class ReorganizationService {
           duplicatesRemoved: 0,
           emptyFoldersRemoved: 0,
           bookmarksSkipped,
+          bookmarksAlreadyOrganized: 0,
           errors,
           moves: [],
           duplicates: [],
@@ -1025,6 +1056,12 @@ export class ReorganizationService {
               'ReorganizationService',
               `Keeping bookmark "${bookmark.title}" in current location`
             );
+            // Still mark as organized so we don't re-analyze it next time
+            const originalParentId = bookmark.parentId || 'unknown';
+            const originalFolder = existingFolders.find((f) => f.id === originalParentId);
+            const currentFolderName = originalFolder?.title || 'Unknown';
+            await this.configManager.markBookmarkAsOrganized(bookmark.id, currentFolderName);
+            bookmarksAlreadyOrganized++;
             continue;
           }
 
@@ -1044,6 +1081,18 @@ export class ReorganizationService {
             const originalParentId = bookmark.parentId || 'unknown';
             const originalFolder = existingFolders.find((f) => f.id === originalParentId);
             const fromFolderName = originalFolder?.title || 'Unknown';
+
+            // Check if bookmark is already in the target folder
+            if (originalParentId === folderId) {
+              logger.debug(
+                'ReorganizationService',
+                `Bookmark "${bookmark.title}" already in folder ${suggestion.folderName}, marking as organized`
+              );
+              // Don't move, just mark as organized
+              await this.configManager.markBookmarkAsOrganized(bookmark.id, suggestion.folderName);
+              bookmarksAlreadyOrganized++;
+              continue;
+            }
 
             await this.bookmarkManager.moveBookmark(bookmark.id, folderId);
             bookmarksMoved++;
@@ -1117,6 +1166,7 @@ export class ReorganizationService {
         duplicatesRemoved: 0,
         emptyFoldersRemoved,
         bookmarksSkipped,
+        bookmarksAlreadyOrganized,
         errors,
         moves,
         duplicates: [],
@@ -1138,6 +1188,7 @@ export class ReorganizationService {
         success: false,
         bookmarksMoved,
         bookmarksSkipped,
+        bookmarksAlreadyOrganized,
         foldersCreated: createdFolders.size,
         duplicatesRemoved,
         emptyFoldersRemoved,

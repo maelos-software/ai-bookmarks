@@ -262,10 +262,43 @@
             z-index: 1000;
             display: none;
             animation: slideDown 0.3s ease-out;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .unsaved-changes-banner .banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .unsaved-changes-banner .banner-save-btn {
+            background: white;
+            color: #f57c00;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .unsaved-changes-banner .banner-save-btn:hover {
+            background: #fff3e0;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .unsaved-changes-banner .banner-save-btn:active {
+            transform: translateY(0);
         }
 
         .unsaved-changes-banner.visible {
-            display: block;
+            display: flex;
         }
 
         @keyframes slideDown {
@@ -457,8 +490,11 @@
 <body>
     <!-- Unsaved Changes Banner -->
     <div id="unsaved-changes-banner" class="unsaved-changes-banner">
-        <span class="icon">⚠️</span>
-        <span>You have unsaved changes. Click "Save Settings" to apply your changes.</span>
+        <div class="banner-content">
+            <span class="icon">⚠️</span>
+            <span>You have unsaved changes.</span>
+            <button id="banner-save-btn" class="banner-save-btn">💾 Save Settings</button>
+        </div>
     </div>
 
     <div class="container">
