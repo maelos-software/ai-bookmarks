@@ -940,10 +940,6 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
 
         if (!response.ok) {
           const errorBody = await response.text();
-          logger.error('LLMService', `API error: ${response.status}`, {
-            error: errorBody,
-            endpoint,
-          });
 
           // Parse common error scenarios with user-friendly messages
           let userMessage = `API Error (${response.status})`;
@@ -977,6 +973,20 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
             } catch {
               userMessage = `Bad request (400): ${errorBody}`;
             }
+          }
+
+          // Log as WARN for retryable errors (will retry), ERROR for permanent failures
+          const isRetryable = response.status === 429 || response.status >= 500;
+          if (isRetryable) {
+            logger.warn('LLMService', `API error (will retry): ${response.status}`, {
+              error: errorBody,
+              endpoint,
+            });
+          } else {
+            logger.error('LLMService', `API error: ${response.status}`, {
+              error: errorBody,
+              endpoint,
+            });
           }
 
           const error = new Error(userMessage) as Error & {
@@ -1292,7 +1302,6 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
 
         if (!response.ok) {
           const errorText = await response.text();
-          logger.error('LLMService', `Test failed: ${response.status}`, { errorText });
 
           // Parse error message
           let errorMessage = `API error (${response.status})`;
@@ -1318,11 +1327,19 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
             errorMessage = 'Access denied - check your API key permissions';
           }
 
+          // Log as WARN for retryable errors, ERROR for permanent failures
+          const isRetryable = response.status >= 500 || response.status === 429;
+          if (isRetryable) {
+            logger.warn('LLMService', `Test failed (will retry): ${response.status}`, { errorText });
+          } else {
+            logger.error('LLMService', `Test failed: ${response.status}`, { errorText });
+          }
+
           // Throw error for retryable status codes (5xx, 429), return for others
           const error = new Error(errorMessage) as Error & { statusCode?: number };
           error.statusCode = response.status;
 
-          if (response.status >= 500 || response.status === 429) {
+          if (isRetryable) {
             // Retryable error - throw it
             throw error;
           }
@@ -1496,7 +1513,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
             };
           }
         } catch (parseError) {
-          logger.error('LLMService', 'Test response not valid JSON', {
+          logger.warn('LLMService', 'Test response not valid JSON', {
             error: parseError,
             contentLength: content.length,
             contentPreview: content.substring(0, 500),
@@ -1652,7 +1669,7 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
       );
       return plan;
     } catch (error) {
-      logger.error('LLMService', 'CRITICAL: Failed to parse LLM response', {
+      logger.warn('LLMService', 'Failed to parse LLM response (may retry)', {
         error,
         response: response.substring(0, 1000),
         fullResponseLength: response.length,

@@ -437,9 +437,14 @@ export class ReorganizationService {
       logger.info('ReorganizationService', 'Step 5: Collecting folders that need to be created');
 
       // Get unique folder names that bookmarks were actually assigned to
+      // Exclude KEEP_CURRENT since that's not a real folder
       const foldersWithBookmarks = new Set<string>();
       allPlans.forEach((plan) => {
-        plan.suggestions.forEach((s) => foldersWithBookmarks.add(s.folderName));
+        plan.suggestions.forEach((s) => {
+          if (s.folderName !== 'KEEP_CURRENT') {
+            foldersWithBookmarks.add(s.folderName);
+          }
+        });
       });
 
       // Only create folders that have bookmarks AND don't exist yet
@@ -524,7 +529,12 @@ export class ReorganizationService {
         for (const suggestion of plan.suggestions) {
           try {
             const bookmark = bookmarkMap.get(suggestion.bookmarkId);
-            if (!bookmark) continue;
+            if (!bookmark) {
+              const errorMsg = `Bookmark ${suggestion.bookmarkId} not found in map (LLM returned ID that doesn't exist in our bookmark list)`;
+              errors.push(errorMsg);
+              logger.error('ReorganizationService', errorMsg);
+              continue;
+            }
 
             // Skip bookmarks that should stay in their current location
             if (suggestion.folderName === 'KEEP_CURRENT') {
@@ -604,6 +614,8 @@ export class ReorganizationService {
             const errorMsg = `Failed to move bookmark ${suggestion.bookmarkId}: ${error}`;
             errors.push(errorMsg);
             logger.error('ReorganizationService', errorMsg, error);
+            // Count as skipped since we couldn't process it
+            bookmarksSkipped++;
           }
         }
       }
