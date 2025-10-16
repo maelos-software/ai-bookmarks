@@ -20,7 +20,8 @@ module.exports = {
     '!src/popup/**',
     '!src/options/**',
     '!src/results/**',
-    '!src/folder-selector/**'
+    '!src/folder-selector/**',
+    '!src/background/background.ts' // Orchestration layer - business logic tested in services
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],

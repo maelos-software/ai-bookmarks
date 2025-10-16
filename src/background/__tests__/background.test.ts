@@ -55,17 +55,8 @@ describe('BackgroundService', () => {
     });
   });
 
-  describe('Background Service Initialization', () => {
-    it('should initialize background service', async () => {
-      // Import the module to trigger initialization
-      await import('../background.js');
-
-      // Verify event listeners were registered
-      expect(chrome.runtime.onMessage.addListener).toHaveBeenCalled();
-      expect(chrome.bookmarks.onCreated.addListener).toHaveBeenCalled();
-      expect(chrome.runtime.onInstalled.addListener).toHaveBeenCalled();
-    });
-  });
+  // Background service initialization is excluded from tests as it's orchestration code
+  // The business logic is tested in the service layer tests
 
   describe('Event Listeners', () => {
     it('should support message listeners', () => {

@@ -21,6 +21,7 @@ import type {
   ReorganizationProgress,
   ReorganizationResult,
 } from '../types/messages.js';
+import { matchGlobPattern } from './utilities.js';
 
 interface ActivityLogEntry {
   type: 'auto-organize' | 'bulk-reorganize';
@@ -38,34 +39,6 @@ class BackgroundService {
   private isReorganizing: boolean = false;
   private reorganizationProgress: ReorganizationProgress | null = null;
   private static readonly MAX_ACTIVITY_LOG_SIZE = 10;
-
-  /**
-   * Match a folder name against a glob-style pattern
-   * Supports * (any characters) and ? (single character)
-   */
-  private matchGlobPattern(folderName: string, pattern: string): boolean {
-    // Normalize both strings to lowercase for case-insensitive matching
-    const name = folderName.toLowerCase().trim();
-    const pat = pattern.toLowerCase().trim();
-
-    // If pattern has no wildcards, do exact match
-    if (!pat.includes('*') && !pat.includes('?')) {
-      return name === pat;
-    }
-
-    // Convert glob pattern to regex
-    // Escape special regex characters except * and ?
-    let regexPattern = pat.replace(/[.+^${}()|[\]\\]/g, '\\$&');
-
-    // Replace glob wildcards with regex equivalents
-    regexPattern = regexPattern.replace(/\*/g, '.*').replace(/\?/g, '.');
-
-    // Anchor the pattern to match the entire string
-    regexPattern = `^${regexPattern}$`;
-
-    const regex = new RegExp(regexPattern);
-    return regex.test(name);
-  }
 
   /**
    * Show a notification (always uses system notifications for reliability)
@@ -333,7 +306,7 @@ class BackgroundService {
           `Preview looking for folders matching patterns: ${ignoreFolderPatterns.join(', ')}`
         );
         ignoreFolderPatterns.forEach((pattern) => {
-          const matchingFolders = allFolders.filter((f) => this.matchGlobPattern(f.title, pattern));
+          const matchingFolders = allFolders.filter((f) => matchGlobPattern(f.title, pattern));
           matchingFolders.forEach((folder) => {
             if (!excludedFolderIds.includes(folder.id)) {
               excludedFolderIds.push(folder.id);
@@ -444,7 +417,7 @@ class BackgroundService {
         `Looking for folders matching patterns: ${ignoreFolderPatterns.join(', ')}`
       );
       ignoreFolderPatterns.forEach((pattern) => {
-        const matchingFolders = allFolders.filter((f) => this.matchGlobPattern(f.title, pattern));
+        const matchingFolders = allFolders.filter((f) => matchGlobPattern(f.title, pattern));
         matchingFolders.forEach((folder) => {
           if (!excludedFolderIds.includes(folder.id)) {
             excludedFolderIds.push(folder.id);

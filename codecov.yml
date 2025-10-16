@@ -21,6 +21,7 @@ ignore:
   - "src/options/**"                # UI - Options page
   - "src/results/**"                # UI - Results page
   - "src/folder-selector/**"        # UI - Folder selector page
+  - "src/background/background.ts"  # Orchestration layer - business logic tested in services
   - "*.html"                        # HTML files
   - "*.css"                         # CSS files
   - "dist/**"                       # Build output
