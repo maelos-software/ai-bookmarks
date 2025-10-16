@@ -352,12 +352,11 @@ export class ReorganizationService {
         progressCallback?.(i, bookmarks.length, `Assigning batch ${batchNum}/${totalBatches}`);
 
         try {
-          // Assign bookmarks to approved folders only (no new folder creation)
-          // In useExistingFolders mode, allow bookmarks to stay where they are if they don't fit well
+          // Assign bookmarks to approved folders
+          // LLM can use KEEP_CURRENT if bookmark is already well-organized
           const plan = await this.llmService.assignToFolders(
             batch,
-            approvedFolders,
-            useExistingFolders
+            approvedFolders
           );
           allPlans.push(plan);
 
@@ -939,11 +938,11 @@ export class ReorganizationService {
         );
 
         try {
-          // In useExistingFolders mode, allow bookmarks to stay where they are if they don't fit well
+          // Assign bookmarks to folders
+          // LLM can use KEEP_CURRENT if bookmark is already well-organized
           const plan = await this.llmService.assignToFolders(
             batch,
-            approvedFolders,
-            useExistingFolders
+            approvedFolders
           );
           allPlans.push(plan);
           logger.debug('ReorganizationService', `Batch ${batchNum} completed successfully`);

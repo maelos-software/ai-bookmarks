@@ -373,7 +373,7 @@ describe('LLMService', () => {
         }),
       });
 
-      const result = await service.assignToFolders(bookmarks, ['Dev', 'News'], true);
+      const result = await service.assignToFolders(bookmarks, ['Dev', 'News']);
 
       expect(result.suggestions[0].folderName).toBe('KEEP_CURRENT');
     });
@@ -392,7 +392,7 @@ describe('LLMService', () => {
         }),
       });
 
-      const result = await service.assignToFolders(bookmarks, ['Dev', 'News'], false);
+      const result = await service.assignToFolders(bookmarks, ['Dev', 'News']);
 
       expect(result.suggestions[0].folderName).toBe('Dev');
     });
@@ -721,7 +721,7 @@ describe('LLMService', () => {
         }),
       });
 
-      const result = await service.assignToFolders([], ['Tech', 'News'], false);
+      const result = await service.assignToFolders([], ['Tech', 'News']);
 
       expect(result.suggestions).toEqual([]);
     });
@@ -736,7 +736,7 @@ describe('LLMService', () => {
         text: async () => 'Error',
       });
 
-      await expect(service.assignToFolders(bookmarks, ['Tech'], false)).rejects.toThrow();
+      await expect(service.assignToFolders(bookmarks, ['Tech'])).rejects.toThrow();
     });
   });
 
@@ -1284,7 +1284,7 @@ describe('LLMService', () => {
         }),
       });
 
-      const result = await service.assignToFolders(bookmarks, ['Tech'], true);
+      const result = await service.assignToFolders(bookmarks, ['Tech']);
 
       expect(result.suggestions).toBeDefined();
     });
@@ -1756,14 +1756,14 @@ describe('LLMService', () => {
         }),
       });
 
-      const result = await service.assignToFolders(bookmarks, ['Tech', 'News'], true);
+      const result = await service.assignToFolders(bookmarks, ['Tech', 'News']);
 
       expect(result.suggestions).toHaveLength(2);
       expect(result.suggestions[0].folderName).toBe('Tech');
       expect(result.suggestions[1].folderName).toBe('KEEP_CURRENT');
     });
 
-    it('should map invalid folders to first approved when allowKeepCurrent is false', async () => {
+    it('should map invalid folders to KEEP_CURRENT', async () => {
       const service = new LLMService('sk-test123', 'openai');
       const bookmarks = [
         { id: '1', title: 'Test 1', url: 'https://test1.com' },
@@ -1788,11 +1788,11 @@ describe('LLMService', () => {
         }),
       });
 
-      const result = await service.assignToFolders(bookmarks, ['Tech', 'News'], false);
+      const result = await service.assignToFolders(bookmarks, ['Tech', 'News']);
 
       expect(result.suggestions).toHaveLength(2);
       expect(result.suggestions[0].folderName).toBe('Tech');
-      expect(result.suggestions[1].folderName).toBe('Tech');
+      expect(result.suggestions[1].folderName).toBe('KEEP_CURRENT');
     });
   });
 
