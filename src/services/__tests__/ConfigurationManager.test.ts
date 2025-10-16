@@ -65,7 +65,7 @@ describe('ConfigurationManager', () => {
     it('should save config to chrome storage', async () => {
       const testConfig: AppConfig = {
         api: { provider: 'openai', apiKey: 'test-key' },
-        performance: { apiTimeout: 60, batchSize: 25, maxTokens: 2048 },
+        performance: { apiTimeout: 60, batchSize: 25, maxTokens: 2048, retryAttempts: 3, retryDelay: 10 },
         organization: {
           removeDuplicates: false,
           removeEmptyFolders: true,

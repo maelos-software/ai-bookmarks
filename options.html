@@ -851,6 +851,24 @@
                                 </div>
                                 <small>Maximum tokens for AI response. Higher values allow processing larger batches but cost more. Rate limiting is handled automatically with smart retry logic. (1024-8192 tokens)</small>
                             </div>
+
+                            <div class="form-group">
+                                <label for="retryAttempts">Retry Attempts</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="retryAttempts" name="retryAttempts" min="1" max="10" value="3" required>
+                                    <span class="unit-label">attempts</span>
+                                </div>
+                                <small>Number of times to retry failed LLM requests (helps with transient network issues)</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="retryDelay">Retry Delay</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="retryDelay" name="retryDelay" min="1" max="60" value="10" required>
+                                    <span class="unit-label">seconds</span>
+                                </div>
+                                <small>Time to wait between retry attempts</small>
+                            </div>
                         </div>
 
                         <div class="collapsible-subsection">

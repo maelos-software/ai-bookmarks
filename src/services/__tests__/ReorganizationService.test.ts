@@ -72,7 +72,7 @@ describe('ReorganizationService', () => {
 
     mockConfigManager.getConfig.mockResolvedValue({
       api: { provider: 'openai', apiKey: 'test' },
-      performance: { apiTimeout: 60, batchSize: 50, maxTokens: 4096 },
+      performance: { apiTimeout: 60, batchSize: 50, maxTokens: 4096, retryAttempts: 3, retryDelay: 10 },
       organization: {
         removeDuplicates: true,
         removeEmptyFolders: true,
@@ -224,7 +224,7 @@ describe('ReorganizationService', () => {
     it('should skip bookmarks in organization history when configured', async () => {
       mockConfigManager.getConfig.mockResolvedValue({
         api: { provider: 'openai', apiKey: 'test' },
-        performance: { apiTimeout: 60, batchSize: 50, maxTokens: 4096 },
+        performance: { apiTimeout: 60, batchSize: 50, maxTokens: 4096, retryAttempts: 3, retryDelay: 10 },
         organization: {
           removeDuplicates: true,
           removeEmptyFolders: true,
@@ -273,7 +273,7 @@ describe('ReorganizationService', () => {
     it('should use existing folders mode when configured', async () => {
       mockConfigManager.getConfig.mockResolvedValue({
         api: { provider: 'openai', apiKey: 'test' },
-        performance: { apiTimeout: 60, batchSize: 50, maxTokens: 4096 },
+        performance: { apiTimeout: 60, batchSize: 50, maxTokens: 4096, retryAttempts: 3, retryDelay: 10 },
         organization: {
           removeDuplicates: true,
           removeEmptyFolders: true,
@@ -509,7 +509,7 @@ describe('ReorganizationService', () => {
       ]);
       mockConfigManager.getConfig.mockResolvedValue({
         api: { provider: 'openai', apiKey: 'test' },
-        performance: { apiTimeout: 60, batchSize: 50, maxTokens: 4096 },
+        performance: { apiTimeout: 60, batchSize: 50, maxTokens: 4096, retryAttempts: 3, retryDelay: 10 },
         organization: {
           removeDuplicates: true,
           removeEmptyFolders: true,
@@ -540,7 +540,7 @@ describe('ReorganizationService', () => {
       ]);
       mockConfigManager.getConfig.mockResolvedValue({
         api: { provider: 'openai', apiKey: 'test' },
-        performance: { apiTimeout: 60, batchSize: 50, maxTokens: 4096 },
+        performance: { apiTimeout: 60, batchSize: 50, maxTokens: 4096, retryAttempts: 3, retryDelay: 10 },
         organization: {
           removeDuplicates: true,
           removeEmptyFolders: true,

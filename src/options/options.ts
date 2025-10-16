@@ -22,6 +22,8 @@ class OptionsController {
   private apiTimeoutInput: HTMLInputElement;
   private batchSizeInput: HTMLInputElement;
   private maxTokensInput: HTMLInputElement;
+  private retryAttemptsInput: HTMLInputElement;
+  private retryDelayInput: HTMLInputElement;
   private removeDuplicatesCheckbox: HTMLInputElement;
   private removeEmptyFoldersCheckbox: HTMLInputElement;
   private categoriesTextarea: HTMLTextAreaElement;
@@ -65,6 +67,8 @@ class OptionsController {
     this.apiTimeoutInput = document.getElementById('apiTimeout') as HTMLInputElement;
     this.batchSizeInput = document.getElementById('batchSize') as HTMLInputElement;
     this.maxTokensInput = document.getElementById('maxTokens') as HTMLInputElement;
+    this.retryAttemptsInput = document.getElementById('retryAttempts') as HTMLInputElement;
+    this.retryDelayInput = document.getElementById('retryDelay') as HTMLInputElement;
     this.removeDuplicatesCheckbox = document.getElementById('removeDuplicates') as HTMLInputElement;
     this.removeEmptyFoldersCheckbox = document.getElementById(
       'removeEmptyFolders'
@@ -176,6 +180,8 @@ class OptionsController {
     this.apiTimeoutInput.addEventListener('input', () => this.markUnsavedChanges());
     this.batchSizeInput.addEventListener('input', () => this.markUnsavedChanges());
     this.maxTokensInput.addEventListener('input', () => this.markUnsavedChanges());
+    this.retryAttemptsInput.addEventListener('input', () => this.markUnsavedChanges());
+    this.retryDelayInput.addEventListener('input', () => this.markUnsavedChanges());
     this.categoriesTextarea.addEventListener('input', () => this.markUnsavedChanges());
     this.ignoreFoldersInput.addEventListener('input', () => this.markUnsavedChanges());
     this.removeDuplicatesCheckbox.addEventListener('change', () => this.markUnsavedChanges());
@@ -337,6 +343,12 @@ class OptionsController {
           );
           this.maxTokensInput.value = String(
             config.performance.maxTokens || DEFAULT_PERFORMANCE.maxTokens
+          );
+          this.retryAttemptsInput.value = String(
+            config.performance.retryAttempts ?? DEFAULT_PERFORMANCE.retryAttempts
+          );
+          this.retryDelayInput.value = String(
+            config.performance.retryDelay ?? DEFAULT_PERFORMANCE.retryDelay
           );
         }
 
@@ -517,6 +529,8 @@ class OptionsController {
     const apiTimeout = parseInt(this.apiTimeoutInput.value);
     const batchSize = parseInt(this.batchSizeInput.value);
     const maxTokens = parseInt(this.maxTokensInput.value);
+    const retryAttempts = parseInt(this.retryAttemptsInput.value);
+    const retryDelay = parseInt(this.retryDelayInput.value);
     const removeDuplicates = this.removeDuplicatesCheckbox.checked;
     const removeEmptyFolders = this.removeEmptyFoldersCheckbox.checked;
     const categoriesText = this.categoriesTextarea.value.trim();
@@ -559,6 +573,16 @@ class OptionsController {
       return;
     }
 
+    if (retryAttempts < 1 || retryAttempts > 10) {
+      this.showStatus('Retry attempts must be between 1 and 10', 'error');
+      return;
+    }
+
+    if (retryDelay < 1 || retryDelay > 60) {
+      this.showStatus('Retry delay must be between 1 and 60 seconds', 'error');
+      return;
+    }
+
     this.saveBtn.disabled = true;
     this.showStatus('Saving...', 'info');
 
@@ -598,6 +622,8 @@ class OptionsController {
           apiTimeout,
           batchSize,
           maxTokens,
+          retryAttempts,
+          retryDelay,
         },
         organization: {
           removeDuplicates,
@@ -679,6 +705,8 @@ class OptionsController {
       this.apiTimeoutInput.value = String(DEFAULT_PERFORMANCE.apiTimeout);
       this.batchSizeInput.value = String(DEFAULT_PERFORMANCE.batchSize);
       this.maxTokensInput.value = String(DEFAULT_PERFORMANCE.maxTokens);
+      this.retryAttemptsInput.value = String(DEFAULT_PERFORMANCE.retryAttempts);
+      this.retryDelayInput.value = String(DEFAULT_PERFORMANCE.retryDelay);
       this.removeDuplicatesCheckbox.checked = true;
       this.removeEmptyFoldersCheckbox.checked = true;
       this.categoriesTextarea.value = DEFAULT_CATEGORIES.join('\n');

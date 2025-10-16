@@ -28,6 +28,8 @@ export interface PerformanceConfig {
   apiTimeout: number; // seconds
   batchSize: number; // number of bookmarks per batch
   maxTokens: number; // maximum tokens for LLM response
+  retryAttempts: number; // number of retry attempts for failed LLM requests
+  retryDelay: number; // delay in seconds between retry attempts
 }
 
 export interface OrganizationConfig {
@@ -98,6 +100,8 @@ export const DEFAULT_PERFORMANCE = {
   apiTimeout: 180,
   batchSize: 50,
   maxTokens: 4096,
+  retryAttempts: 3,
+  retryDelay: 10,
 } as const;
 
 // System folder IDs (browser-specific, immutable)
@@ -181,6 +185,10 @@ export class ConfigurationManager {
     await chrome.storage.sync.set({
       [ConfigurationManager.STORAGE_KEY]: config,
     });
+
+    // Clear health check cache when config changes
+    // This ensures the popup re-validates the connection with new settings
+    await chrome.storage.local.remove('statusCache');
   }
 
   async updateAPIConfig(apiConfig: Partial<APIConfig>): Promise<void> {

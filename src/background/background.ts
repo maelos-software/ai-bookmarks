@@ -269,7 +269,9 @@ class BackgroundService {
       apiTimeout,
       maxTokens,
       config.api.customEndpoint,
-      config.api.customModelName
+      config.api.customModelName,
+      config.performance?.retryAttempts,
+      config.performance?.retryDelay
     );
 
     logger.info('BackgroundService', 'Creating reorganization service');
@@ -734,7 +736,9 @@ class BackgroundService {
         30,
         100,
         config.customEndpoint,
-        config.customModelName
+        config.customModelName,
+        1, // Only 1 attempt for health check
+        5  // 5 second delay (though won't retry)
       );
 
       logger.info('BackgroundService', 'Calling validateConnection');
@@ -1043,7 +1047,9 @@ class BackgroundService {
         config.performance?.apiTimeout || DEFAULT_PERFORMANCE.apiTimeout,
         config.performance?.maxTokens || DEFAULT_PERFORMANCE.maxTokens,
         config.api.customEndpoint,
-        config.api.customModelName
+        config.api.customModelName,
+        config.performance?.retryAttempts,
+        config.performance?.retryDelay
       );
 
       // Get categories

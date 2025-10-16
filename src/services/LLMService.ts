@@ -39,6 +39,8 @@ export class LLMService {
   private maxTokens: number;
   private customEndpoint?: string;
   private customModelName?: string;
+  private retryAttempts: number;
+  private retryDelay: number; // milliseconds
 
   constructor(
     apiKey: string,
@@ -47,7 +49,9 @@ export class LLMService {
     timeoutSeconds?: number,
     maxTokens?: number,
     customEndpoint?: string,
-    customModelName?: string
+    customModelName?: string,
+    retryAttempts?: number,
+    retryDelaySeconds?: number
   ) {
     this.apiKey = apiKey;
     this.provider = provider;
@@ -63,6 +67,8 @@ export class LLMService {
 
     this.timeout = (timeoutSeconds || DEFAULT_PERFORMANCE.apiTimeout) * 1000; // Convert to milliseconds
     this.maxTokens = maxTokens || DEFAULT_PERFORMANCE.maxTokens;
+    this.retryAttempts = retryAttempts ?? DEFAULT_PERFORMANCE.retryAttempts;
+    this.retryDelay = (retryDelaySeconds ?? DEFAULT_PERFORMANCE.retryDelay) * 1000; // Convert to milliseconds
 
     const endpointInfo = this.customEndpoint ? `, endpoint=${this.customEndpoint}` : '';
     logger.info(
@@ -256,7 +262,7 @@ Your response (category name only):`;
     logger.debug('LLMService', `Built single bookmark prompt, length=${prompt.length} chars`);
 
     try {
-      const { content } = await this.callLLM(prompt);
+      const { content } = await this.callLLMWithRetry(prompt);
       let categoryResponse = content.trim();
 
       // Handle JSON response if LLM returns {"category": "..."} format
@@ -325,7 +331,7 @@ Your response (category name only):`;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        const { content, usage } = await this.callLLM(prompt);
+        const { content, usage } = await this.callLLMWithRetry(prompt);
         logger.debug('LLMService', 'Got response from LLM', { responseLength: content.length });
 
         const plan = this.parseResponse(content, bookmarks);
@@ -440,7 +446,7 @@ Return ONLY a JSON array of folder names, nothing else:
 Target: 5-15 folders total.`;
 
     try {
-      const { content, usage } = await this.callLLM(prompt);
+      const { content, usage } = await this.callLLMWithRetry(prompt);
 
       // Parse response
       const jsonMatch =
@@ -627,7 +633,7 @@ CRITICAL RULES:
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        const { content, usage } = await this.callLLM(prompt);
+        const { content, usage } = await this.callLLMWithRetry(prompt);
         const plan = this.parseResponse(content, bookmarks);
 
         // Validate that all folder names are in approved list (or KEEP_CURRENT if allowed)
@@ -751,7 +757,7 @@ Return COMPACT JSON with ALL ${allAssignments.length} bookmarks reassigned using
 CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for index (1-${allAssignments.length}), "f" for folder name. No "Uncategorized" or vague names allowed.`;
 
     try {
-      const { content, usage } = await this.callLLM(prompt);
+      const { content, usage } = await this.callLLMWithRetry(prompt);
       const plan = this.parseResponse(
         content,
         allAssignments.map((a) => ({ id: a.bookmarkId, title: a.title, url: a.url }))
@@ -766,6 +772,84 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
       logger.error('LLMService', 'Review and optimize failed', error);
       throw error;
     }
+  }
+
+  /**
+   * Sleep for specified milliseconds
+   */
+  private async sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Retry wrapper for LLM calls
+   */
+  private async callLLMWithRetry(
+    prompt: string
+  ): Promise<{ content: string; usage: { prompt: number; completion: number; total: number } }> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+      try {
+        logger.debug('LLMService', `LLM request attempt ${attempt}/${this.retryAttempts}`);
+        return await this.callLLM(prompt);
+      } catch (error) {
+        lastError = error as Error;
+
+        // Check if this is a retryable error
+        const isRetryable = this.isRetryableError(error);
+
+        if (!isRetryable) {
+          logger.warn('LLMService', `Non-retryable error encountered: ${lastError.message}`);
+          throw error;
+        }
+
+        // If this was the last attempt, throw the error
+        if (attempt === this.retryAttempts) {
+          logger.error('LLMService', `All ${this.retryAttempts} retry attempts exhausted`);
+          throw error;
+        }
+
+        // Wait before retrying
+        logger.warn(
+          'LLMService',
+          `Attempt ${attempt} failed: ${lastError.message}. Retrying in ${this.retryDelay / 1000}s...`
+        );
+        await this.sleep(this.retryDelay);
+      }
+    }
+
+    // This should never be reached, but TypeScript needs it
+    throw lastError || new Error('Unknown error during retry');
+  }
+
+  /**
+   * Determine if an error is retryable
+   */
+  private isRetryableError(error: unknown): boolean {
+    if (!(error instanceof Error)) return false;
+
+    const errorWithStatus = error as Error & { statusCode?: number };
+    const statusCode = errorWithStatus.statusCode;
+
+    // Retry on timeout, network errors, and server errors (5xx)
+    if (error.name === 'AbortError') return true;
+    if (error.message.includes('timeout')) return true;
+    if (error.message.includes('network')) return true;
+    if (error.message.includes('fetch failed')) return true;
+
+    // Retry on specific HTTP status codes
+    if (statusCode === 429) return true; // Rate limit
+    if (statusCode === 500) return true; // Internal server error
+    if (statusCode === 502) return true; // Bad gateway
+    if (statusCode === 503) return true; // Service unavailable
+    if (statusCode === 504) return true; // Gateway timeout
+
+    // Don't retry on client errors (4xx except 429)
+    if (statusCode && statusCode >= 400 && statusCode < 500) return false;
+
+    // Retry on unknown errors (could be transient)
+    return true;
   }
 
   private async callLLM(
