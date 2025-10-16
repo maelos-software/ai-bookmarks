@@ -1,0 +1,32 @@
+# Codecov configuration
+# https://docs.codecov.com/docs/codecov-yaml
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+ignore:
+  - "src/**/__tests__/**"           # Test files
+  - "src/**/*.test.ts"              # Test files
+  - "src/**/*.spec.ts"              # Test files
+  - "src/**/*.d.ts"                 # Type definition files
+  - "src/popup/**"                  # UI - Popup page
+  - "src/options/**"                # UI - Options page
+  - "src/results/**"                # UI - Results page
+  - "src/folder-selector/**"        # UI - Folder selector page
+  - "*.html"                        # HTML files
+  - "*.css"                         # CSS files
+  - "dist/**"                       # Build output
+  - "coverage/**"                   # Coverage reports
+
+comment:
+  layout: "reach,diff,flags,tree,footer"
+  behavior: default
+  require_changes: false
