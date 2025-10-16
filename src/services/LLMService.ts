@@ -1167,7 +1167,62 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
       reset: Date;
     };
   }> {
-    logger.info('LLMService', 'Validating API connection with test call');
+    logger.info('LLMService', 'Validating API connection with test call (with retry)');
+
+    // Wrap the validation in retry logic for transient failures
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+      try {
+        logger.debug(
+          'LLMService',
+          `Connection validation attempt ${attempt}/${this.retryAttempts}`
+        );
+        return await this.performValidation();
+      } catch (error) {
+        lastError = error as Error;
+
+        // Check if this is a retryable error
+        const isRetryable = this.isRetryableError(error);
+
+        if (!isRetryable) {
+          logger.warn('LLMService', `Non-retryable error in validation: ${lastError.message}`);
+          throw error;
+        }
+
+        // If this was the last attempt, throw the error
+        if (attempt === this.retryAttempts) {
+          logger.error('LLMService', `All ${this.retryAttempts} validation attempts exhausted`);
+          throw error;
+        }
+
+        // Wait before retrying
+        logger.warn(
+          'LLMService',
+          `Validation attempt ${attempt} failed: ${lastError.message}. Retrying in ${this.retryDelay / 1000}s...`
+        );
+        await this.sleep(this.retryDelay);
+      }
+    }
+
+    throw lastError || new Error('Unknown error during validation retry');
+  }
+
+  /**
+   * Perform the actual connection validation (called by validateConnection with retry)
+   */
+  private async performValidation(): Promise<{
+    success: boolean;
+    error?: string;
+    responseTime: number;
+    model?: string;
+    credits?: number;
+    rateLimit?: {
+      limit: number;
+      remaining: number;
+      reset: Date;
+    };
+  }> {
     const startTime = Date.now();
 
     // Check credits first for OpenRouter to provide better error messages
@@ -1297,6 +1352,16 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
             errorMessage = 'Access denied - check your API key permissions';
           }
 
+          // Throw error for retryable status codes (5xx, 429), return for others
+          const error = new Error(errorMessage) as Error & { statusCode?: number };
+          error.statusCode = response.status;
+
+          if (response.status >= 500 || response.status === 429) {
+            // Retryable error - throw it
+            throw error;
+          }
+
+          // Non-retryable error - return it
           return {
             success: false,
             error: errorMessage,

@@ -1902,7 +1902,17 @@ describe('LLMService', () => {
     });
 
     it('should parse error message from errorData.error.message', async () => {
-      const service = new LLMService('sk-test123', 'openai');
+      const service = new LLMService(
+        'sk-test123',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
 
       mockFetch.mockResolvedValue({
         ok: false,
@@ -1917,11 +1927,22 @@ describe('LLMService', () => {
       const result = await service.validateConnection();
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Custom error from API');
+      // 500 errors are now thrown and retried, then caught by outer error handler
+      expect(result.error).toBe('Network error: Custom error from API');
     });
 
     it('should parse error message from errorData.message', async () => {
-      const service = new LLMService('sk-test123', 'openai');
+      const service = new LLMService(
+        'sk-test123',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
 
       mockFetch.mockResolvedValue({
         ok: false,
@@ -1936,7 +1957,8 @@ describe('LLMService', () => {
       const result = await service.validateConnection();
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Another custom error format');
+      // 500 errors are now thrown and retried, then caught by outer error handler
+      expect(result.error).toBe('Network error: Another custom error format');
     });
   });
 
