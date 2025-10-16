@@ -92,7 +92,6 @@ class PopupController {
     this.progressMonitor.restoreMonitoringState();
   }
 
-
   private async getStatusCache(): Promise<StatusCache | null> {
     try {
       const result = await chrome.storage.local.get(PopupController.STATUS_CACHE_KEY);

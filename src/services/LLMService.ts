@@ -563,8 +563,7 @@ Think: "Can I use an existing folder?" FIRST, then "How can I create the FEWEST 
 
     // Validate we have folders to work with
     if (approvedFolders.length === 0) {
-      const error =
-        'No approved folders provided. Please configure categories in settings.';
+      const error = 'No approved folders provided. Please configure categories in settings.';
       logger.error('LLMService', error);
       throw new Error(error);
     }
@@ -619,7 +618,8 @@ CRITICAL RULES:
 
           // Map invalid folders to KEEP_CURRENT as fallback
           plan.suggestions.forEach((s) => {
-            const isValid = s.folderName === 'KEEP_CURRENT' || approvedFolders.includes(s.folderName);
+            const isValid =
+              s.folderName === 'KEEP_CURRENT' || approvedFolders.includes(s.folderName);
 
             if (!isValid) {
               logger.warn('LLMService', `Mapping invalid folder "${s.folderName}" to KEEP_CURRENT`);
@@ -1330,7 +1330,9 @@ CRITICAL: You MUST include all ${allAssignments.length} bookmarks. Use "i" for i
           // Log as WARN for retryable errors, ERROR for permanent failures
           const isRetryable = response.status >= 500 || response.status === 429;
           if (isRetryable) {
-            logger.warn('LLMService', `Test failed (will retry): ${response.status}`, { errorText });
+            logger.warn('LLMService', `Test failed (will retry): ${response.status}`, {
+              errorText,
+            });
           } else {
             logger.error('LLMService', `Test failed: ${response.status}`, { errorText });
           }

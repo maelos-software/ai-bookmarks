@@ -354,10 +354,7 @@ export class ReorganizationService {
         try {
           // Assign bookmarks to approved folders
           // LLM can use KEEP_CURRENT if bookmark is already well-organized
-          const plan = await this.llmService.assignToFolders(
-            batch,
-            approvedFolders
-          );
+          const plan = await this.llmService.assignToFolders(batch, approvedFolders);
           allPlans.push(plan);
 
           // Update folder sizes based on this batch's assignments
@@ -952,10 +949,7 @@ export class ReorganizationService {
         try {
           // Assign bookmarks to folders
           // LLM can use KEEP_CURRENT if bookmark is already well-organized
-          const plan = await this.llmService.assignToFolders(
-            batch,
-            approvedFolders
-          );
+          const plan = await this.llmService.assignToFolders(batch, approvedFolders);
           allPlans.push(plan);
           logger.debug('ReorganizationService', `Batch ${batchNum} completed successfully`);
         } catch (error) {

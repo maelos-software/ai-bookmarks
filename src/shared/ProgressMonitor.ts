@@ -87,7 +87,7 @@ export class ProgressMonitor {
 
     // Wait a brief moment for the background service to set up its state
     // before checking status (avoids race condition)
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Check status immediately
     await this.checkStatus();
@@ -127,7 +127,7 @@ export class ProgressMonitor {
   private async checkStatus(): Promise<boolean> {
     try {
       const response = await chrome.runtime.sendMessage({
-        type: 'GET_REORGANIZATION_STATUS'
+        type: 'GET_REORGANIZATION_STATUS',
       });
 
       if (response && response.isReorganizing && response.progress) {
@@ -190,7 +190,7 @@ export class ProgressMonitor {
   async restoreMonitoringState(): Promise<boolean> {
     try {
       const response = await chrome.runtime.sendMessage({
-        type: 'GET_REORGANIZATION_STATUS'
+        type: 'GET_REORGANIZATION_STATUS',
       });
 
       if (response && response.isReorganizing && response.progress) {
