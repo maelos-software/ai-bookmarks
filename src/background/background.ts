@@ -738,7 +738,7 @@ class BackgroundService {
         config.customEndpoint,
         config.customModelName,
         1, // Only 1 attempt for health check
-        5  // 5 second delay (though won't retry)
+        5 // 5 second delay (though won't retry)
       );
 
       logger.info('BackgroundService', 'Calling validateConnection');

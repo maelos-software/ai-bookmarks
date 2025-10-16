@@ -58,6 +58,12 @@ class OptionsController {
   private unsavedChangesBanner: HTMLElement;
   private bannerSaveBtn: HTMLButtonElement;
   private hasUnsavedChanges: boolean = false;
+  private confirmationOverlay: HTMLElement;
+  private confirmationTitle: HTMLElement;
+  private confirmationMessage: HTMLElement;
+  private confirmCancelBtn: HTMLButtonElement;
+  private confirmProceedBtn: HTMLButtonElement;
+  private confirmCallback: (() => void) | null = null;
 
   constructor() {
     this.form = document.getElementById('optionsForm') as HTMLFormElement;
@@ -112,6 +118,11 @@ class OptionsController {
     this.geminiGetKeyBtn = document.getElementById('gemini-get-key-btn') as HTMLButtonElement;
     this.unsavedChangesBanner = document.getElementById('unsaved-changes-banner') as HTMLElement;
     this.bannerSaveBtn = document.getElementById('banner-save-btn') as HTMLButtonElement;
+    this.confirmationOverlay = document.getElementById('confirmation-overlay') as HTMLElement;
+    this.confirmationTitle = document.getElementById('confirmation-title') as HTMLElement;
+    this.confirmationMessage = document.getElementById('confirmation-message') as HTMLElement;
+    this.confirmCancelBtn = document.getElementById('confirm-cancel-btn') as HTMLButtonElement;
+    this.confirmProceedBtn = document.getElementById('confirm-proceed-btn') as HTMLButtonElement;
 
     this.authService = new OpenRouterAuthService();
 
@@ -150,6 +161,17 @@ class OptionsController {
 
     this.bannerSaveBtn.addEventListener('click', () => {
       this.handleSave();
+    });
+
+    this.confirmCancelBtn.addEventListener('click', () => {
+      this.hideConfirmation();
+    });
+
+    this.confirmProceedBtn.addEventListener('click', () => {
+      if (this.confirmCallback) {
+        this.confirmCallback();
+      }
+      this.hideConfirmation();
     });
 
     // Setup collapsible Advanced Settings
@@ -676,72 +698,70 @@ class OptionsController {
   }
 
   private async handleReset() {
-    if (
-      !confirm(
-        'Are you sure you want to reset all settings to defaults? Your API key will be cleared and you will be signed out of OpenRouter.'
-      )
-    ) {
-      return;
-    }
+    this.showConfirmation(
+      'Reset All Settings?',
+      'Are you sure you want to reset all settings to defaults?<br><br>Your API key will be cleared and you will be signed out of OpenRouter.',
+      async () => {
+        this.resetBtn.disabled = true;
+        this.showStatus('Resetting to defaults...', 'info');
 
-    this.resetBtn.disabled = true;
-    this.showStatus('Resetting to defaults...', 'info');
+        try {
+          // Get current config to preserve API key
+          const result = await chrome.storage.sync.get('app_config');
+          const currentConfig: AppConfig = result.app_config;
 
-    try {
-      // Get current config to preserve API key
-      const result = await chrome.storage.sync.get('app_config');
-      const currentConfig: AppConfig = result.app_config;
+          // Sign out of OpenRouter if logged in
+          if (this.providerSelect.value === 'openrouter') {
+            await this.authService.logout();
+          }
 
-      // Sign out of OpenRouter if logged in
-      if (this.providerSelect.value === 'openrouter') {
-        await this.authService.logout();
+          // Set defaults (preserve existing API key and provider if they exist)
+          // User must manually change provider/key if they want to clear it
+          this.providerSelect.value = currentConfig?.api?.provider || 'gemini';
+          this.apiKeyInput.value = currentConfig?.api?.apiKey || '';
+          this.modelInput.value = '';
+          this.apiTimeoutInput.value = String(DEFAULT_PERFORMANCE.apiTimeout);
+          this.batchSizeInput.value = String(DEFAULT_PERFORMANCE.batchSize);
+          this.maxTokensInput.value = String(DEFAULT_PERFORMANCE.maxTokens);
+          this.retryAttemptsInput.value = String(DEFAULT_PERFORMANCE.retryAttempts);
+          this.retryDelayInput.value = String(DEFAULT_PERFORMANCE.retryDelay);
+          this.removeDuplicatesCheckbox.checked = true;
+          this.removeEmptyFoldersCheckbox.checked = true;
+          this.categoriesTextarea.value = DEFAULT_CATEGORIES.join('\n');
+          this.ignoreFoldersInput.value = '';
+          this.organizeSavedTabsCheckbox.checked = false;
+          this.autoOrganizeCheckbox.checked = false;
+
+          // Set default folder mode (create)
+          this.folderModeRadios.forEach((radio) => {
+            radio.checked = radio.value === 'create';
+          });
+
+          // Set default radio button
+          this.respectOrganizationHistoryRadios.forEach((radio) => {
+            radio.checked = radio.value === 'organizeAllOnly';
+          });
+
+          this.logLevelSelect.value = '0';
+          this.consoleLoggingCheckbox.checked = true;
+
+          this.updateModelPlaceholder();
+          this.toggleOpenRouterOAuthSection();
+          this.updateRadioCardStates();
+          this.updateFolderModeUI();
+          this.markUnsavedChanges();
+          this.showStatus(
+            '✓ Reset to defaults! (API key preserved) Click Save to apply changes.',
+            'success'
+          );
+        } catch (error) {
+          this.showStatus(`Error: ${error}`, 'error');
+          console.error('Failed to reset:', error);
+        } finally {
+          this.resetBtn.disabled = false;
+        }
       }
-
-      // Set defaults (preserve existing API key and provider if they exist)
-      // User must manually change provider/key if they want to clear it
-      this.providerSelect.value = currentConfig?.api?.provider || 'gemini';
-      this.apiKeyInput.value = currentConfig?.api?.apiKey || '';
-      this.modelInput.value = '';
-      this.apiTimeoutInput.value = String(DEFAULT_PERFORMANCE.apiTimeout);
-      this.batchSizeInput.value = String(DEFAULT_PERFORMANCE.batchSize);
-      this.maxTokensInput.value = String(DEFAULT_PERFORMANCE.maxTokens);
-      this.retryAttemptsInput.value = String(DEFAULT_PERFORMANCE.retryAttempts);
-      this.retryDelayInput.value = String(DEFAULT_PERFORMANCE.retryDelay);
-      this.removeDuplicatesCheckbox.checked = true;
-      this.removeEmptyFoldersCheckbox.checked = true;
-      this.categoriesTextarea.value = DEFAULT_CATEGORIES.join('\n');
-      this.ignoreFoldersInput.value = '';
-      this.organizeSavedTabsCheckbox.checked = false;
-      this.autoOrganizeCheckbox.checked = false;
-
-      // Set default folder mode (create)
-      this.folderModeRadios.forEach((radio) => {
-        radio.checked = radio.value === 'create';
-      });
-
-      // Set default radio button
-      this.respectOrganizationHistoryRadios.forEach((radio) => {
-        radio.checked = radio.value === 'organizeAllOnly';
-      });
-
-      this.logLevelSelect.value = '0';
-      this.consoleLoggingCheckbox.checked = true;
-
-      this.updateModelPlaceholder();
-      this.toggleOpenRouterOAuthSection();
-      this.updateRadioCardStates();
-      this.updateFolderModeUI();
-      this.markUnsavedChanges();
-      this.showStatus(
-        '✓ Reset to defaults! (API key preserved) Click Save to apply changes.',
-        'success'
-      );
-    } catch (error) {
-      this.showStatus(`Error: ${error}`, 'error');
-      console.error('Failed to reset:', error);
-    } finally {
-      this.resetBtn.disabled = false;
-    }
+    );
   }
 
   private showStatus(message: string, type: 'info' | 'success' | 'error') {
@@ -877,82 +897,78 @@ class OptionsController {
   }
 
   private async handleOpenRouterLogout() {
-    if (
-      !confirm('Are you sure you want to sign out of OpenRouter? Your API key will be removed.')
-    ) {
-      return;
-    }
+    this.showConfirmation(
+      'Sign Out of OpenRouter?',
+      'Are you sure you want to sign out of OpenRouter?<br><br>Your API key will be removed.',
+      async () => {
+        this.openrouterLogoutBtn.disabled = true;
 
-    this.openrouterLogoutBtn.disabled = true;
-
-    try {
-      await this.authService.logout();
-      this.apiKeyInput.value = '';
-      await this.updateOAuthStatus();
-      this.showStatus('✓ Signed out successfully', 'success');
-    } catch (error) {
-      console.error('Logout error:', error);
-      this.showStatus(`Error during logout: ${error}`, 'error');
-    } finally {
-      this.openrouterLogoutBtn.disabled = false;
-    }
+        try {
+          await this.authService.logout();
+          this.apiKeyInput.value = '';
+          await this.updateOAuthStatus();
+          this.showStatus('✓ Signed out successfully', 'success');
+        } catch (error) {
+          console.error('Logout error:', error);
+          this.showStatus(`Error during logout: ${error}`, 'error');
+        } finally {
+          this.openrouterLogoutBtn.disabled = false;
+        }
+      }
+    );
   }
 
   private async handleClearHistory() {
-    if (
-      !confirm(
-        'Are you sure you want to clear the organization history? This will allow all bookmarks to be reorganized in future runs.'
-      )
-    ) {
-      return;
-    }
+    this.showConfirmation(
+      'Clear Organization History?',
+      'Are you sure you want to clear the organization history?<br><br>This will allow all bookmarks to be reorganized in future runs.',
+      async () => {
+        this.clearHistoryBtn.disabled = true;
 
-    this.clearHistoryBtn.disabled = true;
+        try {
+          const response = await chrome.runtime.sendMessage({ type: 'CLEAR_ORGANIZATION_HISTORY' });
 
-    try {
-      const response = await chrome.runtime.sendMessage({ type: 'CLEAR_ORGANIZATION_HISTORY' });
-
-      if (response && response.success) {
-        this.showStatus('✓ Organization history cleared successfully', 'success');
-      } else {
-        throw new Error(response?.error || 'Failed to clear history');
+          if (response && response.success) {
+            this.showStatus('✓ Organization history cleared successfully', 'success');
+          } else {
+            throw new Error(response?.error || 'Failed to clear history');
+          }
+        } catch (error) {
+          console.error('Clear history error:', error);
+          this.showStatus(`Error clearing history: ${error}`, 'error');
+        } finally {
+          this.clearHistoryBtn.disabled = false;
+        }
       }
-    } catch (error) {
-      console.error('Clear history error:', error);
-      this.showStatus(`Error clearing history: ${error}`, 'error');
-    } finally {
-      this.clearHistoryBtn.disabled = false;
-    }
+    );
   }
 
   private async handleMarkAllOrganized() {
-    if (
-      !confirm(
-        'Mark all bookmarks as organized? This will prevent the AI from reorganizing any of your existing bookmarks until you clear the history.'
-      )
-    ) {
-      return;
-    }
+    this.showConfirmation(
+      'Mark All as Organized?',
+      'Mark all bookmarks as organized?<br><br>This will prevent the AI from reorganizing any of your existing bookmarks until you clear the history.',
+      async () => {
+        this.markAllOrganizedBtn.disabled = true;
 
-    this.markAllOrganizedBtn.disabled = true;
+        try {
+          const response = await chrome.runtime.sendMessage({ type: 'MARK_ALL_ORGANIZED' });
 
-    try {
-      const response = await chrome.runtime.sendMessage({ type: 'MARK_ALL_ORGANIZED' });
-
-      if (response && response.success) {
-        this.showStatus(
-          `✓ Successfully marked ${response.count} bookmarks as organized`,
-          'success'
-        );
-      } else {
-        throw new Error(response?.error || 'Failed to mark bookmarks as organized');
+          if (response && response.success) {
+            this.showStatus(
+              `✓ Successfully marked ${response.count} bookmarks as organized`,
+              'success'
+            );
+          } else {
+            throw new Error(response?.error || 'Failed to mark bookmarks as organized');
+          }
+        } catch (error) {
+          console.error('Mark all organized error:', error);
+          this.showStatus(`Error marking bookmarks as organized: ${error}`, 'error');
+        } finally {
+          this.markAllOrganizedBtn.disabled = false;
+        }
       }
-    } catch (error) {
-      console.error('Mark all organized error:', error);
-      this.showStatus(`Error marking bookmarks as organized: ${error}`, 'error');
-    } finally {
-      this.markAllOrganizedBtn.disabled = false;
-    }
+    );
   }
 
   private setupCollapsibleSection() {
@@ -976,6 +992,18 @@ class OptionsController {
         content.classList.add('collapsed');
       }
     });
+  }
+
+  private showConfirmation(title: string, message: string, callback: () => void) {
+    this.confirmationTitle.textContent = title;
+    this.confirmationMessage.innerHTML = message;
+    this.confirmCallback = callback;
+    this.confirmationOverlay.classList.add('active');
+  }
+
+  private hideConfirmation() {
+    this.confirmationOverlay.classList.remove('active');
+    this.confirmCallback = null;
   }
 }
 

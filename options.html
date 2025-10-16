@@ -485,6 +485,64 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Confirmation Dialog */
+        .confirmation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .confirmation-overlay.active {
+            display: flex;
+        }
+
+        .confirmation-dialog {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .confirmation-icon {
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .confirmation-message {
+            font-size: 1em;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .confirmation-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .confirmation-actions .btn {
+            flex: 1;
+            padding: 14px 20px;
+        }
     </style>
 </head>
 <body>
@@ -915,6 +973,21 @@
                 <strong>🔒 Privacy Notice:</strong> Your API key and all settings are stored locally in Chrome's secure storage.
                 No data is ever sent to third parties except for AI processing requests to your chosen provider.
             </p>
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div id="confirmation-overlay" class="confirmation-overlay">
+        <div class="confirmation-dialog">
+            <div class="confirmation-icon">⚠️</div>
+            <div id="confirmation-title" class="confirmation-title">Confirm Action</div>
+            <div id="confirmation-message" class="confirmation-message">
+                Are you sure you want to proceed?
+            </div>
+            <div class="confirmation-actions">
+                <button id="confirm-cancel-btn" class="btn btn-secondary">Cancel</button>
+                <button id="confirm-proceed-btn" class="btn btn-primary">Proceed</button>
+            </div>
         </div>
     </div>
 

@@ -69,7 +69,17 @@ describe('LLMService', () => {
 
   describe('constructor', () => {
     it('should initialize with OpenAI provider', () => {
-      const service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      const service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
       expect(service).toBeDefined();
     });
 
@@ -140,7 +150,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should categorize bookmark correctly', async () => {
@@ -208,7 +228,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle API response with valid folder assignments', async () => {
@@ -293,7 +323,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should assign bookmarks to existing folders', async () => {
@@ -362,7 +402,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should discover folder names from bookmarks', async () => {
@@ -408,7 +458,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-or-test123456789012345678', 'openrouter', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-or-test123456789012345678',
+        'openrouter',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should return credit balance', async () => {
@@ -458,7 +518,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should validate successful connection', async () => {
@@ -524,7 +594,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should review and suggest optimizations', async () => {
@@ -566,7 +646,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle malformed JSON responses', async () => {
@@ -609,7 +699,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle empty bookmark array', async () => {
@@ -644,7 +744,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle empty assignments', async () => {
@@ -680,7 +790,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle response with code blocks', async () => {
@@ -729,7 +849,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle invalid category response', async () => {
@@ -785,7 +915,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle truncated response with length finish reason', async () => {
@@ -826,7 +966,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-ant-test123', 'claude', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-ant-test123',
+        'claude',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle Claude response format', async () => {
@@ -872,7 +1022,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle 400 bad request errors', async () => {
@@ -945,7 +1105,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-or-test123', 'openrouter', 'grok-beta', undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-or-test123',
+        'openrouter',
+        'grok-beta',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should use correct endpoint for OpenRouter', async () => {
@@ -1007,7 +1177,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('xai-test123', 'grok', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'xai-test123',
+        'grok',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should use correct endpoint for Grok', async () => {
@@ -1040,7 +1220,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle organizeBookmarks with batch context', async () => {
@@ -1293,7 +1483,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle validateConnection with length finish_reason and fallback', async () => {
@@ -1362,7 +1562,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle missing suggestions in response', async () => {
@@ -1408,7 +1618,17 @@ describe('LLMService', () => {
     let service: LLMService;
 
     beforeEach(() => {
-      service = new LLMService('sk-test123456789012345678', 'openai', undefined, undefined, undefined, undefined, undefined, 1, 0);
+      service = new LLMService(
+        'sk-test123456789012345678',
+        'openai',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        0
+      );
     });
 
     it('should handle discoverFolders with missing folders array', async () => {
